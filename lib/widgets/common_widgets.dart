@@ -45,11 +45,15 @@ class AppSearchBar extends StatelessWidget {
 class ProfileGreeting extends StatelessWidget {
   final String name;
   final String avatarUrl;
+  final String? roleTitle;
+  final VoidCallback? onLogout;
 
   const ProfileGreeting({
     super.key,
     required this.name,
     required this.avatarUrl,
+    this.roleTitle,
+    this.onLogout,
   });
 
   @override
@@ -60,15 +64,39 @@ class ProfileGreeting extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Hello',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 14,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'Halo, ',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 14,
+                    ),
+                  ),
+                  if (roleTitle != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        roleTitle!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
               ),
+              const SizedBox(height: 2),
               Text(
                 name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -78,9 +106,15 @@ class ProfileGreeting extends StatelessWidget {
             ],
           ),
         ),
+        if (onLogout != null)
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: Colors.white),
+            tooltip: 'Keluar Akun',
+            onPressed: onLogout,
+          ),
         Container(
-          width: 48,
-          height: 48,
+          width: 46,
+          height: 46,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2),

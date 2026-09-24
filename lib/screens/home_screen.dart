@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/sample_data.dart';
+import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/wave_header.dart';
+import 'login_screen.dart';
 import 'mpasi_menu_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -11,6 +13,11 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService().currentUser;
+    final displayName = user?.name ?? SampleData.userName;
+    final displayAvatar = user?.avatarUrl ?? SampleData.avatarUrl;
+    final displayRole = user?.roleDisplayTitle ?? 'Ibu Balita';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: SingleChildScrollView(
@@ -27,8 +34,18 @@ class HomeScreen extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                       child: ProfileGreeting(
-                        name: SampleData.userName,
-                        avatarUrl: SampleData.avatarUrl,
+                        name: displayName,
+                        avatarUrl: displayAvatar,
+                        roleTitle: displayRole,
+                        onLogout: () {
+                          AuthService().logout();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        },
                       ),
                     ),
                   ),
