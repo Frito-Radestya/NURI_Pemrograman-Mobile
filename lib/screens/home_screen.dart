@@ -7,6 +7,7 @@ import '../widgets/common_widgets.dart';
 import '../widgets/wave_header.dart';
 import 'login_screen.dart';
 import 'mpasi_menu_screen.dart';
+import 'food_diary_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -63,6 +64,11 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _heroBanner(),
             ),
+            const SizedBox(height: 14),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _foodDiaryBanner(context),
+            ),
             const SizedBox(height: 22),
             SizedBox(
               height: 100,
@@ -101,6 +107,20 @@ class HomeScreen extends StatelessWidget {
                     Icons.child_care,
                     const Color(0xFFAB47BC),
                     'Tumbuh\nKembang',
+                  ),
+                  _category(
+                    context,
+                    Icons.menu_book_rounded,
+                    const Color(0xFFFF8A65),
+                    'Food\nDiary',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FoodDiaryScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -212,6 +232,79 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _foodDiaryBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const FoodDiaryScreen()),
+        );
+      },
+      child: Container(
+        height: 80,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE8FFF8), Color(0xFFD0F5EE)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                color: AppColors.primary,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Food Diary Hari Ini 📋',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                  Text(
+                    'Catat asupan gizi harianmu sekarang',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: AppColors.textGrey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
