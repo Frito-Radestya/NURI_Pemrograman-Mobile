@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/user_model.dart';
 import '../models/user_role.dart';
 import '../services/auth_service.dart';
@@ -40,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await AuthService().login(
+      final success = await AuthService().login(
         identifier: _userCtrl.text.trim(),
         password: _passCtrl.text.trim(),
         role: _selectedRole,
@@ -49,16 +50,39 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Email/kontak atau kata sandi tidak cocok. '
+              'Gunakan akun demo atau akun terdaftar.',
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        return;
+      }
+
+      AuthService().setKeepSignedIn(_keepSignedIn);
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal Masuk: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Gagal Masuk: $e')));
     }
+  }
+
+  void _selectRole(UserRole role) {
+    final demo = AuthService.demoUserForRole(role);
+    setState(() {
+      _selectedRole = role;
+      _userCtrl.text = demo.emailOrPhone;
+      _passCtrl.text = AuthService.demoPassword;
+    });
   }
 
   void _quickDemoLogin(UserRole role) async {
@@ -88,9 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
   }
 
   @override
@@ -240,9 +263,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _userCtrl,
                       icon: Icons.person_outline_rounded,
                       hint: 'Email atau Username',
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? 'Email / Username tidak boleh kosong'
-                          : null,
+                      validator: (v) {
+                        final value = v?.trim() ?? '';
+                        if (value.isEmpty) {
+                          return 'Email / Username tidak boleh kosong';
+                        }
+                        if (value.length < 3) {
+                          return 'Minimal 3 karakter';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 14),
 
@@ -261,9 +291,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: AppColors.primary,
                         ),
                       ),
-                      validator: (v) => v == null || v.isEmpty
-                          ? 'Kata sandi tidak boleh kosong'
-                          : null,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return 'Kata sandi tidak boleh kosong';
+                        }
+                        if (v.length < 6) return 'Minimal 6 karakter';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 14),
 
@@ -369,9 +403,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => RegisterScreen(
-                                initialRole: _selectedRole,
-                              ),
+                              builder: (_) =>
+                                  RegisterScreen(initialRole: _selectedRole),
                             ),
                           );
                         },
@@ -409,15 +442,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: const Color(0xFFF4F6FB),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.2)),
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.flash_on_rounded,
-                                  color: Colors.amber, size: 18),
+                              const Icon(
+                                Icons.flash_on_rounded,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 'Masuk Cepat Mode Demo',
@@ -483,16 +520,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Expanded(
                           child: _socialButton(
-                            label: 'Google',
-                            iconWidget: Image.network(
-                              'https://cdn-icons-png.flaticon.com/512/300/300221.png',
-                              width: 20,
-                              height: 20,
-                              errorBuilder: (ctx, err, stack) => const Icon(
-                                Icons.g_mobiledata,
-                                color: Colors.red,
-                                size: 24,
-                              ),
+                            label: 'Masuk Demo',
+                            iconWidget: const Icon(
+                              Icons.bolt_rounded,
+                              color: Colors.amber,
+                              size: 20,
                             ),
                             onTap: () => _quickDemoLogin(UserRole.ibuBalita),
                           ),
@@ -500,9 +532,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(width: 14),
                         Expanded(
                           child: _socialButton(
-                            label: 'WhatsApp',
+                            label: 'Lupa Password',
                             iconWidget: const Icon(
-                              Icons.chat_bubble_outline_rounded,
+                              Icons.lock_reset_rounded,
                               color: Color(0xFF25D366),
                               size: 20,
                             ),
@@ -527,9 +559,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => RegisterScreen(
-                                initialRole: _selectedRole,
-                              ),
+                              builder: (_) =>
+                                  RegisterScreen(initialRole: _selectedRole),
                             ),
                           );
                         },
@@ -569,7 +600,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final isSelected = _selectedRole == role;
         return Expanded(
           child: GestureDetector(
-            onTap: () => setState(() => _selectedRole = role),
+            onTap: () => _selectRole(role),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -595,8 +626,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 11,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected ? role.color : AppColors.textDark,
                     ),
                   ),
@@ -616,9 +648,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: role.color.withValues(alpha: 0.12),
         elevation: 0,
         padding: const EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Text(
         label,
@@ -641,9 +671,7 @@ class _LoginScreenState extends State<LoginScreen> {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
         side: BorderSide(color: Colors.grey.shade300),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -683,8 +711,10 @@ class _LoginScreenState extends State<LoginScreen> {
         style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textDark),
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           prefixIcon: Icon(icon, color: AppColors.textGrey),
           suffixIcon: suffixIcon,
           hintText: hint,

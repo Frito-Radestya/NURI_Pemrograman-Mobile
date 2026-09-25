@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/user_role.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
@@ -10,10 +11,7 @@ import 'otp_verification_screen.dart';
 class RegisterScreen extends StatefulWidget {
   final UserRole initialRole;
 
-  const RegisterScreen({
-    super.key,
-    this.initialRole = UserRole.ibuBalita,
-  });
+  const RegisterScreen({super.key, this.initialRole = UserRole.ibuBalita});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -123,9 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mendaftar: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Gagal mendaftar: $e')));
     }
   }
 
@@ -145,8 +142,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       top: 10,
                       left: 12,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new,
-                            color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new,
+                          color: Colors.white,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -229,8 +228,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       hint: 'Email atau No. WhatsApp (e.g. 0812...)',
                       keyboardType: TextInputType.emailAddress,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
+                        final value = v?.trim() ?? '';
+                        if (value.isEmpty) {
                           return 'Email/No. WhatsApp wajib diisi';
+                        }
+                        final emailPattern = RegExp(
+                          r'^[\w.+-]+@[\w-]+\.[\w.-]+$',
+                        );
+                        final phonePattern = RegExp(r'^0\d{8,14}$');
+                        if (!emailPattern.hasMatch(value) &&
+                            !phonePattern.hasMatch(value)) {
+                          return 'Gunakan email valid atau nomor 08xxxxxxxxxx';
                         }
                         return null;
                       },
@@ -254,9 +262,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: () =>
                             setState(() => _obscurePass = !_obscurePass),
                       ),
-                      validator: (v) => v == null || v.length < 6
-                          ? 'Kata sandi minimal 6 karakter'
-                          : null,
+                      validator: (v) {
+                        final value = v ?? '';
+                        if (value.length < 8) {
+                          return 'Kata sandi minimal 8 karakter';
+                        }
+                        if (!RegExp(r'[A-Za-z]').hasMatch(value) ||
+                            !RegExp(r'[0-9]').hasMatch(value)) {
+                          return 'Gunakan kombinasi huruf dan angka';
+                        }
+                        return null;
+                      },
                     ),
                     _buildPasswordStrengthIndicator(),
                     const SizedBox(height: 14),
@@ -435,11 +451,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: isSelected ? role.color : Colors.grey.shade300,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    role.icon,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+                  child: Icon(role.icon, color: Colors.white, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -465,11 +477,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 if (isSelected)
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: role.color,
-                    size: 22,
-                  ),
+                  Icon(Icons.check_circle_rounded, color: role.color, size: 22),
               ],
             ),
           ),
@@ -494,6 +502,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               icon: Icons.cake_outlined,
               hint: 'Usia Balita (Bulan, e.g. 18)',
               keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return null;
+                final age = int.tryParse(v.trim());
+                if (age == null) return 'Masukkan angka';
+                if (age < 0 || age > 60) return 'Rentang 0-60 bulan';
+                return null;
+              },
             ),
           ],
         );
@@ -503,12 +518,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
           icon: Icons.calendar_month_outlined,
           hint: 'Usia Kehamilan (Minggu, e.g. 24)',
           keyboardType: TextInputType.number,
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) {
+              return 'Usia kehamilan wajib diisi';
+            }
+            final week = int.tryParse(v.trim());
+            if (week == null) return 'Masukkan angka';
+            if (week < 1 || week > 45) return 'Rentang 1-45 minggu';
+            return null;
+          },
         );
       case UserRole.kaderPosyandu:
         return _inputField(
           controller: _posyanduNameCtrl,
           icon: Icons.location_city_outlined,
           hint: 'Nama Posyandu / Desa Wilayah Tugas',
+          validator: (v) => v == null || v.trim().isEmpty
+              ? 'Nama Posyandu wajib diisi'
+              : null,
         );
     }
   }
@@ -577,8 +604,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textDark),
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           prefixIcon: Icon(icon, color: AppColors.textGrey),
           suffixIcon: suffixIcon,
           hintText: hint,

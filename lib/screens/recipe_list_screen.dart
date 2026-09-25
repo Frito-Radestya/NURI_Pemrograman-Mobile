@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../data/sample_data.dart';
+
 import '../models/recipe.dart';
+import '../services/recipe_service.dart';
 import '../theme/app_colors.dart';
 import 'recipe_detail_screen.dart';
 
@@ -13,33 +14,10 @@ class RecipeListScreen extends StatefulWidget {
 }
 
 class _RecipeListScreenState extends State<RecipeListScreen> {
-  final categories = const [
-    'Breakfast',
-    'Lunch',
-    'Dinner',
-    'Snack',
-    'Cheat',
-  ];
-  int selected = 0;
-  late List<Recipe> recipes;
+  final _service = RecipeService();
+  String _selectedCategory = RecipeService.categories.first;
 
-  @override
-  void initState() {
-    super.initState();
-    recipes = SampleData.recipes.map((r) {
-      return Recipe(
-        id: r.id,
-        title: r.title,
-        time: r.time,
-        ingredientsPreview: r.ingredientsPreview,
-        imageUrl: r.imageUrl,
-        ingredients: r.ingredients,
-        steps: r.steps,
-        category: r.category,
-        bookmarked: r.bookmarked,
-      );
-    }).toList();
-  }
+  List<Recipe> get _recipes => _service.byCategory(_selectedCategory);
 
   @override
   Widget build(BuildContext context) {
@@ -69,12 +47,13 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: categories.length,
+              itemCount: RecipeService.categories.length,
               separatorBuilder: (context, index) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
-                final active = selected == i;
+                final category = RecipeService.categories[i];
+                final active = category == _selectedCategory;
                 return GestureDetector(
-                  onTap: () => setState(() => selected = i),
+                  onTap: () => setState(() => _selectedCategory = category),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
@@ -82,11 +61,13 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: active ? AppColors.primaryLight : Colors.transparent,
+                      color: active
+                          ? AppColors.primaryLight
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      categories[i],
+                      category,
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: active ? FontWeight.w600 : FontWeight.w500,
@@ -100,29 +81,63 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-              itemCount: recipes.length,
-              itemBuilder: (context, index) {
-                final recipe = recipes[index];
-                return _RecipeCard(
-                  recipe: recipe,
-                  onBookmark: () {
-                    setState(() => recipe.bookmarked = !recipe.bookmarked);
-                  },
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RecipeDetailScreen(recipe: recipe),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+            child: _recipes.isEmpty
+                ? const _EmptyRecipeList()
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    itemCount: _recipes.length,
+                    itemBuilder: (context, index) {
+                      final recipe = _recipes[index];
+                      return _RecipeCard(
+                        recipe: recipe,
+                        onBookmark: () {
+                          _service.toggleBookmark(recipe.id);
+                          setState(() {});
+                        },
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  RecipeDetailScreen(recipe: recipe),
+                            ),
+                          );
+                          if (mounted) setState(() {});
+                        },
+                      );
+                    },
+                  ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyRecipeList extends StatelessWidget {
+  const _EmptyRecipeList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.menu_book_outlined,
+              size: 56,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Belum ada resep pada kategori ini',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -162,8 +177,9 @@ class _RecipeCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
                   child: Image.network(
                     recipe.imageUrl,
                     height: 160,
@@ -219,8 +235,11 @@ class _RecipeCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Icon(Icons.access_time,
-                          size: 14, color: Colors.grey.shade400),
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         recipe.time,

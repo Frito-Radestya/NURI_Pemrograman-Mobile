@@ -20,44 +20,58 @@ class SampleData {
     Recipe(
       id: '1',
       title: 'Bubur Ikan Dori',
-      time: '15 min',
-      ingredientsPreview: '1 fish | 5 carrot | etc.',
-      imageUrl:
-          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&h=500&fit=crop',
-      category: 'Breakfast',
+      time: '15 menit',
+      ingredientsPreview: '1 ikan | 5 wortel | 3 bawang bombay',
+      imageUrl: 'https://picsum.photos/seed/nuri-bubur-ikan/800/500',
+      category: 'Sarapan',
       ingredients: const [
-        '1 Ruas ikan dori',
-        '3 Sendok makan beras',
-        '3 Bawang bombay',
+        '1 ruas ikan dori',
+        '3 sendok makan beras',
+        '3 bawang bombay',
         'Jahe secukupnya',
-        'Seledri',
+        'Seledri secukupnya',
       ],
       steps: const [
         RecipeStep(
           instruction: 'Rebus beras dengan 200 ml air.',
-          imageUrl:
-              'https://images.unsplash.com/photo-1516684733122-df022752128b?w=400&h=250&fit=crop',
+          imageUrl: 'https://picsum.photos/seed/nuri-langkah-1/400/250',
         ),
+        RecipeStep(instruction: 'Aduk sampai tekstur nasi agak lembek.'),
         RecipeStep(
-          instruction: 'Aduk sampai tekstur nasi agak lembek.',
-        ),
-        RecipeStep(
-          instruction:
-              'Masukkan wortel, ikan dori, dan bawang bombay yang sudah diiris kasar.',
+          instruction: 'Masukkan wortel, ikan dori, dan bawang bombay yang sudah diiris.',
         ),
       ],
     ),
     Recipe(
       id: '2',
-      title: 'Bubur Hati Ayam',
-      time: '45 min',
-      ingredientsPreview: 'milk | oatmeal | lorem etc.',
-      imageUrl:
-          'https://images.unsplash.com/photo-1494859802830-b7c1d0a0e8a8?w=800&h=500&fit=crop',
-      category: 'Breakfast',
+      title: 'Nasi Tim Ayam',
+      time: '35 menit',
+      ingredientsPreview: 'Ayam | beras | wortel | tomat',
+      imageUrl: 'https://picsum.photos/seed/nuri-nasi-tim/800/500',
+      category: 'Makan Siang',
       ingredients: const [
-        '50g hati ayam',
-        '3 Sendok makan beras',
+        '1 potong ayam',
+        '3 sendok makan beras',
+        '1 wortel',
+        '1 tomat',
+      ],
+      steps: const [
+        RecipeStep(
+          instruction: 'Masak ayam bersama beras dan sayur hingga matang.',
+        ),
+        RecipeStep(instruction: 'Aduk dan sajikan dalam porsi kecil.'),
+      ],
+    ),
+    Recipe(
+      id: '3',
+      title: 'Bubur Hati Ayam',
+      time: '45 menit',
+      ingredientsPreview: 'Hati ayam | beras | bayam',
+      imageUrl: 'https://picsum.photos/seed/nuri-bubur-hati/800/500',
+      category: 'Makan Siang',
+      ingredients: const [
+        '50 gram hati ayam',
+        '3 sendok makan beras',
         'Wortel secukupnya',
         'Bayam secukupnya',
       ],
@@ -67,18 +81,37 @@ class SampleData {
       ],
     ),
     Recipe(
-      id: '3',
+      id: '4',
+      title: 'Sup Iga Sapi',
+      time: '40 menit',
+      ingredientsPreview: 'Iga sapi | kentang | wortel',
+      imageUrl: 'https://picsum.photos/seed/nuri-sup-iga/800/500',
+      category: 'Makan Malam',
+      ingredients: const [
+        '100 gram iga sapi',
+        '1 kentang',
+        '1 wortel',
+        'Garam secukupnya',
+      ],
+      steps: const [
+        RecipeStep(instruction: 'Rebus iga sapi hingga empuk.'),
+        RecipeStep(
+          instruction: 'Tambahkan kentang dan wortel serta garam secukupnya.',
+        ),
+      ],
+    ),
+    Recipe(
+      id: '5',
       title: 'Bubur Ubi Ungu',
-      time: '25 min',
-      ingredientsPreview: 'milk | oatmeal | fruits etc.',
-      imageUrl:
-          'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800&h=500&fit=crop',
-      category: 'Breakfast',
+      time: '25 menit',
+      ingredientsPreview: 'Ubi ungu | susu | buah',
+      imageUrl: 'https://picsum.photos/seed/nuri-ubi-ungu/800/500',
+      category: 'Camilan',
       bookmarked: true,
       ingredients: const [
         '1 buah ubi ungu',
-        '50 ml ASI / susu formula',
-        'Buah secukupnya',
+        '50 ml susu formula',
+        'Buah yang dihaluskan',
       ],
       steps: const [
         RecipeStep(instruction: 'Kukus ubi ungu hingga lembut.'),

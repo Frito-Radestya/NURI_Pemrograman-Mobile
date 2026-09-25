@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_logo.dart';
@@ -9,10 +10,7 @@ import 'login_screen.dart';
 class ResetPasswordScreen extends StatefulWidget {
   final String contact;
 
-  const ResetPasswordScreen({
-    super.key,
-    required this.contact,
-  });
+  const ResetPasswordScreen({super.key, required this.contact});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -40,17 +38,29 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await AuthService().resetPassword(_newPassCtrl.text.trim());
+      final success = await AuthService().resetPassword(
+        contact: widget.contact,
+        newPassword: _newPassCtrl.text.trim(),
+      );
       if (!mounted) return;
       setState(() => _isLoading = false);
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kontak tidak ditemukan. Periksa kembali data Anda.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        return;
+      }
 
       _showSuccessDialog();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengubah password: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Gagal mengubah password: $e')));
     }
   }
 
@@ -133,7 +143,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final passText = _newPassCtrl.text;
     final hasMinLength = passText.length >= 8;
-    final hasLetterAndNum = RegExp(r'[A-Za-z]').hasMatch(passText) &&
+    final hasLetterAndNum =
+        RegExp(r'[A-Za-z]').hasMatch(passText) &&
         RegExp(r'[0-9]').hasMatch(passText);
 
     return Scaffold(
@@ -150,8 +161,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       top: 10,
                       left: 12,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new,
-                            color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new,
+                          color: Colors.white,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -224,15 +237,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         onPressed: () =>
                             setState(() => _obscureNew = !_obscureNew),
                       ),
-                      validator: (v) => v == null || v.length < 8
-                          ? 'Kata sandi minimal 8 karakter'
-                          : null,
+                      validator: (v) {
+                        final value = v ?? '';
+                        if (value.length < 8) {
+                          return 'Kata sandi minimal 8 karakter';
+                        }
+                        if (!RegExp(r'[A-Za-z]').hasMatch(value) ||
+                            !RegExp(r'[0-9]').hasMatch(value)) {
+                          return 'Gunakan kombinasi huruf dan angka';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
-                    _buildRequirementCheck(
-                      'Minimal 8 karakter',
-                      hasMinLength,
-                    ),
+                    _buildRequirementCheck('Minimal 8 karakter', hasMinLength),
                     const SizedBox(height: 4),
                     _buildRequirementCheck(
                       'Kombinasi huruf dan angka',
@@ -359,8 +377,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textDark),
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           prefixIcon: Icon(icon, color: AppColors.textGrey),
           suffixIcon: suffixIcon,
           hintText: hint,

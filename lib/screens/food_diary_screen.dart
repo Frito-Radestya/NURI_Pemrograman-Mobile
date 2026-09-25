@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../data/food_database.dart';
+import '../models/child_profile.dart';
 import '../models/food_entry.dart';
+import '../services/auth_service.dart';
+import '../services/child_service.dart';
 import '../services/food_diary_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/nutrition_ring_widget.dart';
@@ -33,7 +37,14 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
     super.dispose();
   }
 
-  DailyNutritionSummary get _summary => _diaryService.getSummary(_selectedDate);
+  String get _userId => AuthService().currentUser?.id ?? 'guest';
+
+  List<ChildProfile> get _children => ChildService().getChildren(_userId);
+
+  ChildProfile? get _primaryChild => _children.isEmpty ? null : _children.first;
+
+  DailyNutritionSummary get _summary =>
+      _diaryService.getSummary(userId: _userId, date: _selectedDate);
 
   void _goToPrevDay() {
     setState(() {
@@ -41,8 +52,15 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
     });
   }
 
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
   void _goToNextDay() {
-    if (_selectedDate.isBefore(DateTime.now())) {
+    if (!_isToday(_selectedDate)) {
       setState(() {
         _selectedDate = _selectedDate.add(const Duration(days: 1));
       });
@@ -51,8 +69,19 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
 
   String _formatDate(DateTime d) {
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     final today = DateTime.now();
     if (d.year == today.year && d.month == today.month && d.day == today.day) {
@@ -75,7 +104,7 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxScrolled) => [
           SliverAppBar(
-            expandedHeight: 290,
+            expandedHeight: 326,
             pinned: true,
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -88,9 +117,7 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
                 color: Colors.white,
               ),
             ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeader(summary),
-            ),
+            flexibleSpace: FlexibleSpaceBar(background: _buildHeader(summary)),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(50),
               child: _buildTabBar(),
@@ -100,17 +127,25 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
         body: TabBarView(
           controller: _tabController,
           children: _sessions
-              .map((session) => _SessionTab(
-                    session: session,
-                    date: _selectedDate,
-                    diaryService: _diaryService,
-                    onEntryChanged: () => setState(() {}),
-                  ))
+              .map(
+                (session) => _SessionTab(
+                  session: session,
+                  userId: _userId,
+                  date: _selectedDate,
+                  diaryService: _diaryService,
+                  onEntryChanged: () => setState(() {}),
+                  onEdit: (entry) => _showFoodSheet(
+                    session: entry.session,
+                    existingEntry: entry,
+                  ),
+                ),
+              )
               .toList(),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddFoodSheet(_sessions[_tabController.index]),
+        onPressed: () =>
+            _showFoodSheet(session: _sessions[_tabController.index]),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
@@ -156,16 +191,56 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
                     ),
                   ),
                   IconButton(
-                    onPressed: _goToNextDay,
-                    icon: const Icon(Icons.chevron_right, color: Colors.white),
+                    onPressed: _isToday(_selectedDate) ? null : _goToNextDay,
+                    icon: Icon(
+                      Icons.chevron_right,
+                      color: _isToday(_selectedDate)
+                          ? Colors.white38
+                          : Colors.white,
+                    ),
                     iconSize: 28,
                   ),
                 ],
               ),
+              if (_primaryChild != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.child_care_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Untuk ${_primaryChild!.name}',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               // Nutrition rings card
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(18),
@@ -218,23 +293,36 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
 
   String _shortLabel(String session) {
     switch (session) {
-      case 'pagi': return 'Pagi';
-      case 'siang': return 'Siang';
-      case 'malam': return 'Malam';
-      case 'snack': return 'Camilan';
-      default: return session;
+      case 'pagi':
+        return 'Pagi';
+      case 'siang':
+        return 'Siang';
+      case 'malam':
+        return 'Malam';
+      case 'snack':
+        return 'Camilan';
+      default:
+        return session;
     }
   }
 
-  void _showAddFoodSheet(String session) {
+  void _showFoodSheet({required String session, FoodEntry? existingEntry}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _AddFoodSheet(
+      builder: (_) => _FoodEditorSheet(
         session: session,
-        onAdd: (entry) {
-          _diaryService.addEntry(_selectedDate, entry);
+        userId: _userId,
+        dateKey: FoodDiaryService.dateKey(_selectedDate),
+        defaultChildId: _primaryChild?.id,
+        existingEntry: existingEntry,
+        onSave: (entry) {
+          if (existingEntry == null) {
+            _diaryService.addEntry(_selectedDate, entry);
+          } else {
+            _diaryService.updateEntry(_selectedDate, entry);
+          }
           setState(() {});
         },
       ),
@@ -248,21 +336,33 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
 
 class _SessionTab extends StatelessWidget {
   final String session;
+  final String userId;
   final DateTime date;
   final FoodDiaryService diaryService;
   final VoidCallback onEntryChanged;
+  final ValueChanged<FoodEntry> onEdit;
 
   const _SessionTab({
     required this.session,
+    required this.userId,
     required this.date,
     required this.diaryService,
     required this.onEntryChanged,
+    required this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
-    final entries = diaryService.getEntriesBySession(date, session);
-    final sessionSummary = diaryService.getSessionSummary(date, session);
+    final entries = diaryService.getEntriesBySession(
+      userId: userId,
+      date: date,
+      session: session,
+    );
+    final sessionSummary = diaryService.getSessionSummary(
+      userId: userId,
+      date: date,
+      session: session,
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
@@ -279,8 +379,13 @@ class _SessionTab extends StatelessWidget {
           ...entries.map(
             (entry) => _FoodEntryCard(
               entry: entry,
+              onEdit: () => onEdit(entry),
               onDelete: () {
-                diaryService.removeEntry(date, entry.id);
+                diaryService.removeEntry(
+                  userId: userId,
+                  date: date,
+                  entryId: entry.id,
+                );
                 onEntryChanged();
               },
             ),
@@ -352,7 +457,10 @@ class _SessionSummaryCard extends StatelessWidget {
         ),
         Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF8E8E93)),
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            color: const Color(0xFF8E8E93),
+          ),
         ),
       ],
     );
@@ -403,9 +511,14 @@ class _EmptySession extends StatelessWidget {
 
 class _FoodEntryCard extends StatelessWidget {
   final FoodEntry entry;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _FoodEntryCard({required this.entry, required this.onDelete});
+  const _FoodEntryCard({
+    required this.entry,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -420,7 +533,11 @@ class _FoodEntryCard extends StatelessWidget {
           color: const Color(0xFFFF6B6B),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 26),
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          color: Colors.white,
+          size: 26,
+        ),
       ),
       onDismissed: (_) => onDelete(),
       child: Container(
@@ -455,26 +572,42 @@ class _FoodEntryCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.foodName,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: const Color(0xFF2D3436),
-                    ),
+              child: InkWell(
+                onTap: onEdit,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.foodName,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: const Color(0xFF2D3436),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${entry.portionGram.toStringAsFixed(0)} gram · ${FoodDiaryService.sessionLabel(entry.session)}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: const Color(0xFF8E8E93),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${entry.portionGram.toStringAsFixed(0)} gram',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: const Color(0xFF8E8E93),
-                    ),
-                  ),
-                ],
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: onEdit,
+              tooltip: 'Edit ${entry.foodName}',
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: AppColors.primary,
+                size: 20,
               ),
             ),
             Column(
@@ -509,22 +642,48 @@ class _FoodEntryCard extends StatelessWidget {
 // Bottom Sheet: tambah makanan
 // ─────────────────────────────────────────────────
 
-class _AddFoodSheet extends StatefulWidget {
+class _FoodEditorSheet extends StatefulWidget {
   final String session;
-  final void Function(FoodEntry entry) onAdd;
+  final String userId;
+  final String dateKey;
+  final String? defaultChildId;
+  final FoodEntry? existingEntry;
+  final void Function(FoodEntry entry) onSave;
 
-  const _AddFoodSheet({required this.session, required this.onAdd});
+  const _FoodEditorSheet({
+    required this.session,
+    required this.userId,
+    required this.dateKey,
+    required this.onSave,
+    this.defaultChildId,
+    this.existingEntry,
+  });
 
   @override
-  State<_AddFoodSheet> createState() => _AddFoodSheetState();
+  State<_FoodEditorSheet> createState() => _FoodEditorSheetState();
 }
 
-class _AddFoodSheetState extends State<_AddFoodSheet> {
+class _FoodEditorSheetState extends State<_FoodEditorSheet> {
   final _searchController = TextEditingController();
   final _portionController = TextEditingController();
   FoodItem? _selectedFood;
   List<FoodItem> _searchResults = FoodDatabase.items;
   String _selectedCategory = 'Semua';
+  late String _session;
+  String? _portionError;
+
+  bool get isEditing => widget.existingEntry != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _session = widget.existingEntry?.session ?? widget.session;
+    final existing = widget.existingEntry;
+    if (existing != null) {
+      _selectedFood = FoodDatabase.findById(existing.foodItemId);
+      _portionController.text = existing.portionGram.toStringAsFixed(0);
+    }
+  }
 
   @override
   void dispose() {
@@ -549,9 +708,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
       _selectedCategory = cat;
       _searchResults = cat == 'Semua'
           ? FoodDatabase.search(_searchController.text)
-          : FoodDatabase.items
-              .where((f) => f.category == cat)
-              .toList();
+          : FoodDatabase.items.where((f) => f.category == cat).toList();
     });
   }
 
@@ -562,16 +719,29 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
     });
   }
 
-  void _addEntry() {
-    if (_selectedFood == null) return;
-    final gram = double.tryParse(_portionController.text) ??
-        _selectedFood!.defaultPortion;
-    final entry = _selectedFood!.toEntry(
-      session: widget.session,
+  void _saveEntry() {
+    final food = _selectedFood;
+    if (food == null) return;
+
+    final gram = double.tryParse(_portionController.text.trim());
+    if (gram == null || gram < 1 || gram > 2000) {
+      setState(() {
+        _portionError = 'Masukkan porsi antara 1 sampai 2000 gram';
+      });
+      return;
+    }
+
+    setState(() => _portionError = null);
+    final existing = widget.existingEntry;
+    final entry = food.toEntry(
+      entryId: existing?.id ?? FoodDiaryService().generateId(),
+      userId: widget.userId,
+      dateKey: widget.dateKey,
+      session: _session,
       gram: gram,
-      entryId: FoodDiaryService().generateId(),
+      childId: existing?.childId ?? widget.defaultChildId,
     );
-    widget.onAdd(entry);
+    widget.onSave(entry);
     Navigator.pop(context);
   }
 
@@ -580,155 +750,176 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     final categories = ['Semua', ...FoodDatabase.categories];
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      padding: EdgeInsets.only(bottom: bottomPadding),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 4),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDDE1E7),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Tambah Makanan — ${FoodDiaryService.sessionLabel(widget.session)}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF2D3436),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF8E8E93)),
-                ),
-              ],
-            ),
-          ),
-
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearch,
-              decoration: InputDecoration(
-                hintText: 'Cari makanan...',
-                hintStyle: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFFB0B0B0),
-                ),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF8E8E93)),
-                filled: true,
-                fillColor: const Color(0xFFF0F2F8),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
+    return Material(
+      color: Colors.white,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.85,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomPadding),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 4),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDE1E7),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-          ),
-
-          // Category filter chips
-          SizedBox(
-            height: 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              children: categories.map((cat) {
-                final isSelected = _selectedCategory == cat;
-                return GestureDetector(
-                  onTap: () => _onCategoryFilter(cat),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary
-                          : const Color(0xFFF0F2F8),
-                      borderRadius: BorderRadius.circular(20),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${isEditing ? 'Edit' : 'Tambah'} Makanan — ${FoodDiaryService.sessionLabel(_session)}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF2D3436),
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      cat,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : const Color(0xFF8E8E93),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Color(0xFF8E8E93),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (!isEditing) ...[
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearch,
+                    decoration: InputDecoration(
+                      hintText: 'Cari makanan...',
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFFB0B0B0),
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Color(0xFF8E8E93),
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF0F2F8),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
                       ),
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-          ),
+                ),
 
-          const SizedBox(height: 8),
-
-          // Food list
-          Expanded(
-            child: _selectedFood == null
-                ? ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _searchResults.length,
-                    itemBuilder: (context, i) {
-                      final food = _searchResults[i];
-                      return ListTile(
-                        onTap: () => _selectFood(food),
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                          child: const Icon(
-                            Icons.restaurant_rounded,
-                            color: AppColors.primary,
-                            size: 20,
+                // Category filter chips
+                SizedBox(
+                  height: 44,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    children: categories.map((cat) {
+                      final isSelected = _selectedCategory == cat;
+                      return GestureDetector(
+                        onTap: () => _onCategoryFilter(cat),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 4,
                           ),
-                        ),
-                        title: Text(
-                          food.name,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary
+                                : const Color(0xFFF0F2F8),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                        ),
-                        subtitle: Text(
-                          '${food.caloriesPer100g.toStringAsFixed(0)} kkal / 100g · ${food.category}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: const Color(0xFF8E8E93),
+                          child: Text(
+                            cat,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF8E8E93),
+                            ),
                           ),
-                        ),
-                        trailing: const Icon(
-                          Icons.add_circle_outline_rounded,
-                          color: AppColors.primary,
                         ),
                       );
-                    },
-                  )
-                : _buildPortionSelector(),
+                    }).toList(),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 8),
+
+              // Food list
+              Expanded(
+                child: _selectedFood == null
+                    ? ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _searchResults.length,
+                        itemBuilder: (context, i) {
+                          final food = _searchResults[i];
+                          return ListTile(
+                            onTap: () => _selectFood(food),
+                            leading: CircleAvatar(
+                              backgroundColor: AppColors.primary.withValues(
+                                alpha: 0.12,
+                              ),
+                              child: const Icon(
+                                Icons.restaurant_rounded,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              food.name,
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${food.caloriesPer100g.toStringAsFixed(0)} kkal / 100g · ${food.category}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: const Color(0xFF8E8E93),
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: AppColors.primary,
+                            ),
+                          );
+                        },
+                      )
+                    : _buildPortionSelector(),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildPortionSelector() {
     final food = _selectedFood!;
-    final gram = double.tryParse(_portionController.text) ?? food.defaultPortion;
+    final parsedGram = double.tryParse(_portionController.text.trim());
+    final gram = parsedGram != null && parsedGram > 0
+        ? parsedGram
+        : food.defaultPortion;
     final factor = gram / 100;
     final estCal = food.caloriesPer100g * factor;
     final estProt = food.proteinPer100g * factor;
@@ -742,11 +933,20 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
         children: [
           // Back button
           GestureDetector(
-            onTap: () => setState(() => _selectedFood = null),
+            onTap: () {
+              if (isEditing) {
+                Navigator.pop(context);
+              } else {
+                setState(() => _selectedFood = null);
+              }
+            },
             child: Row(
               children: [
-                const Icon(Icons.arrow_back_ios_rounded,
-                    size: 16, color: AppColors.primary),
+                const Icon(
+                  Icons.arrow_back_ios_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
                 Text(
                   'Kembali ke daftar',
                   style: GoogleFonts.poppins(
@@ -770,8 +970,11 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.restaurant_rounded,
-                    color: AppColors.primary, size: 26),
+                child: const Icon(
+                  Icons.restaurant_rounded,
+                  color: AppColors.primary,
+                  size: 26,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -800,6 +1003,33 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           ),
           const SizedBox(height: 20),
 
+          if (isEditing) ...[
+            Text(
+              'Sesi Makan',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: const Color(0xFF2D3436),
+              ),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _session,
+              items: FoodDiaryService.sessions
+                  .map(
+                    (session) => DropdownMenuItem(
+                      value: session,
+                      child: Text(FoodDiaryService.sessionLabel(session)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => _session = value);
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+
           // Portion input
           Text(
             'Jumlah (gram)',
@@ -812,11 +1042,12 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           const SizedBox(height: 8),
           TextField(
             controller: _portionController,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() => _portionError = null),
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               hintText: 'Masukkan jumlah gram',
               suffixText: 'gram',
+              errorText: _portionError,
               filled: true,
               fillColor: const Color(0xFFF0F2F8),
               border: OutlineInputBorder(
@@ -890,7 +1121,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _addEntry,
+              onPressed: _saveEntry,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -901,7 +1132,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                 elevation: 0,
               ),
               child: Text(
-                'Tambahkan ke ${FoodDiaryService.sessionLabel(widget.session)}',
+                isEditing
+                    ? 'Simpan Perubahan'
+                    : 'Tambahkan ke ${FoodDiaryService.sessionLabel(_session)}',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,

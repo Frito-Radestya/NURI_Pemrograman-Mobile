@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/recipe.dart';
+import '../services/recipe_service.dart';
 import '../theme/app_colors.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
@@ -20,6 +22,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   void initState() {
     super.initState();
     bookmarked = widget.recipe.bookmarked;
+  }
+
+  void _toggleBookmark() {
+    setState(() {
+      bookmarked = !bookmarked;
+      RecipeService().toggleBookmark(widget.recipe.id);
+    });
   }
 
   @override
@@ -44,10 +53,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     height: 300,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 300,
-                      color: AppColors.softBlue,
-                    ),
+                    errorBuilder: (context, error, stackTrace) =>
+                        Container(height: 300, color: AppColors.softBlue),
                   ),
                 ),
                 Positioned(
@@ -64,7 +71,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                   child: _circleBtn(
                     icon: bookmarked ? Icons.bookmark : Icons.bookmark_border,
                     color: bookmarked ? AppColors.primary : AppColors.textDark,
-                    onTap: () => setState(() => bookmarked = !bookmarked),
+                    onTap: _toggleBookmark,
                   ),
                 ),
               ],
@@ -174,57 +181,54 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
             sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final step = recipe.steps[index];
-                  final isOrange = index == 1;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Step ${index + 1}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: isOrange
-                                ? AppColors.stepOrange
-                                : AppColors.stepTeal,
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final step = recipe.steps[index];
+                final isOrange = index == 1;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Step ${index + 1}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isOrange
+                              ? AppColors.stepOrange
+                              : AppColors.stepTeal,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        step.instruction,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          height: 1.45,
+                          color: AppColors.textDark.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      if (step.imageUrl != null) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: Image.network(
+                            step.imageUrl!,
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  height: 120,
+                                  color: AppColors.softBlue,
+                                ),
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          step.instruction,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            height: 1.45,
-                            color: AppColors.textDark.withValues(alpha: 0.8),
-                          ),
-                        ),
-                        if (step.imageUrl != null) ...[
-                          const SizedBox(height: 10),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: Image.network(
-                              step.imageUrl!,
-                              height: 120,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                height: 120,
-                                color: AppColors.softBlue,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
-                    ),
-                  );
-                },
-                childCount: recipe.steps.length,
-              ),
+                    ],
+                  ),
+                );
+              }, childCount: recipe.steps.length),
             ),
           ),
         ],

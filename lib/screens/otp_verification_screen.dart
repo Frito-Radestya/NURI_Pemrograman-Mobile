@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/user_role.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
@@ -40,8 +42,10 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _otpCtrls =
-      List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _otpCtrls = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
 
   int _resendTimer = 60;
@@ -110,7 +114,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
 
       if (widget.isFromRegister) {
-        await AuthService().register(
+        final registered = await AuthService().register(
           name: widget.userName ?? 'Pengguna NURI',
           emailOrPhone: widget.contact,
           password: widget.password ?? 'password',
@@ -120,6 +124,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           pregnancyWeeks: widget.pregnancyWeeks,
           posyanduName: widget.posyanduName,
         );
+
+        if (!mounted) return;
+        if (!registered) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email/kontak sudah terdaftar. Silakan masuk.'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+          return;
+        }
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -143,9 +159,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
     }
   }
 
@@ -165,8 +180,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       top: 10,
                       left: 12,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new,
-                            color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new,
+                          color: Colors.white,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -221,8 +238,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.softGreen,
                       borderRadius: BorderRadius.circular(12),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../data/sample_data.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
@@ -8,6 +9,9 @@ import '../widgets/wave_header.dart';
 import 'login_screen.dart';
 import 'mpasi_menu_screen.dart';
 import 'food_diary_screen.dart';
+import 'child_list_screen.dart';
+import 'profile_screen.dart';
+import 'article_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -38,6 +42,14 @@ class HomeScreen extends StatelessWidget {
                         name: displayName,
                         avatarUrl: displayAvatar,
                         roleTitle: displayRole,
+                        onProfileTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProfileScreen(),
+                            ),
+                          );
+                        },
                         onLogout: () {
                           AuthService().logout();
                           Navigator.of(context).pushAndRemoveUntil(
@@ -55,14 +67,24 @@ class HomeScreen extends StatelessWidget {
                   left: 20,
                   right: 20,
                   bottom: -24,
-                  child: const AppSearchBar(hint: 'Apa itu stunting ?'),
+                  child: AppSearchBar(
+                    hint: 'Apa itu stunting ?',
+                    onTap: () => showSearch<void>(
+                      context: context,
+                      delegate: ArticleSearchDelegate(),
+                    ),
+                    onFilterTap: () => showSearch<void>(
+                      context: context,
+                      delegate: ArticleSearchDelegate(),
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 40),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _heroBanner(),
+              child: _heroBanner(context),
             ),
             const SizedBox(height: 14),
             Padding(
@@ -71,7 +93,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             SizedBox(
-              height: 100,
+              height: 118,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -81,6 +103,7 @@ class HomeScreen extends StatelessWidget {
                     Icons.medical_services_outlined,
                     const Color(0xFF00C9A7),
                     'Mengenal\nStunting',
+                    onTap: () => _openArticle(context, 'stunting'),
                   ),
                   _category(
                     context,
@@ -101,12 +124,21 @@ class HomeScreen extends StatelessWidget {
                     Icons.medication_outlined,
                     const Color(0xFF26C6DA),
                     'Menu Gizi\nSeimbang',
+                    onTap: () => _openArticle(context, 'balanced-menu'),
                   ),
                   _category(
                     context,
                     Icons.child_care,
                     const Color(0xFFAB47BC),
-                    'Tumbuh\nKembang',
+                    'Data\nAnak',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ChildListScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _category(
                     context,
@@ -133,7 +165,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _stuntingCard(),
+              child: _stuntingCard(context),
             ),
             const SizedBox(height: 22),
             const Padding(
@@ -146,10 +178,7 @@ class HomeScreen extends StatelessWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _newsCard(),
-                  _newsCard(),
-                ],
+                children: [_newsCard(context), _newsCard(context)],
               ),
             ),
             const SizedBox(height: 28),
@@ -159,79 +188,89 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _heroBanner() {
-    return Container(
-      height: 150,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  void _openArticle(BuildContext context, String articleId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ArticleScreen(articleId: articleId)),
+    );
+  }
+
+  Widget _heroBanner(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openArticle(context, 'who-growth'),
+      child: Container(
+        height: 150,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withValues(alpha: 0.12),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.12),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 16,
-            right: 60,
-            child: Icon(Icons.add, size: 18, color: Colors.amber.shade200),
-          ),
-          Positioned(
-            bottom: 30,
-            right: 100,
-            child: Icon(Icons.circle, size: 8, color: Colors.blue.shade100),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 18, 110, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'KETAHUI TINGGI DAN BERAT BADAN IDEAL ANAK MENURUT WHO',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1565C0),
-                    height: 1.25,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Apakah Si Kecil masuk dalam kategori berat badan normal?',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    color: const Color(0xFF1976D2),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                  style: GoogleFonts.poppins(
-                    fontSize: 9,
-                    color: Colors.blueGrey.shade300,
-                  ),
-                ),
-              ],
+        child: Stack(
+          children: [
+            Positioned(
+              top: 16,
+              right: 60,
+              child: Icon(Icons.add, size: 18, color: Colors.amber.shade200),
             ),
-          ),
-          Positioned(
-            right: 8,
-            bottom: 8,
-            child: Icon(
-              Icons.health_and_safety,
-              size: 88,
-              color: AppColors.primary.withValues(alpha: 0.85),
+            Positioned(
+              bottom: 30,
+              right: 100,
+              child: Icon(Icons.circle, size: 8, color: Colors.blue.shade100),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 110, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'KETAHUI TINGGI DAN BERAT BADAN IDEAL ANAK MENURUT WHO',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1565C0),
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Apakah Si Kecil masuk dalam kategori berat badan normal?',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: const Color(0xFF1976D2),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Kurva WHO membantu orang tua mengenali risiko lebih awal.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 9,
+                      color: Colors.blueGrey.shade300,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: Icon(
+                Icons.health_and_safety,
+                size: 88,
+                color: AppColors.primary.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -349,165 +388,175 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _stuntingCard() {
-    return Container(
-      height: 140,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE0F7FA), Color(0xFFF5FBFC)],
+  Widget _stuntingCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openArticle(context, 'stunting'),
+      child: Container(
+        height: 140,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE0F7FA), Color(0xFFF5FBFC)],
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 18, 8, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Definisi Mengenai Stunting',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Stunting adalah kondisi gagal tumbuh pada anak akibat kekurangan gizi kronis.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        height: 1.4,
+                        color: AppColors.textGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+              child: Image.network(
+                SampleData.doctorPhoto,
+                width: 120,
+                height: 140,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 120,
+                  color: AppColors.softBlue,
+                  child: const Icon(
+                    Icons.person,
+                    size: 48,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 8, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Definisi Mengenai Stunting',
+    );
+  }
+
+  Widget _newsCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openArticle(context, 'news'),
+      child: Container(
+        width: 240,
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  child: Image.network(
+                    SampleData.newsImage,
+                    height: 110,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Container(height: 110, color: AppColors.softBlue),
+                  ),
+                ),
+                Positioned(
+                  left: 10,
+                  bottom: 10,
+                  right: 10,
+                  child: Text(
+                    'MENUHI JANJI TANGANI STUNTING DAN GIZI BURUK',
                     style: GoogleFonts.poppins(
-                      fontSize: 13,
+                      fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primaryDark,
+                      color: Colors.orange.shade700,
+                      height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Stunting adalah kondisi gagal tumbuh pada anak akibat kekurangan gizi kronis.',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      height: 1.4,
-                      color: AppColors.textGrey,
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+              child: Text(
+                'Pencegahan stunting dimulai dari ASI eksklusif dan MPASI bergizi',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 10,
+                    backgroundImage: NetworkImage(SampleData.avatarUrl),
+                    onBackgroundImageError: (_, _) {},
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Diva Putri Adilla\nSep 9, 2025',
+                      style: GoogleFonts.poppins(
+                        fontSize: 9,
+                        color: AppColors.textGrey,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE3F2FD),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: Color(0xFF42A5F5),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(18),
-              bottomRight: Radius.circular(18),
-            ),
-            child: Image.network(
-              SampleData.doctorPhoto,
-              width: 120,
-              height: 140,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 120,
-                color: AppColors.softBlue,
-                child: const Icon(Icons.person, size: 48, color: Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _newsCard() {
-    return Container(
-      width: 240,
-      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  SampleData.newsImage,
-                  height: 110,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 110,
-                    color: AppColors.softBlue,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 10,
-                bottom: 10,
-                right: 10,
-                child: Text(
-                  'MENUHI JANJI TANGANI STUNTING DAN GIZI BURUK',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.orange.shade700,
-                    height: 1.2,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-            child: Text(
-              'Feel the thrill on the only surf simulator in Maldives 2022',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 10,
-                  backgroundImage: NetworkImage(SampleData.avatarUrl),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Diva Putri Adilla\nSep 9, 2022',
-                    style: GoogleFonts.poppins(
-                      fontSize: 9,
-                      color: AppColors.textGrey,
-                      height: 1.2,
-                    ),
-                  ),
-                ),
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE3F2FD),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.send_rounded,
-                    size: 14,
-                    color: Color(0xFF42A5F5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
