@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../data/sample_data.dart';
+import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/wave_header.dart';
 import 'recipe_list_screen.dart';
+import 'profile_screen.dart';
+import 'article_screen.dart';
 
 class MpasiMenuScreen extends StatelessWidget {
   const MpasiMenuScreen({super.key});
@@ -32,27 +36,48 @@ class MpasiMenuScreen extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: IconButton(
                               onPressed: () => Navigator.pop(context),
-                              icon: const Icon(Icons.arrow_back_ios_new,
-                                  color: Colors.white, size: 18),
+                              icon: const Icon(
+                                Icons.arrow_back_ios_new,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                             ),
                           ),
                           const SizedBox(height: 8),
                           ProfileGreeting(
-                            name: SampleData.userName,
-                            avatarUrl: SampleData.avatarUrl,
+                            name:
+                                AuthService().currentUser?.name ??
+                                SampleData.userName,
+                            avatarUrl:
+                                AuthService().currentUser?.avatarUrl ??
+                                SampleData.avatarUrl,
+                            onProfileTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ProfileScreen(),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   left: 20,
                   right: 20,
                   bottom: -24,
-                  child: AppSearchBar(hint: 'Apa itu MPASI?'),
+                  child: AppSearchBar(
+                    hint: 'Apa itu MPASI?',
+                    onTap: () => showSearch<void>(
+                      context: context,
+                      delegate: ArticleSearchDelegate(),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -64,7 +89,7 @@ class MpasiMenuScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _featureCard(),
+              child: _featureCard(context),
             ),
             const SizedBox(height: 16),
             Padding(
@@ -77,6 +102,7 @@ class MpasiMenuScreen extends StatelessWidget {
                       iconBg: const Color(0xFFE53935),
                       icon: Icons.assignment_outlined,
                       label: 'Panduan MPASI',
+                      onTap: () => _openArticle(context, 'mpasi-guide'),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -114,6 +140,14 @@ class MpasiMenuScreen extends StatelessWidget {
                     iconColor: const Color(0xFF42A5F5),
                     title: 'Resep Masakan',
                     subtitle: '5 files',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RecipeListScreen(),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 10),
                   _reportItem(
@@ -121,6 +155,7 @@ class MpasiMenuScreen extends StatelessWidget {
                     iconColor: const Color(0xFFAB47BC),
                     title: 'Panduan MPASI',
                     subtitle: '8 files',
+                    onTap: () => _openArticle(context, 'mpasi-guide'),
                   ),
                 ],
               ),
@@ -130,6 +165,17 @@ class MpasiMenuScreen extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: SectionTitle('Konsultasi Dokter'),
             ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _reportItem(
+                color: AppColors.softGreen,
+                iconColor: AppColors.primary,
+                title: 'Kapan perlu rujuk?',
+                subtitle: 'Panduan tanda bahaya dan rujukan',
+                onTap: () => _openArticle(context, 'consultation'),
+              ),
+            ),
             const SizedBox(height: 40),
           ],
         ),
@@ -137,68 +183,78 @@ class MpasiMenuScreen extends StatelessWidget {
     );
   }
 
-  Widget _featureCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.softBlueCard,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mengenal MPASI',
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'MPASI adalah makanan pendamping ASI yang diberikan kepada bayi mulai usia 6 bulan.',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    height: 1.4,
-                    color: AppColors.textDark.withValues(alpha: 0.75),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Text(
-                      'Read more',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
-                      ),
+  void _openArticle(BuildContext context, String articleId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ArticleScreen(articleId: articleId)),
+    );
+  }
+
+  Widget _featureCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openArticle(context, 'mpasi'),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.softBlueCard,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mengenal MPASI',
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
                     ),
-                    const Icon(Icons.keyboard_arrow_down, size: 18),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'MPASI adalah makanan pendamping ASI yang diberikan kepada bayi mulai usia 6 bulan.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      height: 1.4,
+                      color: AppColors.textDark.withValues(alpha: 0.75),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text(
+                        'Read more',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const Icon(Icons.keyboard_arrow_down, size: 18),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 72,
-            height: 72,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFF8A65),
-              shape: BoxShape.circle,
+            const SizedBox(width: 8),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFF8A65),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.baby_changing_station,
+                color: Colors.white,
+                size: 36,
+              ),
             ),
-            child: const Icon(
-              Icons.baby_changing_station,
-              color: Colors.white,
-              size: 36,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -261,50 +317,54 @@ class MpasiMenuScreen extends StatelessWidget {
     required Color iconColor,
     required String title,
     required String subtitle,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8E8E8)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE8E8E8)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.insert_drive_file_outlined, color: iconColor),
             ),
-            child: Icon(Icons.insert_drive_file_outlined, color: iconColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: AppColors.textGrey,
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.textGrey,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.more_vert, color: AppColors.textGrey),
-        ],
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textGrey),
+          ],
+        ),
       ),
     );
   }

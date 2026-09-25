@@ -1,42 +1,56 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_colors.dart';
 
 class AppSearchBar extends StatelessWidget {
   final String hint;
+  final VoidCallback? onTap;
+  final VoidCallback? onFilterTap;
 
-  const AppSearchBar({super.key, required this.hint});
+  const AppSearchBar({
+    super.key,
+    required this.hint,
+    this.onTap,
+    this.onFilterTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(28),
+      elevation: 3,
+      shadowColor: Colors.black.withValues(alpha: 0.12),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Icon(Icons.search, color: Colors.grey.shade400, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              hint,
-              style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 14,
+        child: Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Icon(Icons.search, color: Colors.grey.shade400, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  hint,
+                  style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                ),
               ),
-            ),
+              if (onFilterTap != null)
+                InkWell(
+                  onTap: onFilterTap,
+                  borderRadius: BorderRadius.circular(20),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.tune, size: 20),
+                  ),
+                )
+              else
+                Icon(Icons.tune, color: Colors.grey.shade400, size: 20),
+            ],
           ),
-          Icon(Icons.tune, color: Colors.grey.shade400, size: 20),
-        ],
+        ),
       ),
     );
   }
@@ -47,6 +61,7 @@ class ProfileGreeting extends StatelessWidget {
   final String avatarUrl;
   final String? roleTitle;
   final VoidCallback? onLogout;
+  final VoidCallback? onProfileTap;
 
   const ProfileGreeting({
     super.key,
@@ -54,6 +69,7 @@ class ProfileGreeting extends StatelessWidget {
     required this.avatarUrl,
     this.roleTitle,
     this.onLogout,
+    this.onProfileTap,
   });
 
   @override
@@ -76,7 +92,9 @@ class ProfileGreeting extends StatelessWidget {
                   if (roleTitle != null)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(10),
@@ -112,15 +130,25 @@ class ProfileGreeting extends StatelessWidget {
             tooltip: 'Keluar Akun',
             onPressed: onLogout,
           ),
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
-            image: DecorationImage(
-              image: NetworkImage(avatarUrl),
-              fit: BoxFit.cover,
+        GestureDetector(
+          onTap: onProfileTap,
+          child: Tooltip(
+            message: 'Buka profil dan pengaturan',
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                color: Colors.white24,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.person, color: Colors.white),
+              ),
             ),
           ),
         ),

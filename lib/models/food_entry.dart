@@ -1,7 +1,13 @@
-// Model untuk satu item makanan di food diary
+// Model untuk satu item makanan di food diary.
+// Field *_id menyimpan relasi ke user, katalog makanan, kategori, dan anak.
 class FoodEntry {
   final String id;
+  final String userId;
+  final String foodItemId;
   final String foodName;
+  final String categoryId;
+  final String? childId;
+  final String dateKey; // YYYY-MM-DD
   final String session; // 'pagi', 'siang', 'malam', 'snack'
   final double portionGram;
   final double calories;
@@ -13,7 +19,11 @@ class FoodEntry {
 
   const FoodEntry({
     required this.id,
+    required this.userId,
+    required this.foodItemId,
     required this.foodName,
+    required this.categoryId,
+    required this.dateKey,
     required this.session,
     required this.portionGram,
     required this.calories,
@@ -21,12 +31,19 @@ class FoodEntry {
     required this.carbs,
     required this.fat,
     required this.addedAt,
+    this.childId,
     this.unit,
   });
 
   FoodEntry copyWith({
     String? id,
+    String? userId,
+    String? foodItemId,
     String? foodName,
+    String? categoryId,
+    String? childId,
+    bool clearChildId = false,
+    String? dateKey,
     String? session,
     double? portionGram,
     double? calories,
@@ -38,7 +55,12 @@ class FoodEntry {
   }) {
     return FoodEntry(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
+      foodItemId: foodItemId ?? this.foodItemId,
       foodName: foodName ?? this.foodName,
+      categoryId: categoryId ?? this.categoryId,
+      childId: clearChildId ? null : (childId ?? this.childId),
+      dateKey: dateKey ?? this.dateKey,
       session: session ?? this.session,
       portionGram: portionGram ?? this.portionGram,
       calories: calories ?? this.calories,
@@ -53,7 +75,12 @@ class FoodEntry {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'userId': userId,
+      'foodItemId': foodItemId,
       'foodName': foodName,
+      'categoryId': categoryId,
+      'childId': childId,
+      'dateKey': dateKey,
       'session': session,
       'portionGram': portionGram,
       'calories': calories,
@@ -68,7 +95,12 @@ class FoodEntry {
   factory FoodEntry.fromMap(Map<String, dynamic> map) {
     return FoodEntry(
       id: map['id'] ?? '',
+      userId: map['userId'] ?? 'guest',
+      foodItemId: map['foodItemId'] ?? '',
       foodName: map['foodName'] ?? '',
+      categoryId: map['categoryId'] ?? '',
+      childId: map['childId'],
+      dateKey: map['dateKey'] ?? '',
       session: map['session'] ?? 'pagi',
       portionGram: (map['portionGram'] as num?)?.toDouble() ?? 0,
       calories: (map['calories'] as num?)?.toDouble() ?? 0,

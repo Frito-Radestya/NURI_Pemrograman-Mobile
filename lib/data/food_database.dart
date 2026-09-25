@@ -25,15 +25,26 @@ class FoodItem {
     required this.fatPer100g,
   });
 
+  /// Relasi ke tabel kategori referensi.
+  String get categoryId => FoodDatabase.categoryIdForName(category);
+
   FoodEntry toEntry({
+    required String entryId,
+    required String userId,
+    required String dateKey,
     required String session,
     required double gram,
-    required String entryId,
+    String? childId,
   }) {
     final factor = gram / 100;
     return FoodEntry(
       id: entryId,
+      userId: userId,
+      foodItemId: id,
       foodName: name,
+      categoryId: categoryId,
+      childId: childId,
+      dateKey: dateKey,
       session: session,
       portionGram: gram,
       calories: caloriesPer100g * factor,
@@ -340,6 +351,32 @@ class FoodDatabase {
     ),
   ];
 
+  // Tabel referensi kategori (7 kategori sesuai SSGI/TKPI).
+  static const Map<String, String> categoryIds = {
+    'Karbohidrat': 'cat_karbohidrat',
+    'Protein Hewani': 'cat_protein_hewani',
+    'Protein Nabati': 'cat_protein_nabati',
+    'Sayuran': 'cat_sayuran',
+    'Buah': 'cat_buah',
+    'Susu & Olahan': 'cat_susu_olahan',
+    'Minuman': 'cat_minuman',
+  };
+
+  static const Map<String, String> categoryNames = {
+    'cat_karbohidrat': 'Karbohidrat',
+    'cat_protein_hewani': 'Protein Hewani',
+    'cat_protein_nabati': 'Protein Nabati',
+    'cat_sayuran': 'Sayuran',
+    'cat_buah': 'Buah',
+    'cat_susu_olahan': 'Susu & Olahan',
+    'cat_minuman': 'Minuman',
+  };
+
+  static String categoryIdForName(String name) =>
+      categoryIds[name] ?? 'cat_lainnya';
+
+  static String categoryNameForId(String id) => categoryNames[id] ?? 'Lainnya';
+
   static List<FoodItem> search(String query) {
     if (query.trim().isEmpty) return items;
     final q = query.toLowerCase();
@@ -348,6 +385,10 @@ class FoodDatabase {
 
   static List<FoodItem> byCategory(String category) {
     return items.where((f) => f.category == category).toList();
+  }
+
+  static List<FoodItem> byCategoryId(String categoryId) {
+    return items.where((f) => f.categoryId == categoryId).toList();
   }
 
   static List<String> get categories {
