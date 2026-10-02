@@ -20,9 +20,22 @@ class RecipeService {
     'Camilan',
   ];
 
-  List<Recipe> get allRecipes => List.unmodifiable(_recipes);
+  void syncWithSampleData() {
+    final existingIds = _recipes.map((r) => r.id).toSet();
+    for (final r in SampleData.recipes) {
+      if (!existingIds.contains(r.id)) {
+        _recipes.add(_copyRecipe(r));
+      }
+    }
+  }
+
+  List<Recipe> get allRecipes {
+    syncWithSampleData();
+    return List.unmodifiable(_recipes);
+  }
 
   List<Recipe> byCategory(String category) {
+    syncWithSampleData();
     if (category == 'Semua') return allRecipes;
     return _recipes.where((r) => r.category == category).toList();
   }

@@ -38,11 +38,11 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 3200),
     )..repeat(reverse: true);
 
-    // Total splash ~3.4s lalu ke login
-    Future.delayed(const Duration(milliseconds: 3400), _goLogin);
+    // Total splash ~3.4s lalu ke 
+    Future.delayed(const Duration(milliseconds: 3400), _go);
   }
 
-  void _goLogin() {
+  void _go() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
