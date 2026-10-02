@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../data/food_database.dart';
 import '../models/food_entry.dart';
 
@@ -140,18 +142,18 @@ class FoodDiaryService {
     }
   }
 
-  static String sessionIcon(String session) {
+  static IconData sessionIcon(String session) {
     switch (session) {
       case 'pagi':
-        return '🌅';
+        return Icons.breakfast_dining_outlined;
       case 'siang':
-        return '☀️';
+        return Icons.wb_sunny_outlined;
       case 'malam':
-        return '🌙';
+        return Icons.nights_stay_outlined;
       case 'snack':
-        return '🍎';
+        return Icons.cookie_outlined;
       default:
-        return '🍽️';
+        return Icons.restaurant_outlined;
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../data/akg_reference.dart';
 import '../data/food_database.dart';
 import '../models/child_profile.dart';
 import '../models/food_entry.dart';
@@ -96,6 +97,20 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
     return '${d.day} ${months[d.month]} ${d.year}';
   }
 
+  String _akgLabel(DailyNutritionSummary summary) {
+    final child = _primaryChild!;
+    final age = child.ageInMonths(_selectedDate);
+    final target = AkgReference.forChild(
+      ageMonths: age,
+      isBoy: child.gender == 'L',
+    );
+    final pct = summary.percentOf(target);
+    String traffic(double v) => v < 0.7 ? 'kurang' : 'cukup';
+    return 'AKG anak $age bln: ${target.calories.toStringAsFixed(0)} kkal '
+        '(${traffic(pct['calories']!)} ${(pct['calories']! * 100).toStringAsFixed(0)}%) · '
+        'Protein ${traffic(pct['protein']!)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final summary = _summary;
@@ -104,7 +119,7 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxScrolled) => [
           SliverAppBar(
-            expandedHeight: 326,
+            expandedHeight: 360,
             pinned: true,
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -260,6 +275,17 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
                   totalFat: summary.totalFat,
                 ),
               ),
+              if (_primaryChild != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _akgLabel(summary),
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -284,7 +310,14 @@ class _FoodDiaryScreenState extends State<FoodDiaryScreen>
         unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
         tabs: _sessions.map((s) {
           return Tab(
-            text: '${FoodDiaryService.sessionIcon(s)} ${_shortLabel(s)}',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(FoodDiaryService.sessionIcon(s), size: 14),
+                const SizedBox(width: 6),
+                Text(_shortLabel(s)),
+              ],
+            ),
           );
         }).toList(),
       ),
@@ -479,9 +512,10 @@ class _EmptySession extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 48),
         child: Column(
           children: [
-            Text(
+            Icon(
               FoodDiaryService.sessionIcon(session),
-              style: const TextStyle(fontSize: 52),
+              size: 52,
+              color: const Color(0xFFB2BEC3),
             ),
             const SizedBox(height: 12),
             Text(

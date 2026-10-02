@@ -5,6 +5,8 @@ import '../models/child_profile.dart';
 import '../services/child_service.dart';
 import '../theme/app_colors.dart';
 import 'child_form_screen.dart';
+import 'stunting_screening_screen.dart';
+import 'growth_curve_screen.dart';
 
 /// Halaman detail Data Anak (Read satu record).
 class ChildDetailScreen extends StatefulWidget {
@@ -147,6 +149,39 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 _infoCard(child),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => StuntingScreeningScreen(
+                              initialChildId: child.id,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.medical_services_outlined),
+                        label: const Text('Skrining'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                GrowthCurveScreen(childId: child.id),
+                          ),
+                        ),
+                        icon: const Icon(Icons.show_chart),
+                        label: const Text('Kurva'),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(16),

@@ -187,18 +187,22 @@ class TrafficLightBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     String label;
+    IconData icon;
     switch (status) {
       case 'cukup':
         color = const Color(0xFF00C9A7);
-        label = '✓ Cukup';
+        label = 'Cukup';
+        icon = Icons.check_circle_outline;
         break;
       case 'lebih':
         color = const Color(0xFFFF6B6B);
-        label = '↑ Lebih';
+        label = 'Lebih';
+        icon = Icons.arrow_upward_rounded;
         break;
       default:
         color = const Color(0xFFFFB347);
-        label = '↓ Kurang';
+        label = 'Kurang';
+        icon = Icons.arrow_downward_rounded;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -207,13 +211,20 @@ class TrafficLightBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
