@@ -2,19 +2,267 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../data/sample_data.dart';
+import '../models/user_role.dart';
 import '../services/auth_service.dart';
+import '../services/child_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/common_widgets.dart';
 import '../widgets/wave_header.dart';
 import 'login_screen.dart';
 import 'mpasi_menu_screen.dart';
 import 'food_diary_screen.dart';
+import 'food_scan_screen.dart';
+import 'stunting_screening_screen.dart';
+import 'growth_curve_screen.dart';
+import 'chatbot_screen.dart';
+import 'screening_session_screen.dart';
 import 'child_list_screen.dart';
 import 'profile_screen.dart';
 import 'article_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+/// Status implementasi fitur, selaras PRD §5 kolom Status.
+enum HomeFeatureStatus { ready, partial, soon }
+
+class _HomeFeature {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final HomeFeatureStatus status;
+  final String prdRef;
+  final String? articleId;
+
+  const _HomeFeature({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.status,
+    required this.prdRef,
+    this.articleId,
+  });
+}
+
+List<_HomeFeature> _featuresForRole(UserRole? role) {
+  switch (role) {
+    case UserRole.kaderPosyandu:
+      return const [
+        _HomeFeature(
+          title: 'Data Anak',
+          subtitle: 'Kelola + ukur BB/TB',
+          icon: Icons.child_care,
+          color: Color(0xFFAB47BC),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Data anak (Parsial)',
+        ),
+        _HomeFeature(
+          title: 'Skrining',
+          subtitle: 'z-score WHO',
+          icon: Icons.medical_services_outlined,
+          color: Color(0xFF00C9A7),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Skrining z-score (Parsial: manual, foto eksperimental)',
+        ),
+        _HomeFeature(
+          title: 'Rekap Sesi',
+          subtitle: 'Sesi + rekap kader',
+          icon: Icons.assessment_outlined,
+          color: Color(0xFF2F80ED),
+          status: HomeFeatureStatus.soon,
+          prdRef: 'PRD §5 Mode kader (Parsial: data ada, rekap belum)',
+        ),
+        _HomeFeature(
+          title: 'Food Diary',
+          subtitle: 'Catat asupan',
+          icon: Icons.menu_book_rounded,
+          color: Color(0xFFFF8A65),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Food diary (Parsial)',
+        ),
+        _HomeFeature(
+          title: 'Edukasi',
+          subtitle: 'Stunting + WHO',
+          icon: Icons.school_outlined,
+          color: Color(0xFF26C6DA),
+          status: HomeFeatureStatus.ready,
+          prdRef: 'Artikel pengetahuan',
+          articleId: 'stunting',
+        ),
+        _HomeFeature(
+          title: 'MPASI',
+          subtitle: 'Resep bergizi',
+          icon: Icons.favorite,
+          color: Color(0xFFFF6B6B),
+          status: HomeFeatureStatus.ready,
+          prdRef: 'Pendukung F-06',
+        ),
+      ];
+    case UserRole.ibuHamil:
+      return const [
+        _HomeFeature(
+          title: 'Food Diary',
+          subtitle: 'Catat asupan',
+          icon: Icons.menu_book_rounded,
+          color: Color(0xFFFF8A65),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Food diary (Parsial)',
+        ),
+        _HomeFeature(
+          title: 'MPASI',
+          subtitle: 'Persiapan bergizi',
+          icon: Icons.favorite,
+          color: Color(0xFFFF6B6B),
+          status: HomeFeatureStatus.ready,
+          prdRef: 'Pendukung F-06',
+        ),
+        _HomeFeature(
+          title: 'AKG Hamil',
+          subtitle: 'Monitoring v2',
+          icon: Icons.pregnant_woman_rounded,
+          color: Color(0xFFFF7043),
+          status: HomeFeatureStatus.soon,
+          prdRef: 'PRD §5 Mode ibu hamil v2 (Belum)',
+        ),
+        _HomeFeature(
+          title: 'Data Anak',
+          subtitle: 'Kelola tumbuh',
+          icon: Icons.child_care,
+          color: Color(0xFFAB47BC),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Data anak (Parsial)',
+        ),
+        _HomeFeature(
+          title: 'Edukasi',
+          subtitle: 'Gizi + stunting',
+          icon: Icons.school_outlined,
+          color: Color(0xFF26C6DA),
+          status: HomeFeatureStatus.ready,
+          prdRef: 'Artikel pengetahuan',
+          articleId: 'balanced-menu',
+        ),
+      ];
+    case UserRole.ibuBalita:
+    default:
+      return const [
+        _HomeFeature(
+          title: 'Scan Makanan',
+          subtitle: 'Foto + gizi',
+          icon: Icons.photo_camera_outlined,
+          color: Color(0xFF2F80ED),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Scan multi-objek (Parsial: single + koreksi manual)',
+        ),
+        _HomeFeature(
+          title: 'Food Diary',
+          subtitle: '4 sesi + ring',
+          icon: Icons.menu_book_rounded,
+          color: Color(0xFFFF8A65),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Food diary (Parsial)',
+        ),
+        _HomeFeature(
+          title: 'Data Anak',
+          subtitle: 'BB/TB + status',
+          icon: Icons.child_care,
+          color: Color(0xFFAB47BC),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Data anak (Parsial)',
+        ),
+        _HomeFeature(
+          title: 'Kurva',
+          subtitle: 'WHO + tren',
+          icon: Icons.show_chart_rounded,
+          color: Color(0xFF00C9A7),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Kurva (Parsial)',
+        ),
+        _HomeFeature(
+          title: 'MPASI',
+          subtitle: 'Resep bergizi',
+          icon: Icons.favorite,
+          color: Color(0xFFFF6B6B),
+          status: HomeFeatureStatus.ready,
+          prdRef: 'Pendukung F-06',
+        ),
+        _HomeFeature(
+          title: 'Edukasi',
+          subtitle: 'Stunting + WHO',
+          icon: Icons.school_outlined,
+          color: Color(0xFF26C6DA),
+          status: HomeFeatureStatus.ready,
+          prdRef: 'Artikel pengetahuan',
+          articleId: 'stunting',
+        ),
+        _HomeFeature(
+          title: 'Tanya NURI',
+          subtitle: 'Chatbot gizi',
+          icon: Icons.chat_bubble_outline_rounded,
+          color: Color(0xFF7C4DFF),
+          status: HomeFeatureStatus.partial,
+          prdRef: 'PRD §5 Chatbot Groq (Parsial: online bila ada key)',
+        ),
+      ];
+  }
+}
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    const pages = [
+      _BerandaTab(),
+      ChildListScreen(),
+      FoodDiaryScreen(),
+      MpasiMenuScreen(),
+      ProfileScreen(),
+    ];
+    return Scaffold(
+      body: pages[_index],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_rounded),
+            label: 'Beranda',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.child_care_outlined),
+            selectedIcon: Icon(Icons.child_care_rounded),
+            label: 'Anak',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.menu_book_rounded),
+            label: 'Diary',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.favorite_outline_rounded),
+            selectedIcon: Icon(Icons.favorite_rounded),
+            label: 'MPASI',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
+            label: 'Profil',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BerandaTab extends StatelessWidget {
+  const _BerandaTab();
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +270,7 @@ class HomeScreen extends StatelessWidget {
     final displayName = user?.name ?? SampleData.userName;
     final displayAvatar = user?.avatarUrl ?? SampleData.avatarUrl;
     final displayRole = user?.roleDisplayTitle ?? 'Ibu Balita';
+    final features = _featuresForRole(user?.role);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -92,70 +341,14 @@ class HomeScreen extends StatelessWidget {
               child: _foodDiaryBanner(context),
             ),
             const SizedBox(height: 22),
-            SizedBox(
-              height: 118,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _category(
-                    context,
-                    Icons.medical_services_outlined,
-                    const Color(0xFF00C9A7),
-                    'Mengenal\nStunting',
-                    onTap: () => _openArticle(context, 'stunting'),
-                  ),
-                  _category(
-                    context,
-                    Icons.favorite,
-                    const Color(0xFFFF6B6B),
-                    'MPASI',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MpasiMenuScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _category(
-                    context,
-                    Icons.medication_outlined,
-                    const Color(0xFF26C6DA),
-                    'Menu Gizi\nSeimbang',
-                    onTap: () => _openArticle(context, 'balanced-menu'),
-                  ),
-                  _category(
-                    context,
-                    Icons.child_care,
-                    const Color(0xFFAB47BC),
-                    'Data\nAnak',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ChildListScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _category(
-                    context,
-                    Icons.menu_book_rounded,
-                    const Color(0xFFFF8A65),
-                    'Food\nDiary',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const FoodDiaryScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: SectionTitle('Fitur'),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _featureGrid(context, features),
             ),
             const SizedBox(height: 8),
             const Padding(
@@ -192,6 +385,169 @@ class HomeScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => ArticleScreen(articleId: articleId)),
+    );
+  }
+
+  void _openFeature(BuildContext context, _HomeFeature feature) {
+    switch (feature.title) {
+      case 'Scan Makanan':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const FoodScanScreen()),
+        );
+        break;
+      case 'Data Anak':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ChildListScreen()),
+        );
+        break;
+      case 'Food Diary':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const FoodDiaryScreen()),
+        );
+        break;
+      case 'MPASI':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MpasiMenuScreen()),
+        );
+        break;
+      case 'Edukasi':
+        _openArticle(context, feature.articleId ?? 'stunting');
+        break;
+      case 'Tanya NURI':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+        );
+        break;
+      case 'Skrining':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const StuntingScreeningScreen(),
+          ),
+        );
+        break;
+      case 'Kurva':
+        final uid = AuthService().currentUser?.id ?? 'guest';
+        final kids = ChildService().getChildren(uid);
+        if (kids.isEmpty) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const StuntingScreeningScreen(),
+            ),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GrowthCurveScreen(childId: kids.first.id),
+            ),
+          );
+        }
+        break;
+      case 'Rekap Sesi':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ScreeningSessionScreen(),
+          ),
+        );
+        break;
+      default:
+        showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(feature.title),
+            content: Text(
+              'Fitur ini ${feature.status == HomeFeatureStatus.soon ? "belum tersedia" : "sebagian tersedia"}.\n${feature.prdRef}.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Mengerti'),
+              ),
+            ],
+          ),
+        );
+    }
+  }
+
+  Widget _featureGrid(BuildContext context, List<_HomeFeature> features) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: features.length,
+      itemBuilder: (context, i) {
+        final feature = features[i];
+        final enabled = feature.status != HomeFeatureStatus.soon;
+        return GestureDetector(
+          onTap: () => _openFeature(context, feature),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: enabled
+                    ? feature.color.withValues(alpha: 0.25)
+                    : Colors.grey.shade200,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: (enabled ? feature.color : Colors.grey).withValues(
+                      alpha: 0.15,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    feature.icon,
+                    color: enabled ? feature.color : Colors.grey,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  feature.title,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  feature.status == HomeFeatureStatus.soon
+                      ? 'Segera'
+                      : feature.subtitle,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: AppColors.textGrey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -320,7 +676,7 @@ class HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Food Diary Hari Ini 📋',
+                    'Food Diary Hari Ini',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
@@ -341,46 +697,6 @@ class HomeScreen extends StatelessWidget {
               Icons.arrow_forward_ios_rounded,
               size: 16,
               color: AppColors.primary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _category(
-    BuildContext context,
-    IconData icon,
-    Color color,
-    String label, {
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 84,
-        margin: const EdgeInsets.symmetric(horizontal: 6),
-        child: Column(
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                height: 1.15,
-                color: AppColors.textDark,
-              ),
             ),
           ],
         ),

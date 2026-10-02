@@ -1,5 +1,6 @@
 // Model untuk satu item makanan di food diary.
 // Field *_id menyimpan relasi ke user, katalog makanan, kategori, dan anak.
+import '../data/akg_reference.dart';
 class FoodEntry {
   final String id;
   final String userId;
@@ -154,6 +155,14 @@ class DailyNutritionSummary {
   double get proteinPercent => (totalProtein / targetProtein).clamp(0.0, 1.0);
   double get carbsPercent => (totalCarbs / targetCarbs).clamp(0.0, 1.0);
   double get fatPercent => (totalFat / targetFat).clamp(0.0, 1.0);
+
+  /// Ringkasan terhadap AKG anak (F-03.4). Mengembalikan persen 0-1 per nutrien.
+  Map<String, double> percentOf(AkgTarget target) => {
+        'calories': (totalCalories / target.calories).clamp(0.0, 2.0),
+        'protein': (totalProtein / target.protein).clamp(0.0, 2.0),
+        'carbs': (totalCarbs / target.carbs).clamp(0.0, 2.0),
+        'fat': (totalFat / target.fat).clamp(0.0, 2.0),
+      };
 
   /// Traffic light: 'kurang' | 'cukup' | 'lebih'
   String caloriesStatus() => _trafficLight(caloriesPercent);

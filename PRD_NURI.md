@@ -125,31 +125,34 @@ Persona di bawah adalah **hipotesis tim**, belum berdasar riset pengguna.
 
 ## 5. Daftar Fitur
 
-| Fitur | MVP | v2 | Nanti |
-|---|---|---|---|
-| Registrasi/login + peran (ibu / kader) | ✔ | | |
-| Scan makanan + deteksi multi-objek | ✔ | | |
-| Koreksi manual hasil deteksi + input makanan manual | ✔ | | |
-| Kalkulasi nilai gizi (TKPI) | ✔ | | |
-| Perbandingan AKG harian (traffic light) | ✔ | | |
-| Food diary + progress ring nutrisi | ✔ | | |
-| Data anak + pengukuran (BB, TB/PB) | ✔ | | |
-| Skrining stunting z-score WHO | ✔ | | |
-| Indikator tambahan dari foto anak | ✔ | | |
-| Rekomendasi lanjutan | ✔ | | |
-| Kurva pertumbuhan anak | ✔ | | |
-| Mode kader: skrining banyak anak + rekap sesi | ✔ | | |
-| Disclaimer skrining + consent data | ✔ | | |
-| Mode ibu hamil (AKG hamil, monitoring) | | ✔ | |
-| Ekspor laporan PDF | Belum diputuskan [OQ-1] | | |
-| Chatbot gizi (Groq) | Belum diputuskan [OQ-1] | | |
-| Reminder notifikasi (Posyandu, makan) | Belum diputuskan [OQ-1] | | |
-| Lokasi Posyandu terdekat | Belum diputuskan [OQ-1] | | |
-| Mode offline penuh + sinkronisasi | Belum diputuskan [OQ-2] | | |
-| Pembaruan model over-the-air | | | ✔ |
-| iOS | | | ✔ |
-| Integrasi sistem pelaporan resmi (mis. e-PPGBM) | | | ✔ |
-| Validasi klinis dan rilis publik | | | ✔ |
+Kolom **Status** adalah hasil kroscek implementasi saat ini (kode HEAD bersih):
+**Sudah** = berfungsi, **Parsial** = ada sebagian, **Belum** = belum ada kode.
+
+| Fitur | MVP | v2 | Nanti | Status |
+|---|---|---|---|---|
+| Registrasi/login + peran (ibu / kader) | ✔ | | | Parsial — UI peran + login demo in-memory ada (`lib/services/auth_service.dart`, `lib/screens/login_screen.dart`); Supabase Auth + bcrypt belum ada |
+| Scan makanan + deteksi multi-objek | ✔ | | | Belum — tanpa kamera/galeri, tanpa model TFLite, tanpa layar scan |
+| Koreksi manual hasil deteksi + input makanan manual | ✔ | | | Parsial — input manual + search 25 item ada (`lib/data/food_database.dart`); koreksi hasil AI belum ada karena scan belum ada |
+| Kalkulasi nilai gizi (TKPI) | ✔ | | | Parsial — hitung `gram/100` untuk 4 nutrien ada; baru 25 item, bukan 80 kelas |
+| Perbandingan AKG harian (traffic light) | ✔ | | | Parsial — logika traffic light + label teks ada (`lib/models/food_entry.dart`); AKG masih hardcode dewasa, bukan AKG anak otomatis |
+| Food diary + progress ring nutrisi | ✔ | | | Parsial — CRUD 4 sesi + ring harian ada (`lib/services/food_diary_service.dart`); penyimpanan masih in-memory, bukan cloud |
+| Data anak + pengukuran (BB, TB/PB) | ✔ | | | Parsial — CRUD data anak ada (`lib/services/child_service.dart`); tanpa aturan PB/TB, koreksi ±0,7 cm, validasi 0–59 bulan, dan riwayat pengukuran |
+| Skrining stunting z-score WHO | ✔ | | | Belum — tanpa tabel WHO LMS, tanpa hitung z-score, status masih dropdown manual |
+| Indikator tambahan dari foto anak | ✔ | | | Belum — tanpa input foto, tanpa model, tanpa label eksperimental |
+| Rekomendasi lanjutan | ✔ | | | Belum — tanpa rekomendasi otomatis per status; yang ada hanya artikel statis |
+| Kurva pertumbuhan anak | ✔ | | | Belum — tanpa grafik; toggle kurva di profil tidak terhubung ke tampilan |
+| Mode kader: skrining banyak anak + rekap sesi | ✔ | | | Parsial — role kader + 20 data seed ada; tanpa sesi skrining dan tanpa rekap |
+| Disclaimer skrining + consent data | ✔ | | | Parsial — checkbox syarat di register ada; layar disclaimer wajib + consent orang tua belum ada |
+| Mode ibu hamil (AKG hamil, monitoring) | | ✔ | | Parsial di luar MVP — role ibu hamil sudah ada di kode padahal PRD v2 (NG3); konten AKG hamil belum ada |
+| Ekspor laporan PDF | Belum diputuskan [OQ-1] | | | Belum |
+| Chatbot gizi (Groq) | Belum diputuskan [OQ-1] | | | Belum |
+| Reminder notifikasi (Posyandu, makan) | Belum diputuskan [OQ-1] | | | Belum — hanya toggle in-memory di profil |
+| Lokasi Posyandu terdekat | Belum diputuskan [OQ-1] | | | Belum — hanya field nama Posyandu teks |
+| Mode offline penuh + sinkronisasi | Belum diputuskan [OQ-2] | | | Belum — semua data in-memory, tanpa persistensi/sync |
+| Pembaruan model over-the-air | | | ✔ | Belum |
+| iOS | | | ✔ | Belum (Android saja, K3) |
+| Integrasi sistem pelaporan resmi (mis. e-PPGBM) | | | ✔ | Belum |
+| Validasi klinis dan rilis publik | | | ✔ | Belum |
 
 ---
 
