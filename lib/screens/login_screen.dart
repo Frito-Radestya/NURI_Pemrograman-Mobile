@@ -35,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handle() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _quickDemoLogin(UserRole role) async {
+  void _quickDemo(UserRole role) async {
     setState(() => _isLoading = true);
     UserModel user;
     switch (role) {
@@ -348,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 22),
 
-                    // Tombol Submit Login
+                    // Tombol Submit 
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -365,7 +365,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
+                          onPressed: _isLoading ? null : _handle,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,
@@ -435,7 +435,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Demo Login Quick Bar
+                    // Demo  Quick Bar
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -526,7 +526,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.amber,
                               size: 20,
                             ),
-                            onTap: () => _quickDemoLogin(UserRole.ibuBalita),
+                            onTap: () => _quickDemo(UserRole.ibuBalita),
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -643,7 +643,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _demoChip(String label, UserRole role) {
     return ElevatedButton(
-      onPressed: () => _quickDemoLogin(role),
+      onPressed: () => _quickDemo(role),
       style: ElevatedButton.styleFrom(
         backgroundColor: role.color.withValues(alpha: 0.12),
         elevation: 0,
