@@ -1,0 +1,98 @@
+{
+  "ref_version": "sample-nuri-reco-v1",
+  "note": "KONTEN CONTOH untuk prototipe UI/UX. Wajib ditulis dari panduan Kemenkes/WHO dan ditelaah ahli gizi/bidan sebelum dipakai (PRD Bagian 13).",
+  "items": [
+    {
+      "status": "normal",
+      "age_band": "under24",
+      "title": "Tinggi badan anak sesuai usianya",
+      "summary": "Pertumbuhan anak sejajar dengan anak lain seusianya. Pertahankan pola makan dan rutin timbang setiap bulan.",
+      "actions": [
+        "Lanjutkan ASI dan MPASI bergizi seimbang",
+        "Timbang dan ukur tiap bulan di Posyandu",
+        "Berikan makanan kaya protein seperti telur, ikan, dan tempe"
+      ]
+    },
+    {
+      "status": "normal",
+      "age_band": "over24",
+      "title": "Tinggi badan anak sesuai usianya",
+      "summary": "Pertumbuhan anak baik. Lanjutkan kebiasaan makan sehat dan aktivitas bermain yang cukup.",
+      "actions": [
+        "Sajikan piring berisi karbohidrat, protein, sayur, dan buah",
+        "Batasi makanan manis dan minuman kemasan",
+        "Timbang dan ukur tiap bulan di Posyandu"
+      ]
+    },
+    {
+      "status": "pendek",
+      "age_band": "under24",
+      "title": "Anak lebih pendek dari anak seusianya",
+      "summary": "Tinggi anak sedikit di bawah standar. Ini bisa diperbaiki bila cepat ditangani sejak dini.",
+      "actions": [
+        "Segera konsultasi ke bidan atau Puskesmas",
+        "Tambah asupan protein hewani setiap hari",
+        "Periksa apakah anak sering sakit atau susah makan",
+        "Ukur ulang tinggi badan bulan depan"
+      ]
+    },
+    {
+      "status": "pendek",
+      "age_band": "over24",
+      "title": "Anak lebih pendek dari anak seusianya",
+      "summary": "Tinggi anak di bawah standar untuk usianya. Perbaikan gizi dan kebersihan dapat membantu kejar tumbuh.",
+      "actions": [
+        "Konsultasi ke tenaga kesehatan untuk pemeriksaan lanjutan",
+        "Berikan 1 butir telur atau ikan setiap hari bila memungkinkan",
+        "Jaga kebersihan dan air bersih untuk cegah infeksi",
+        "Ukur ulang setiap bulan untuk melihat kemajuan"
+      ]
+    },
+    {
+      "status": "sangat_pendek",
+      "age_band": "under24",
+      "title": "Anak sangat pendek — perlu segera ditindaklanjuti",
+      "summary": "Tinggi anak jauh di bawah standar. Ini termasuk kondisi berat dan perlu bantuan tenaga kesehatan.",
+      "actions": [
+        "Segera bawa ke Puskesmas atau dokter anak",
+        "Ikuti program Pemberian Makanan Tambahan bila tersedia",
+        "Berikan asupan protein hewani dan vitamin setiap hari",
+        "Catat berat dan tinggi setiap bulan tanpa terlewat"
+      ]
+    },
+    {
+      "status": "sangat_pendek",
+      "age_band": "over24",
+      "title": "Anak sangat pendek — perlu segera ditindaklanjuti",
+      "summary": "Tinggi anak jauh di bawah standar untuk usianya. Pemeriksaan oleh tenaga kesehatan sangat dianjurkan.",
+      "actions": [
+        "Segera konsultasi ke Puskesmas atau dokter anak",
+        "Ikuti pendampingan gizi dari kader atau Puskesmas",
+        "Pastikan anak makan protein hewani setiap hari",
+        "Periksa juga kemungkinan penyakit penyerta"
+      ]
+    },
+    {
+      "status": "tinggi",
+      "age_band": "under24",
+      "title": "Anak tinggi untuk usianya",
+      "summary": "Tinggi anak di atas rata-rata. Umumnya baik, namun tetap pantau tumbuh kembang secara berkala.",
+      "actions": [
+        "Lanjutkan pola makan bergizi seimbang",
+        "Pantau pertumbuhan tiap bulan",
+        "Konsultasi bila ada keluhan lain"
+      ]
+    },
+    {
+      "status": "tinggi",
+      "age_band": "over24",
+      "title": "Anak tinggi untuk usianya",
+      "summary": "Tinggi anak di atas rata-rata seusianya. Tetap pantau agar pertumbuhan tetap seimbang.",
+      "actions": [
+        "Lanjutkan makan bergizi seimbang",
+        "Pantau berat dan tinggi tiap bulan",
+        "Konsultasi bila ada keluhan lain"
+      ]
+    }
+  ]
+}

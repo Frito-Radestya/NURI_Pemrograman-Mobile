@@ -1,29 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
 
-void main() {
+import 'app.dart';
+import 'state/app_state.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ),
-  );
-  runApp(const NuriApp());
-}
-
-class NuriApp extends StatelessWidget {
-  const NuriApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NURI',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: const SplashScreen(),
-    );
-  }
+  final NuriAppState state = await NuriAppState.bootstrap();
+  runApp(NuriScope(state: state, child: const NuriApp()));
 }

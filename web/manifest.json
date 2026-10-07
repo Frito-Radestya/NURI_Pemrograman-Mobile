@@ -1,6 +1,6 @@
 {
-    "name": "stunting_care",
-    "short_name": "stunting_care",
+    "name": "nuri_app",
+    "short_name": "nuri_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

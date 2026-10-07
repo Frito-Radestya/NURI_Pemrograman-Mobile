@@ -1,42 +1,8 @@
-# StuntingCare (NURI)
+# NURI v2 — Nutrisi & Pertumbuhan Anak
 
-Aplikasi mobile Flutter untuk pencegahan stunting — **Kelompok Free Fire**.
-
-Berdasarkan Mini SRS: **NURI** (Nutrisi & Risiko Stunting di Indonesia).
-
-Dokumentasi kelengkapan tugas: [`DOKUMENTASI_TUGAS.md`](DOKUMENTASI_TUGAS.md)
-
-## Fitur yang tersedia
-
-1. **Splash** + branding NURI.
-2. **Login** (validasi kredensial, 3 role, mode demo).
-3. **Register** → **OTP (1234)** → Home.
-4. **Lupa Password** → OTP → **Reset Password** (validasi kekuatan).
-5. **Home**: hero WHO, kategori fitur, berita, banner Food Diary.
-6. **Pencarian** informasi (artikel pengetahuan) dari Home & MPASI.
-7. **Artikel pengetahuan**: stunting, standar WHO, MPASI, panduan MPASI,
-   menu seimbang, berita, konsultasi.
-8. **MPASI** → **Daftar Resep** (filter kategori) → **Detail Resep**
-   (servings +/-, bookmark tersinkron).
-9. **Food Diary** (CRUD): cari, filter kategori, tambah, **edit**, hapus,
-   ringkasan gizi per sesi dan harian, relasi ke data anak.
-10. **Data Anak** (CRUD): daftar, cari, filter status, detail, form
-    tambah/edit, hapus, 20 record simulasi untuk role Kader.
-11. **Profil & Pengaturan**: edit profil, pengaturan pengingat, tautan
-    Data Anak & Food Diary, tentang aplikasi, dan logout.
-
-## Struktur penting
-
-```
-lib/
-├── data/          # FoodDatabase (25 item + 7 kategori), SampleData (resep)
-├── models/        # UserModel, FoodEntry, ChildProfile, Recipe
-├── services/      # AuthService, FoodDiaryService, ChildService,
-│                  # RecipeService, AppSettingsService
-├── screens/       # 15 layer (splash, auth, home, artikel, mpasi, resep,
-│                  # food diary, data anak, profil)
-└── widgets/       # komponen reusable
-```
+Aplikasi Flutter (offline-first) untuk memantau pertumbuhan balita (z-score TB/U
+standar WHO), mencatat asupan gizi harian vs AKG, dan mendukung kader Posyandu
+(sesi + entri cepat + rekap). Desain mengikuti referensi Stitch dan PRD NURI v2.0.
 
 ## Menjalankan
 
@@ -45,31 +11,93 @@ flutter pub get
 flutter run
 ```
 
-Kredensial demo (semua role memakai kata sandi `password123`):
+### Mode demo (tanpa backend)
+Bila Supabase tidak dikonfigurasi, aplikasi berjalan penuh secara **offline**
+memakai data contoh (ibu "Sari" + anak "Alya"/"Bima"). Cocok untuk demo UI.
 
-| Role | Email / Kontak |
-|------|----------------|
-| Ibu Balita | `divaputri@gmail.com` |
-| Ibu Hamil | `sitirahma@gmail.com` |
-| Kader Posyandu | `081234567890` |
+## Integrasi Supabase
 
-Kode OTP demo: `1234`.
+Integrasi mencakup **Auth (email + kata sandi)**, **Postgres**, **RLS**, dan
+**sinkronisasi dua arah** (unggah state lokal + tarik data pengguna). Bila tidak
+dikonfigurasi, semua jalur cloud dilewati dan aplikasi tetap jalan offline.
 
-## Pengujian
+### 1. Siapkan proyek Supabase
+1. Buat proyek di <https://supabase.com>.
+2. Buka **SQL Editor**, jalankan seluruh isi:
+   `supabase/migrations/0001_nuri_schema.sql`
+   (membuat tabel + kebijakan RLS untuk `profiles`, `children`,
+   `guardian_consents`, `screening_sessions`, `measurements`, `screenings`,
+   `food_log_items`).
+3. (Opsional) Aktifkan **Email confirmation** di Authentication > Providers.
+
+### 2. Berikan kredensial ke aplikasi
+Jangan menuliskan kunci di kode. Gunakan `--dart-define`:
 
 ```bash
-flutter analyze
-flutter test
+flutter run \
+  --dart-define=SUPABASE_URL=https://xxxxxxxx.supabase.co \
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Test mencakup: login benar/salah, OTP, registrasi ganda, isolasi data antar
-user, CRUD Food Diary, validasi porsi, CRUD Data Anak, filter resep, sinkronisasi
-bookmark, dan halaman profil.
+Atau untuk build:
+
+```bash
+flutter build apk \
+  --dart-define=SUPABASE_URL=https://xxxxxxxx.supabase.co \
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=...
+```
+
+Kunci yang dipakai adalah **publishable/anon key** (aman di klien karena RLS).
+`--dart-define=SUPABASE_ANON_KEY` juga masih didukung. **JANGAN** pernah memakai
+`sb_secret_...` / `service_role` di aplikasi.
+Jangan pernah memakai `service_role` di aplikasi.
+
+### 3. Alur
+- **Daftar/Masuk** di layar akun → `authSignUp` / `authSignIn` memanggil Supabase
+  Auth, lalu membuat baris `profiles` (id = `auth.uid()`).
+- Setelah login, aplikasi **menarik** data pengguna (`pull()`) untuk mengisi
+  penyimpanan lokal.
+- **Sinkronkan sekarang** di Pengaturan memanggil unggah idempoten
+  (upsert) sehingga tidak ada duplikat. Indikator status tampil di kartu
+  Sinkronisasi.
+- **Hapus item/akun** juga terhubung ke cloud (`deleteFoodItem`,
+  `softDeleteChild`; `signOut`).
+
+### 4. Uji RLS (disarankan)
+1. Daftar dua akun berbeda (A dan B).
+2. Tambah anak di A, lalu login B — B tidak boleh melihat anak A.
+3. Sebagai kader (role = `kader`), anak boleh dibaca untuk skrining massal.
+
+## Arsitektur singkat
+
+```
+lib/
+  core/config/supabase_config.dart   # baca --dart-define
+  data/
+    reference_data.dart              # aset: WHO LMS, TKPI, AKG, rekomendasi
+    nuri_repository.dart             # penyimpanan lokal + outbox + sync
+    supabase_service.dart            # Auth + push/pull Supabase
+    seed_data.dart                   # data contoh (mode offline)
+  domain/                            # mesin Dart murni (Growth/Nutrition/Recommendation)
+  state/app_state.dart               # ChangeNotifier + InheritedNotifier
+  features/                          # layar (go_router)
+supabase/migrations/                 # skema + RLS
+assets/data/                         # who_lms.json (LMS resmi WHO 2006), tkpi, akg, rekomendasi
+```
+
+- **Z-score** dihitung lokal dari tabel **LMS resmi WHO 2006** (harian), memakai
+  rumus LMS dan koreksi metode ukur ±0,7 cm; hasil identik dengan kalkulator WHO.
+- UI tidak memanggil Supabase langsung; semua lewat `NuriRepository` (PRD Bagian 5).
+
+## Uji
+
+```bash
+dart analyze     # bersih
+flutter test     # unit domain + navigasi + responsif (320–1280 px)
+```
 
 ## Catatan
-
-- Data masih simulasi **in-memory** (sesuai kebutuhan coursework), sudah
-  diisolasi per `userId` dan dilengkapi relasi ID.
-- Kamera/AI scan makanan, deteksi stunting otomatis, dan chatbot (FR-01,
-  FR-04, FR-05, FR-06, FR-08) belum diintegrasikan.
-- Beberapa gambar memakai URL eksternal; UI tetap aman saat gambar gagal dimuat.
+- Tabel referensi (TKPI/AKG/WHO/rekomendasi) **tidak** disinkronkan; dibundel
+  sebagai aset agar tetap tersedia offline.
+- Penghapusan akun menghapus data lokal & sesi cloud. Penghapusan baris di
+  server sepenuhnya (auth user) memerlukan service role / Edge Function.

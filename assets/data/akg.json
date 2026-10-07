@@ -1,0 +1,38 @@
+{
+  "ref_version": "sample-permenkes-28-2019",
+  "note": "NILAI CONTOH untuk prototipe UI/UX. Wajib diverifikasi terhadap Permenkes No. 28/2019. Satuan: energi kkal, protein/lemak/karbohidrat gram, besi/seng/kalsium miligram, vitamin A mikrogram RAE per hari.",
+  "groups": [
+    {
+      "id": "0-5m",
+      "label": "0\u20135 bulan",
+      "min_age_months": 0,
+      "max_age_months": 5,
+      "sex": null,
+      "targets": { "energy": 550, "protein": 9, "fat": 31, "carb": 59, "iron": 0.3, "zinc": 1.1, "calcium": 200, "vit_a": 375 }
+    },
+    {
+      "id": "6-11m",
+      "label": "6\u201311 bulan",
+      "min_age_months": 6,
+      "max_age_months": 11,
+      "sex": null,
+      "targets": { "energy": 800, "protein": 15, "fat": 35, "carb": 105, "iron": 11, "zinc": 3, "calcium": 270, "vit_a": 400 }
+    },
+    {
+      "id": "1-3y",
+      "label": "1\u20133 tahun",
+      "min_age_months": 12,
+      "max_age_months": 47,
+      "sex": null,
+      "targets": { "energy": 1350, "protein": 20, "fat": 45, "carb": 215, "iron": 7, "zinc": 3, "calcium": 650, "vit_a": 450 }
+    },
+    {
+      "id": "4-6y",
+      "label": "4\u20136 tahun",
+      "min_age_months": 48,
+      "max_age_months": 71,
+      "sex": null,
+      "targets": { "energy": 1400, "protein": 25, "fat": 50, "carb": 220, "iron": 10, "zinc": 5, "calcium": 1000, "vit_a": 450 }
+    }
+  ]
+}

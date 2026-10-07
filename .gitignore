@@ -46,3 +46,21 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# ---------------------------------------------------------------------------
+# INTERNAL / PRIVATE — JANGAN diunggah ke repo publik (GitHub)
+# ---------------------------------------------------------------------------
+# Catatan progres & serah-terima internal (berisi TODO, keputusan kerja, dll).
+PROGRESS.md
+# Dokumen/rapat/ide internal lain (tambahkan pola bila perlu).
+*.internal.md
+CATATAN_*.md
+NOTES_*.md
+
+# Rahasia/konfigurasi lokal (jangan pernah commit kunci Supabase).
+.env
+.env.*
+*.env.local
+supabase/.temp/
+supabase/.branches/
+
