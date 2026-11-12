@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +18,17 @@ import 'domain/nutrition/food_catalog.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID');
+
+  // Firebase dipakai untuk Authentication. Bila konfigurasi belum siap,
+  // aplikasi tetap berjalan dengan penyimpanan lokal agar demo tidak macet.
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp();
+    } catch (error) {
+      debugPrint('Firebase gagal diinisialisasi: $error');
+    }
+  }
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

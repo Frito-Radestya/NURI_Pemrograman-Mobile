@@ -32,6 +32,17 @@ Di Android, data demo disimpan di SQLite (`nuri.db`) dengan migrasi otomatis dar
 - **Android:** hapus data aplikasi / uninstall, atau gunakan tombol reset di Profil.
 - **Web:** hapus `localStorage` untuk `127.0.0.1`, atau tombol reset di Profil.
 
+### Firebase
+
+- Proyek Firebase: `nuri-5cddb`
+- Android package: `id.nuri.nuri`
+- Konfigurasi Android: `android/app/google-services.json`
+- SDK Flutter: `firebase_core` dan `firebase_auth`
+- Firebase diinisialisasi di `main.dart`; bila konfigurasi gagal, aplikasi tetap berjalan dengan penyimpanan lokal.
+- Aktifkan **Authentication → Sign-in method → Email/Password** di Firebase Console.
+
+Alur login dan registrasi saat ini masih memakai akun demo lokal. Migrasi ke Firebase Auth dilakukan terpisah agar data demo dan alur offline tetap stabil.
+
 ### Akun demo
 
 - `ibu@nuri.id` — Siti Rahma, ibu hamil + ibu dari Rafi (18 bulan).
@@ -181,7 +192,7 @@ Cakupan test:
 
 Ini adalah demo lokal untuk mata kuliah, bukan produk produksi:
 
-1. **Firebase belum terpasang.** Tidak ada kredensial proyek, sehingga Auth, Firestore, Functions, FCM, App Check, dan Crashlytics belum aktif. Autentikasi bersifat lokal dan tidak aman untuk produksi.
+1. **Firebase Auth baru terpasang sebagian.** Proyek `nuri-5cddb` sudah terhubung dan `firebase_core`/`firebase_auth` sudah diinisialisasi, tetapi login/registrasi masih memakai akun demo lokal. Firestore, Functions, FCM, App Check, dan Crashlytics belum aktif. Autentikasi lokal ini tidak aman untuk produksi.
 2. **Sinkronisasi hanya simulasi UI.** Antrean "pending sync" dan tombol "Sinkronkan" tidak mengirim data ke server.
 3. **Deteksi makanan disimulasikan.** Tidak ada model TFLite/dataset (PRD OQ-5). Jalur manual TKPI tetap lengkap.
 4. **Scan QR disimulasikan.** Kode keluarga/Posyandu dibuat aplikasi; pemindaian kamera dan verifikasi grant server belum ada.
@@ -193,12 +204,13 @@ Ini adalah demo lokal untuk mata kuliah, bukan produk produksi:
 
 ### Jalur migrasi Firebase
 
-1. Buat proyek Firebase, aktifkan Auth email/password, Firestore, FCM, App Check, dan Crashlytics.
-2. Tambahkan `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_messaging`, `firebase_app_check`, `firebase_crashlytics`; jalankan FlutterFire CLI.
-3. Buat `FirebaseRepository implements AppRepository` (atau pecah per koleksi) dan override provider di `main.dart`.
-4. Pindahkan aturan akses grant, validasi peran, dan penulisan sesi ke Cloud Functions + security rules.
-5. Ganti antrean sinkron lokal dengan mekanisme offline Firestore; pertahankan bentuk state agar UI tidak berubah.
-6. Tambahkan TFLite dan model makanan saat dataset tersedia (OQ-5), lalu buka jalur foto.
+1. Proyek `nuri-5cddb` dan Android app `id.nuri.nuri` sudah terdaftar. Pastikan Auth email/password aktif, lalu aktifkan Firestore, FCM, App Check, dan Crashlytics.
+2. `firebase_core` dan `firebase_auth` sudah terpasang. Tambahkan `cloud_firestore`, `firebase_messaging`, `firebase_app_check`, dan `firebase_crashlytics` untuk tahap berikutnya.
+3. Ganti `AppController.login/register` agar memakai Firebase Auth, lalu petakan Firebase UID ke dokumen pengguna dan data demo.
+4. Buat `FirebaseRepository implements AppRepository` (atau pecah per koleksi) dan override provider di `main.dart`.
+5. Pindahkan aturan akses grant, validasi peran, dan penulisan sesi ke Cloud Functions + security rules.
+6. Ganti antrean sinkron lokal dengan mekanisme offline Firestore; pertahankan bentuk state agar UI tidak berubah.
+7. Tambahkan TFLite dan model makanan saat dataset tersedia (OQ-5), lalu buka jalur foto.
 
 ---
 

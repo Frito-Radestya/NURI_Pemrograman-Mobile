@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "736463015384",
+    "project_id": "nuri-5cddb",
+    "storage_bucket": "nuri-5cddb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736463015384:android:3883d779036bc81baff6ad",
+        "android_client_info": {
+          "package_name": "id.nuri.nuri"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCo0faGM-nePWsu55nntBjcMvJ5Zn9rt2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
