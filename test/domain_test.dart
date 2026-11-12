@@ -6,6 +6,7 @@ import 'package:nuri/data/app_controller.dart';
 import 'package:nuri/data/app_repository.dart';
 import 'package:nuri/data/auth_service.dart';
 import 'package:nuri/data/demo_seed.dart';
+import 'package:nuri/data/firestore_service.dart';
 import 'package:nuri/domain/growth/growth_calculator.dart';
 import 'package:nuri/domain/growth/who_lms.dart';
 import 'package:nuri/domain/models.dart';
@@ -821,6 +822,339 @@ void main() {
       expect(after.pendingWrites, before.pendingWrites);
     });
   });
+
+  group('AppController Firestore CRUD & Sync', () {
+    ProviderContainer makeContainer(
+      AppState seed, {
+      AuthService? auth,
+      DatabaseService? db,
+    }) {
+      final repo = _MemoryRepository();
+      return ProviderContainer(
+        overrides: [
+          localRepositoryProvider.overrideWithValue(repo),
+          appControllerProvider.overrideWith(
+            () => AppController(
+              seed,
+              repo,
+              authService: auth ?? _FakeAuthService(),
+              databaseService: db ?? _FakeDatabaseService(),
+            ),
+          ),
+        ],
+      );
+    }
+
+    test('seedUserDataset menyalin data demo pengguna ke database', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final db = _FakeDatabaseService();
+      final user = seed.users.firstWhere((u) => u.id == 'u_ibu');
+
+      await db.seedUserDataset(user: user, seedData: seed);
+
+      expect(db.users.containsKey('u_ibu'), isTrue);
+      expect(db.children.containsKey('c_rafi'), isTrue);
+      expect(db.pregnancies.isNotEmpty, isTrue);
+      expect(db.foodLogs.isNotEmpty, isTrue);
+    });
+
+    test('addChild menyinkronkan data anak baru ke Firestore', () async {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+
+      final controller = container.read(appControllerProvider.notifier);
+      final error = controller.addChild(
+        nickname: 'Adik Bayi',
+        dob: DateTime(2025, 6, 1),
+        sex: Sex.female,
+      );
+
+      expect(error, isNull);
+      final state = container.read(appControllerProvider);
+      final created = state.children.firstWhere(
+        (c) => c.nickname == 'Adik Bayi',
+      );
+      expect(db.children.containsKey(created.id), isTrue);
+      expect(db.children[created.id]?.nickname, 'Adik Bayi');
+    });
+
+    test('addMeasurement memperbarui anak di Firestore', () async {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+
+      final controller = container.read(appControllerProvider.notifier);
+      final result = controller.addMeasurement(
+        childId: 'c_rafi',
+        weightKg: 11.5,
+        heightCm: 83.0,
+        date: DateTime(2026, 3, 15),
+      );
+
+      expect(result, isNotNull);
+      expect(db.children.containsKey('c_rafi'), isTrue);
+      expect(
+        db.children['c_rafi']?.measurements.any((m) => m.weightKg == 11.5),
+        isTrue,
+      );
+    });
+
+    test('addFoodLog dan deleteFoodLog menyinkronkan catatan makan', () async {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+
+      final controller = container.read(appControllerProvider.notifier);
+      final log = controller.addFoodLog(
+        subjectId: 'c_rafi',
+        date: DateTime(2026, 3, 15),
+        meal: MealType.breakfast,
+        items: [
+          const FoodLogItem(
+            foodId: 'f_egg',
+            name: 'Telur Ayam Rebus',
+            grams: 55,
+            kcalPer100: 155,
+            proteinPer100: 12.6,
+          ),
+        ],
+      );
+
+      expect(log, isNotNull);
+      expect(db.foodLogs.containsKey(log.id), isTrue);
+
+      controller.deleteFoodLog(log.id);
+      expect(db.foodLogs.containsKey(log.id), isFalse);
+    });
+
+    test('addRosterTarget menyinkronkan sasaran kader ke Firestore', () async {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_kader');
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+
+      final controller = container.read(appControllerProvider.notifier);
+      final error = controller.addRosterTarget(
+        name: 'Anak Posyandu Baru',
+        type: RosterType.child,
+        dob: DateTime(2025, 8, 1),
+        sex: Sex.male,
+        birthWeightKg: 3.2,
+        birthLengthCm: 49.5,
+      );
+
+      expect(error, isNull);
+      final state = container.read(appControllerProvider);
+      final entry = state.roster.firstWhere(
+        (r) => r.name == 'Anak Posyandu Baru',
+      );
+      expect(db.roster.containsKey(entry.id), isTrue);
+    });
+
+    test(
+      'syncNow menyinkronkan seluruh entitas dan membersihkan pendingWrites',
+      () async {
+        final seed = DemoSeed.build(
+          who: who,
+          today: DateTime(2026, 3, 15),
+        ).copyWith(currentUserId: 'u_kader');
+        final db = _FakeDatabaseService();
+        final container = makeContainer(seed, db: db);
+        addTearDown(container.dispose);
+
+        final controller = container.read(appControllerProvider.notifier);
+        await controller.syncNow();
+
+        final state = container.read(appControllerProvider);
+        expect(state.pendingWrites, 0);
+        expect(state.lastSyncAt, isNotNull);
+        expect(db.syncAllCalls, 1);
+        expect(db.pullCalls, 1);
+      },
+    );
+
+    test('commitState tetap berjalan normal saat database tidak siap', () {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final db = _FakeDatabaseService(available: false);
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+
+      final controller = container.read(appControllerProvider.notifier);
+      final error = controller.addChild(
+        nickname: 'Bayi Offline',
+        dob: DateTime(2025, 9, 1),
+        sex: Sex.male,
+      );
+
+      expect(error, isNull);
+      expect(db.syncChangesCalls, 0);
+    });
+  });
+}
+
+class _FakeDatabaseService implements DatabaseService {
+  _FakeDatabaseService({this.available = true});
+
+  bool available;
+  final Map<String, AppUser> users = {};
+  final Map<String, Child> children = {};
+  final Map<String, Pregnancy> pregnancies = {};
+  final Map<String, FoodLog> foodLogs = {};
+  final Map<String, RosterEntry> roster = {};
+  final Map<String, PosyanduSession> sessions = {};
+  final Map<String, AccessGrant> grants = {};
+
+  int syncChangesCalls = 0;
+  int syncAllCalls = 0;
+  int seedCalls = 0;
+  int pullCalls = 0;
+
+  @override
+  bool get isAvailable => available;
+
+  @override
+  Future<bool> userExists(String userId) async => users.containsKey(userId);
+
+  @override
+  Future<void> seedUserDataset({
+    required AppUser user,
+    required AppState seedData,
+  }) async {
+    seedCalls++;
+    users[user.id] = user;
+    for (final c in seedData.children) {
+      children[c.id] = c;
+    }
+    for (final p in seedData.pregnancies) {
+      pregnancies[p.id] = p;
+    }
+    for (final f in seedData.foodLogs) {
+      foodLogs[f.id] = f;
+    }
+    for (final r in seedData.roster) {
+      roster[r.id] = r;
+    }
+    for (final s in seedData.sessions) {
+      sessions[s.id] = s;
+    }
+  }
+
+  @override
+  Future<AppState?> pullUserDataset({
+    required AppUser user,
+    required AppState currentState,
+  }) async {
+    pullCalls++;
+    return currentState.copyWith(
+      children: children.values.toList(),
+      pregnancies: pregnancies.values.toList(),
+      foodLogs: foodLogs.values.toList(),
+      roster: roster.values.toList(),
+      sessions: sessions.values.toList(),
+      pendingWrites: 0,
+      lastSyncAt: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<void> syncChanges({
+    required AppState previous,
+    required AppState next,
+    required AppUser user,
+  }) async {
+    syncChangesCalls++;
+    for (final c in next.children) {
+      children[c.id] = c;
+    }
+    final nextChildIds = next.children.map((c) => c.id).toSet();
+    for (final c in previous.children) {
+      if (!nextChildIds.contains(c.id)) children.remove(c.id);
+    }
+
+    for (final p in next.pregnancies) {
+      pregnancies[p.id] = p;
+    }
+    for (final f in next.foodLogs) {
+      foodLogs[f.id] = f;
+    }
+    final nextLogIds = next.foodLogs.map((l) => l.id).toSet();
+    for (final f in previous.foodLogs) {
+      if (!nextLogIds.contains(f.id)) foodLogs.remove(f.id);
+    }
+
+    for (final r in next.roster) {
+      roster[r.id] = r;
+    }
+    for (final s in next.sessions) {
+      sessions[s.id] = s;
+    }
+  }
+
+  @override
+  Future<void> syncAll({required AppState state, required AppUser user}) async {
+    syncAllCalls++;
+    for (final c in state.children) {
+      children[c.id] = c;
+    }
+    for (final p in state.pregnancies) {
+      pregnancies[p.id] = p;
+    }
+    for (final f in state.foodLogs) {
+      foodLogs[f.id] = f;
+    }
+    for (final r in state.roster) {
+      roster[r.id] = r;
+    }
+    for (final s in state.sessions) {
+      sessions[s.id] = s;
+    }
+  }
+
+  @override
+  Future<void> saveUser(AppUser user) async => users[user.id] = user;
+  @override
+  Future<void> saveChild(Child child) async => children[child.id] = child;
+  @override
+  Future<void> deleteChild(String id) async => children.remove(id);
+  @override
+  Future<void> savePregnancy(Pregnancy pregnancy) async =>
+      pregnancies[pregnancy.id] = pregnancy;
+  @override
+  Future<void> deletePregnancy(String id) async => pregnancies.remove(id);
+  @override
+  Future<void> saveFoodLog(FoodLog log) async => foodLogs[log.id] = log;
+  @override
+  Future<void> deleteFoodLog(String id) async => foodLogs.remove(id);
+  @override
+  Future<void> saveRosterEntry(RosterEntry entry) async =>
+      roster[entry.id] = entry;
+  @override
+  Future<void> deleteRosterEntry(String id) async => roster.remove(id);
+  @override
+  Future<void> saveSession(PosyanduSession session) async =>
+      sessions[session.id] = session;
+  @override
+  Future<void> saveAccessGrant(AccessGrant grant) async =>
+      grants[grant.id] = grant;
 }
 
 class _FakeAuthService implements AuthService {

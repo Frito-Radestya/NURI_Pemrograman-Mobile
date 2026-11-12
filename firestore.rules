@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pembantu autentikasi
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && (request.auth.uid == uid || resource.data.authUid == request.auth.uid);
+    }
+
+    // Profil pengguna: pengguna dapat membaca profil dan mengubah profil miliknya sendiri
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || request.auth.uid == userId;
+    }
+
+    // Anak: ibu pemilik atau kader di posyandu yang sama
+    match /children/{childId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Kehamilan: ibu pemilik
+    match /pregnancies/{pregnancyId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Catatan makan harian
+    match /food_logs/{logId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Roster Posyandu & sesi penimbangan
+    match /roster/{entryId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /sessions/{sessionId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Artikel edukasi: publik dapat membaca, penulisan dibatasi pengguna terautentikasi
+    match /contents/{articleId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Izin akses data keluarga untuk kader
+    match /access_grants/{grantId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

@@ -138,7 +138,33 @@ extension AuthActions on AppController {
         consentAccepted: isNewUser ? false : currentState.consentAccepted,
       ),
     );
+    if (databaseService.isAvailable) {
+      unawaited(_hydrateOrSeedFirestore(user));
+    }
     return null;
+  }
+
+  Future<void> _hydrateOrSeedFirestore(AppUser user) async {
+    if (!databaseService.isAvailable) return;
+    try {
+      final exists = await databaseService.userExists(user.id);
+      if (!exists) {
+        await databaseService.seedUserDataset(
+          user: user,
+          seedData: currentState,
+        );
+      } else {
+        final remote = await databaseService.pullUserDataset(
+          user: user,
+          currentState: currentState,
+        );
+        if (remote != null) {
+          commitState(remote);
+        }
+      }
+    } catch (e) {
+      debugPrint('Firestore hydrate/seed gagal: $e');
+    }
   }
 
   String _nameFromEmail(String email) {
@@ -168,6 +194,9 @@ extension AuthActions on AppController {
         landingSeen: true,
       ),
     );
+    if (databaseService.isAvailable) {
+      unawaited(_hydrateOrSeedFirestore(user));
+    }
   }
 
   void loginAsUser(String userId) {
@@ -181,6 +210,16 @@ extension AuthActions on AppController {
         landingSeen: true,
       ),
     );
+    AppUser? user;
+    for (final u in currentState.users) {
+      if (u.id == userId) {
+        user = u;
+        break;
+      }
+    }
+    if (user != null && databaseService.isAvailable) {
+      unawaited(_hydrateOrSeedFirestore(user));
+    }
   }
 
   void logout() {

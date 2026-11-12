@@ -242,7 +242,19 @@ extension CadreActions on AppController {
     );
   }
 
-  void syncNow() {
+  Future<void> syncNow() async {
+    final user = currentState.currentUser;
+    if (databaseService.isAvailable && user != null) {
+      await databaseService.syncAll(state: currentState, user: user);
+      final pulled = await databaseService.pullUserDataset(
+        user: user,
+        currentState: currentState,
+      );
+      if (pulled != null) {
+        commitState(pulled);
+        return;
+      }
+    }
     final children = currentState.children.map((child) {
       return child.copyWith(
         measurements: child.measurements

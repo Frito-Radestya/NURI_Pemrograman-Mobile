@@ -37,8 +37,11 @@ Di Android, data demo disimpan di SQLite (`nuri.db`) dengan migrasi otomatis dar
 - Proyek Firebase: `nuri-5cddb`
 - Android package: `id.nuri.nuri`
 - Konfigurasi Android: `android/app/google-services.json`
-- SDK Flutter: `firebase_core` dan `firebase_auth`
+- SDK Flutter: `firebase_core`, `firebase_auth`, dan `cloud_firestore`
 - Firebase diinisialisasi di `main.dart`; bila konfigurasi gagal, aplikasi tetap berjalan dengan penyimpanan lokal.
+- Database: Cloud Firestore dengan offline persistence; aturan keamanan tersedia di `firestore.rules`.
+- Seeding & CRUD: Dataset demo disalin per akun demo saat pertama kali login; setiap aksi CRUD (anak, pengukuran, kehamilan, makanan, roster, sesi) disinkronkan ke Firestore.
+- Tombol **Sinkronkan** di beranda kader dan profil mengirim seluruh perubahan lokal dan menarik dokumen terbaru dari Firestore.
 - Aktifkan **Authentication → Sign-in method → Email/Password** di Firebase Console.
 - Login, registrasi, logout, dan reset password memakai Firebase Authentication.
 - Akun Firebase dipetakan ke `AppUser.authUid`; akun demo lama tetap memakai id lokal (`u_ibu`, `u_kader`) agar data yang sudah ada tidak hilang.
@@ -120,7 +123,7 @@ assets/
   data/                         WHO HFA (LMS harian) + subset TKPI 2017
   fonts/ images/                Nunito, Inter, foto demo
 test/
-  domain_test.dart              44 uji domain, auth, dan konsistensi data demo
+  domain_test.dart              51 uji domain, auth, firestore CRUD, dan konsistensi data demo
   widget_test.dart              smoke test landing page
 ```
 
@@ -182,7 +185,7 @@ Nama, usia, dan nominal mengikuti skenario PRD/screenshot. Data ini fiktif dan h
 
 ```bash
 flutter analyze   # harus: No issues found!
-flutter test      # 45 test lulus
+flutter test      # 52 test lulus
 ```
 
 Cakupan test:
@@ -196,6 +199,7 @@ Cakupan test:
 - Label ramah keluarga untuk kategori pertumbuhan.
 - Aksi controller: login kader, pengukuran kader (hadir + antrean sinkron), dan pengukuran ibu (langsung tersinkron).
 - Auth: pemetaan akun demo ke Firebase UID, pengguna Firebase baru, pesan error, fallback demo, registrasi, dan reset password.
+- Firestore CRUD & Sync: seeding dataset per akun demo, penambahan/penghapusan anak, pengukuran baru, catatan makan, sasaran roster, dan sinkronisasi dua arah `syncNow`.
 - Smoke test landing page setelah splash.
 
 ---
@@ -204,8 +208,8 @@ Cakupan test:
 
 Ini adalah demo lokal untuk mata kuliah, bukan produk produksi:
 
-1. **Firebase Auth terpasang, database belum.** Login, registrasi, logout, dan reset password memakai Firebase Authentication setelah provider Email/Password diaktifkan di console. Data kesehatan, anak, kehamilan, dan catatan makan masih tersimpan lokal di SQLite; Firestore, Functions, FCM, App Check, dan Crashlytics belum aktif. Fallback lokal untuk akun demo tidak aman untuk produksi.
-2. **Sinkronisasi hanya simulasi UI.** Antrean "pending sync" dan tombol "Sinkronkan" tidak mengirim data ke server.
+1. **Firebase Auth & Firestore aktif.** Login, registrasi, logout, reset password, dan sinkronisasi data (anak, pengukuran, kehamilan, catatan makan, sasaran roster, sesi) terhubung ke Firestore dengan persistensi lokal SQLite. Cloud Functions, FCM, App Check, dan Crashlytics belum aktif.
+2. **Sinkronisasi dua arah ke Firestore.** Tombol "Sinkronkan" mengirim dan menarik data dari Firestore; integrasi e-PPGBM eksternal belum diimplementasikan.
 3. **Deteksi makanan disimulasikan.** Tidak ada model TFLite/dataset (PRD OQ-5). Jalur manual TKPI tetap lengkap.
 4. **Scan QR disimulasikan.** Kode keluarga/Posyandu dibuat aplikasi; pemindaian kamera dan verifikasi grant server belum ada.
 5. **Rekap CSV berupa pratinjau + salin.** Berbagi/menyimpan berkas dan integrasi e-PPGBM belum diimplementasikan.
@@ -216,14 +220,11 @@ Ini adalah demo lokal untuk mata kuliah, bukan produk produksi:
 
 ### Jalur migrasi Firebase
 
-1. Proyek `nuri-5cddb` dan Android app `id.nuri.nuri` sudah terdaftar. Auth email/password sudah diintegrasikan; aktifkan provider di console, lalu aktifkan Firestore, FCM, App Check, dan Crashlytics untuk tahap berikutnya.
-2. `firebase_core` dan `firebase_auth` sudah terpasang. Tambahkan `cloud_firestore`, `firebase_messaging`, `firebase_app_check`, dan `firebase_crashlytics`.
-3. Buat dokumen `users/{uid}` di Firestore untuk menyimpan nama, peran, dan `posyanduId`. Setelah itu, peran tidak perlu dipilih ulang saat login di perangkat baru.
-4. Buat `FirebaseRepository implements AppRepository` (atau pecah per koleksi) dan override provider di `main.dart`. Gunakan `authUid` untuk aturan keamanan, sementara id lokal tetap dipakai untuk relasi data demo.
-5. Seed data demo per akun demo ke Firestore. Untuk sementara, data demo masih lokal.
-6. Pindahkan aturan akses grant, validasi peran, dan penulisan sesi ke security rules; Cloud Functions baru diperlukan bila memakai paket Blaze.
-7. Ganti antrean sinkron lokal dengan mekanisme offline Firestore; pertahankan bentuk state agar UI tidak berubah.
-8. Tambahkan TFLite dan model makanan saat dataset tersedia (OQ-5), lalu buka jalur foto.
+1. Proyek `nuri-5cddb` dan Android app `id.nuri.nuri` sudah terdaftar. Auth email/password dan Cloud Firestore sudah terintegrasi; security rules tersedia di `firestore.rules`.
+2. `firebase_core`, `firebase_auth`, dan `cloud_firestore` sudah terpasang. Tambahkan `firebase_messaging`, `firebase_app_check`, dan `firebase_crashlytics` untuk tahap rilis produksi.
+3. Aturan akses peran sudah didefinisikan di `firestore.rules` (Spark plan); Cloud Functions baru diperlukan bila beralih ke paket Blaze.
+4. Mekanisme offline Firestore dan SQLite berjalan bersamaan agar UI tetap instan dan tahan tanpa koneksi.
+5. Tambahkan TFLite dan model makanan saat dataset tersedia (OQ-5), lalu buka jalur foto.
 
 ---
 
