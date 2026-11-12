@@ -40,8 +40,19 @@ Di Android, data demo disimpan di SQLite (`nuri.db`) dengan migrasi otomatis dar
 - SDK Flutter: `firebase_core` dan `firebase_auth`
 - Firebase diinisialisasi di `main.dart`; bila konfigurasi gagal, aplikasi tetap berjalan dengan penyimpanan lokal.
 - Aktifkan **Authentication → Sign-in method → Email/Password** di Firebase Console.
+- Login, registrasi, logout, dan reset password memakai Firebase Authentication.
+- Akun Firebase dipetakan ke `AppUser.authUid`; akun demo lama tetap memakai id lokal (`u_ibu`, `u_kader`) agar data yang sudah ada tidak hilang.
+- Di web preview, Firebase belum diinisialisasi sehingga login/registrasi memakai penyimpanan lokal.
 
-Alur login dan registrasi saat ini masih memakai akun demo lokal. Migrasi ke Firebase Auth dilakukan terpisah agar data demo dan alur offline tetap stabil.
+> **Status verifikasi:** Firebase Core berhasil terhubung, tetapi saat build ini diuji provider **Email/Password masih nonaktif** di Firebase Console. Aktifkan provider tersebut agar login dan registrasi Firebase berhasil. Selama nonaktif, akun demo tetap bisa masuk lewat fallback lokal.
+
+Untuk membuat akun demo di Firebase Console, tambahkan user berikut dengan password `nuri123`:
+
+- `ibu@nuri.id`
+- `sinta@nuri.id`
+- `kader@nuri.id`
+
+Tanpa akun Firebase tersebut, tombol **Demo Ibu** / **Demo Kader** tetap dapat dipakai. Form login juga memiliki fallback demo saat akun demo belum ada, provider email/password belum aktif, atau perangkat offline. Fallback ini tidak berlaku untuk password salah.
 
 ### Akun demo
 
@@ -49,7 +60,7 @@ Alur login dan registrasi saat ini masih memakai akun demo lokal. Migrasi ke Fir
 - `sinta@nuri.id` — Sinta, ibu dari Maya Clarissa (22 bulan).
 - `kader@nuri.id` — Nur Aisyah, kader Posyandu Melati II.
 
-Password apa pun dengan **minimal 6 karakter** diterima untuk akun demo (contoh: `nuri123`). Tombol **Masuk sebagai Ibu** / **Masuk sebagai Kader** di halaman login juga tersedia. Pendaftaran akun baru membuat akun lokal di perangkat, bukan akun Firebase.
+Password akun demo di Firebase adalah `nuri123` bila user demo sudah dibuat di Firebase Console. Tombol **Demo Ibu** / **Demo Kader** di halaman login tetap bekerja tanpa password dan memakai data lokal. Pendaftaran akun baru di Android membuat akun Firebase Authentication; di web preview, pendaftaran masih lokal karena Firebase belum dikonfigurasi untuk web.
 
 ---
 
@@ -109,7 +120,7 @@ assets/
   data/                         WHO HFA (LMS harian) + subset TKPI 2017
   fonts/ images/                Nunito, Inter, foto demo
 test/
-  domain_test.dart              36 uji domain + konsistensi data demo
+  domain_test.dart              44 uji domain, auth, dan konsistensi data demo
   widget_test.dart              smoke test landing page
 ```
 
@@ -171,7 +182,7 @@ Nama, usia, dan nominal mengikuti skenario PRD/screenshot. Data ini fiktif dan h
 
 ```bash
 flutter analyze   # harus: No issues found!
-flutter test      # 37 test lulus
+flutter test      # 45 test lulus
 ```
 
 Cakupan test:
@@ -184,6 +195,7 @@ Cakupan test:
 - Konsistensi data demo (52 sasaran, 38 hadir, distribusi kategori, 685 kkal, akun demo).
 - Label ramah keluarga untuk kategori pertumbuhan.
 - Aksi controller: login kader, pengukuran kader (hadir + antrean sinkron), dan pengukuran ibu (langsung tersinkron).
+- Auth: pemetaan akun demo ke Firebase UID, pengguna Firebase baru, pesan error, fallback demo, registrasi, dan reset password.
 - Smoke test landing page setelah splash.
 
 ---
@@ -192,7 +204,7 @@ Cakupan test:
 
 Ini adalah demo lokal untuk mata kuliah, bukan produk produksi:
 
-1. **Firebase Auth baru terpasang sebagian.** Proyek `nuri-5cddb` sudah terhubung dan `firebase_core`/`firebase_auth` sudah diinisialisasi, tetapi login/registrasi masih memakai akun demo lokal. Firestore, Functions, FCM, App Check, dan Crashlytics belum aktif. Autentikasi lokal ini tidak aman untuk produksi.
+1. **Firebase Auth terpasang, database belum.** Login, registrasi, logout, dan reset password memakai Firebase Authentication setelah provider Email/Password diaktifkan di console. Data kesehatan, anak, kehamilan, dan catatan makan masih tersimpan lokal di SQLite; Firestore, Functions, FCM, App Check, dan Crashlytics belum aktif. Fallback lokal untuk akun demo tidak aman untuk produksi.
 2. **Sinkronisasi hanya simulasi UI.** Antrean "pending sync" dan tombol "Sinkronkan" tidak mengirim data ke server.
 3. **Deteksi makanan disimulasikan.** Tidak ada model TFLite/dataset (PRD OQ-5). Jalur manual TKPI tetap lengkap.
 4. **Scan QR disimulasikan.** Kode keluarga/Posyandu dibuat aplikasi; pemindaian kamera dan verifikasi grant server belum ada.
@@ -204,13 +216,14 @@ Ini adalah demo lokal untuk mata kuliah, bukan produk produksi:
 
 ### Jalur migrasi Firebase
 
-1. Proyek `nuri-5cddb` dan Android app `id.nuri.nuri` sudah terdaftar. Pastikan Auth email/password aktif, lalu aktifkan Firestore, FCM, App Check, dan Crashlytics.
-2. `firebase_core` dan `firebase_auth` sudah terpasang. Tambahkan `cloud_firestore`, `firebase_messaging`, `firebase_app_check`, dan `firebase_crashlytics` untuk tahap berikutnya.
-3. Ganti `AppController.login/register` agar memakai Firebase Auth, lalu petakan Firebase UID ke dokumen pengguna dan data demo.
-4. Buat `FirebaseRepository implements AppRepository` (atau pecah per koleksi) dan override provider di `main.dart`.
-5. Pindahkan aturan akses grant, validasi peran, dan penulisan sesi ke Cloud Functions + security rules.
-6. Ganti antrean sinkron lokal dengan mekanisme offline Firestore; pertahankan bentuk state agar UI tidak berubah.
-7. Tambahkan TFLite dan model makanan saat dataset tersedia (OQ-5), lalu buka jalur foto.
+1. Proyek `nuri-5cddb` dan Android app `id.nuri.nuri` sudah terdaftar. Auth email/password sudah diintegrasikan; aktifkan provider di console, lalu aktifkan Firestore, FCM, App Check, dan Crashlytics untuk tahap berikutnya.
+2. `firebase_core` dan `firebase_auth` sudah terpasang. Tambahkan `cloud_firestore`, `firebase_messaging`, `firebase_app_check`, dan `firebase_crashlytics`.
+3. Buat dokumen `users/{uid}` di Firestore untuk menyimpan nama, peran, dan `posyanduId`. Setelah itu, peran tidak perlu dipilih ulang saat login di perangkat baru.
+4. Buat `FirebaseRepository implements AppRepository` (atau pecah per koleksi) dan override provider di `main.dart`. Gunakan `authUid` untuk aturan keamanan, sementara id lokal tetap dipakai untuk relasi data demo.
+5. Seed data demo per akun demo ke Firestore. Untuk sementara, data demo masih lokal.
+6. Pindahkan aturan akses grant, validasi peran, dan penulisan sesi ke security rules; Cloud Functions baru diperlukan bila memakai paket Blaze.
+7. Ganti antrean sinkron lokal dengan mekanisme offline Firestore; pertahankan bentuk state agar UI tidak berubah.
+8. Tambahkan TFLite dan model makanan saat dataset tersedia (OQ-5), lalu buka jalur foto.
 
 ---
 
