@@ -35,6 +35,9 @@ abstract class DatabaseService {
   /// Menyinkronkan seluruh state lokal pengguna ke Firestore.
   Future<void> syncAll({required AppState state, required AppUser user});
 
+  /// Memasukkan seluruh dataset demo bawaan (semua akun dan entitas) ke Firestore.
+  Future<void> seedAllDemoData({required AppState seedData});
+
   // Operasi CRUD satuan
   Future<void> saveUser(AppUser user);
   Future<void> saveChild(Child child);
@@ -384,6 +387,78 @@ class FirestoreService implements DatabaseService {
       debugPrint('Firestore syncAll berhasil');
     } catch (e) {
       debugPrint('Firestore syncAll gagal: $e');
+    }
+  }
+
+  @override
+  Future<void> seedAllDemoData({required AppState seedData}) async {
+    if (!isAvailable) return;
+    try {
+      final batch = _db.batch();
+
+      for (final user in seedData.users) {
+        batch.set(
+          _db.collection('users').doc(user.id),
+          user.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+      for (final child in seedData.children) {
+        batch.set(
+          _db.collection('children').doc(child.id),
+          child.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+      for (final p in seedData.pregnancies) {
+        batch.set(
+          _db.collection('pregnancies').doc(p.id),
+          p.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+      for (final f in seedData.foodLogs) {
+        batch.set(
+          _db.collection('food_logs').doc(f.id),
+          f.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+      for (final r in seedData.roster) {
+        batch.set(
+          _db.collection('roster').doc(r.id),
+          r.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+      for (final s in seedData.sessions) {
+        batch.set(
+          _db.collection('sessions').doc(s.id),
+          s.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+      for (final c in seedData.contents) {
+        batch.set(
+          _db.collection('contents').doc(c.id),
+          c.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+      for (final g in seedData.accessGrants) {
+        batch.set(
+          _db.collection('access_grants').doc(g.id),
+          g.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+
+      await batch.commit();
+      debugPrint(
+        'Firestore seedAllDemoData berhasil: seluruh data demo telah masuk ke Firestore.',
+      );
+    } catch (e) {
+      debugPrint('Firestore seedAllDemoData gagal: $e');
     }
   }
 
