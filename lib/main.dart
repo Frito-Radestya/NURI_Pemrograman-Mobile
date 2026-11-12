@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'data/app_controller.dart';
 import 'data/app_repository.dart';
+import 'data/auth_service.dart';
 import 'data/demo_seed.dart';
 import 'data/local_repository.dart';
 import 'data/sqlite_repository.dart';
@@ -72,7 +73,11 @@ Future<void> main() async {
       overrides: [
         localRepositoryProvider.overrideWithValue(repository),
         appControllerProvider.overrideWith(
-          () => AppController(initial, repository),
+          () => AppController(
+            initial,
+            repository,
+            authService: FirebaseAuthService(),
+          ),
         ),
       ],
       child: const NuriApp(),

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:nuri/data/app_controller.dart';
 import 'package:nuri/data/app_repository.dart';
+import 'package:nuri/data/auth_service.dart';
 import 'package:nuri/data/demo_seed.dart';
 import 'package:nuri/domain/growth/growth_calculator.dart';
 import 'package:nuri/domain/growth/who_lms.dart';
@@ -554,6 +555,178 @@ void main() {
     });
   });
 
+  group('AppController Firebase Auth', () {
+    ProviderContainer makeContainer(AppState seed, AuthService auth) {
+      final repo = _MemoryRepository();
+      return ProviderContainer(
+        overrides: [
+          localRepositoryProvider.overrideWithValue(repo),
+          appControllerProvider.overrideWith(
+            () => AppController(seed, repo, authService: auth),
+          ),
+        ],
+      );
+    }
+
+    test('login Firebase mempertahankan data akun demo', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService()
+        ..signInSession = const AuthSession(
+          uid: 'fb_ibu',
+          email: 'ibu@nuri.id',
+          displayName: 'Siti Rahma',
+        );
+      final container = makeContainer(seed, auth);
+      addTearDown(container.dispose);
+
+      final error = await container
+          .read(appControllerProvider.notifier)
+          .login('ibu@nuri.id', 'rahasia123');
+
+      expect(error, isNull);
+      final state = container.read(appControllerProvider);
+      expect(state.currentUser?.id, 'u_ibu');
+      expect(state.currentUser?.authUid, 'fb_ibu');
+      expect(state.currentUser?.demo, isTrue);
+      expect(state.myChildren, isNotEmpty);
+    });
+
+    test(
+      'login Firebase pengguna baru memakai UID dan peran pilihan',
+      () async {
+        final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+        final auth = _FakeAuthService()
+          ..signInSession = const AuthSession(
+            uid: 'fb_kader',
+            email: 'kader.baru@nuri.id',
+            displayName: 'Kader Baru',
+          );
+        final container = makeContainer(seed, auth);
+        addTearDown(container.dispose);
+
+        final error = await container
+            .read(appControllerProvider.notifier)
+            .login('kader.baru@nuri.id', 'rahasia123', role: UserRole.cadre);
+
+        expect(error, isNull);
+        final state = container.read(appControllerProvider);
+        expect(state.currentUser?.id, 'fb_kader');
+        expect(state.currentUser?.role, UserRole.cadre);
+        expect(state.currentUser?.authUid, 'fb_kader');
+        expect(state.currentUser?.demo, isFalse);
+        expect(state.onboardingSeen, isFalse);
+        expect(state.consentAccepted, isFalse);
+      },
+    );
+
+    test('login Firebase menampilkan pesan password salah', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService()
+        ..signInFailure = const AuthFailure('wrong-password');
+      final container = makeContainer(seed, auth);
+      addTearDown(container.dispose);
+
+      final error = await container
+          .read(appControllerProvider.notifier)
+          .login('ibu@nuri.id', 'rahasia123');
+
+      expect(error, 'Email atau password salah.');
+      expect(container.read(appControllerProvider).currentUser, isNull);
+    });
+
+    test('akun demo tetap bisa masuk saat belum ada di Firebase', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService()
+        ..signInFailure = const AuthFailure('user-not-found');
+      final container = makeContainer(seed, auth);
+      addTearDown(container.dispose);
+
+      final error = await container
+          .read(appControllerProvider.notifier)
+          .login('ibu@nuri.id', 'rahasia123');
+
+      expect(error, isNull);
+      expect(container.read(appControllerProvider).currentUser?.id, 'u_ibu');
+    });
+
+    test('register Firebase membuat pengguna dengan UID Firebase', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService()
+        ..registerSession = const AuthSession(
+          uid: 'fb_reg',
+          email: 'baru@nuri.id',
+          displayName: 'Ibu Baru',
+        );
+      final container = makeContainer(seed, auth);
+      addTearDown(container.dispose);
+
+      final error = await container
+          .read(appControllerProvider.notifier)
+          .register(
+            name: 'Ibu Baru',
+            email: 'baru@nuri.id',
+            password: 'rahasia123',
+            role: UserRole.mother,
+          );
+
+      expect(error, isNull);
+      final state = container.read(appControllerProvider);
+      expect(state.currentUser?.id, 'fb_reg');
+      expect(state.currentUser?.authUid, 'fb_reg');
+      expect(state.currentUser?.demo, isFalse);
+      expect(state.onboardingSeen, isFalse);
+      expect(auth.registerCalls, 1);
+    });
+
+    test('register menolak email lokal yang sudah dipakai', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService();
+      final container = makeContainer(seed, auth);
+      addTearDown(container.dispose);
+
+      final error = await container
+          .read(appControllerProvider.notifier)
+          .register(
+            name: 'Siti Rahma',
+            email: 'ibu@nuri.id',
+            password: 'rahasia123',
+            role: UserRole.mother,
+          );
+
+      expect(error, contains('sudah digunakan'));
+      expect(auth.registerCalls, 0);
+    });
+
+    test('reset password memanggil Firebase', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService();
+      final container = makeContainer(seed, auth);
+      addTearDown(container.dispose);
+
+      final error = await container
+          .read(appControllerProvider.notifier)
+          .resetPassword('baru@nuri.id');
+
+      expect(error, isNull);
+      expect(auth.resetCalls, 1);
+    });
+
+    test('login lokal tetap tersedia saat Firebase tidak siap', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService(available: false);
+      final container = makeContainer(seed, auth);
+      addTearDown(container.dispose);
+
+      final error = await container
+          .read(appControllerProvider.notifier)
+          .login('ibu@nuri.id', 'rahasia123');
+
+      expect(error, isNull);
+      expect(container.read(appControllerProvider).currentUser?.id, 'u_ibu');
+      expect(auth.signInCalls, 0);
+    });
+  });
+
   group('Label ramah keluarga', () {
     test('setiap kategori pertumbuhan punya label non-klinis', () {
       expect(GrowthCategory.normal.plainLabel, 'Tumbuh optimal');
@@ -648,6 +821,65 @@ void main() {
       expect(after.pendingWrites, before.pendingWrites);
     });
   });
+}
+
+class _FakeAuthService implements AuthService {
+  _FakeAuthService({this.available = true});
+
+  bool available;
+
+  AuthSession? signInSession;
+  AuthSession? registerSession;
+  AuthFailure? signInFailure;
+  AuthFailure? registerFailure;
+  AuthFailure? resetFailure;
+
+  int signInCalls = 0;
+  int registerCalls = 0;
+  int resetCalls = 0;
+  int signOutCalls = 0;
+  int updateNameCalls = 0;
+
+  @override
+  bool get isAvailable => available;
+
+  @override
+  Future<AuthSession> signIn({
+    required String email,
+    required String password,
+  }) async {
+    signInCalls++;
+    if (signInFailure != null) throw signInFailure!;
+    return signInSession ?? AuthSession(uid: 'uid_$email', email: email);
+  }
+
+  @override
+  Future<AuthSession> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    registerCalls++;
+    if (registerFailure != null) throw registerFailure!;
+    return registerSession ??
+        AuthSession(uid: 'uid_$email', email: email, displayName: name);
+  }
+
+  @override
+  Future<void> signOut() async {
+    signOutCalls++;
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    resetCalls++;
+    if (resetFailure != null) throw resetFailure!;
+  }
+
+  @override
+  Future<void> updateDisplayName(String name) async {
+    updateNameCalls++;
+  }
 }
 
 class _MemoryRepository implements AppRepository {

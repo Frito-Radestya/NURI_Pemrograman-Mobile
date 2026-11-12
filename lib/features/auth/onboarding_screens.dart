@@ -39,7 +39,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     _role = widget.initialRole ?? UserRole.mother;
-    _email.text = _demoEmail(_role);
   }
 
   @override
@@ -49,18 +48,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  String _demoEmail(UserRole role) =>
-      role == UserRole.cadre ? 'kader@nuri.id' : 'ibu@nuri.id';
-
   void _selectRole(UserRole role) {
     if (_role == role) return;
     setState(() {
       _role = role;
-      if (_email.text.isEmpty ||
-          _email.text == 'ibu@nuri.id' ||
-          _email.text == 'kader@nuri.id') {
-        _email.text = _demoEmail(role);
-      }
       _error = null;
     });
   }
@@ -76,9 +67,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _loading = true;
       _error = null;
     });
-    final error = ref
+    final error = await ref
         .read(appControllerProvider.notifier)
-        .login(_email.text, _password.text);
+        .login(_email.text, _password.text, role: _role);
     if (!mounted) return;
     if (error != null) {
       setState(() {
@@ -88,6 +79,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
     _finish();
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = await showDialog<String>(
+      context: context,
+      builder: (_) => _ResetPasswordDialog(initialEmail: _email.text),
+    );
+    if (!mounted || email == null) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final error = await ref
+        .read(appControllerProvider.notifier)
+        .resetPassword(email);
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (error != null) {
+      setState(() => _error = error);
+      return;
+    }
+    showNuriSnack(
+      context,
+      'Tautan reset password sudah dikirim. Periksa email dan folder spam.',
+    );
   }
 
   void _demo(UserRole role) {
@@ -151,7 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     NuriTextField(
                       label: 'Email',
                       controller: _email,
-                      hint: _demoEmail(_role),
+                      hint: 'nama@email.com',
                       prefixIcon: Icons.mail_outline_rounded,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -225,10 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Align(
                       alignment: Alignment.center,
                       child: TextButton(
-                        onPressed: () => showNuriSnack(
-                          context,
-                          'Pada demo, gunakan password minimal 6 karakter.',
-                        ),
+                        onPressed: _loading ? null : _forgotPassword,
                         child: const Text('Lupa password?'),
                       ),
                     ),
@@ -335,6 +348,71 @@ class _DemoButton extends StatelessWidget {
   }
 }
 
+class _ResetPasswordDialog extends StatefulWidget {
+  const _ResetPasswordDialog({required this.initialEmail});
+
+  final String initialEmail;
+
+  @override
+  State<_ResetPasswordDialog> createState() => _ResetPasswordDialogState();
+}
+
+class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
+  late final TextEditingController _email;
+
+  @override
+  void initState() {
+    super.initState();
+    _email = TextEditingController(text: widget.initialEmail.trim());
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
+  void _submit() => Navigator.of(context).pop(_email.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reset password'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Masukkan email akun Firebase. Kami akan mengirim tautan untuk membuat password baru.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.muted,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          NuriTextField(
+            label: 'Email',
+            controller: _email,
+            hint: 'nama@email.com',
+            prefixIcon: Icons.mail_outline_rounded,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Kirim tautan')),
+      ],
+    );
+  }
+}
+
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key, this.initialRole});
 
@@ -379,7 +457,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       _loading = true;
       _error = null;
     });
-    final error = ref
+    final error = await ref
         .read(appControllerProvider.notifier)
         .register(
           name: _name.text,

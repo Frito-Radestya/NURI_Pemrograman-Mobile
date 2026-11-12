@@ -198,6 +198,7 @@ class AppUser {
     this.posyanduId,
     this.avatarAsset,
     this.demo = true,
+    this.authUid,
   });
 
   final String id;
@@ -208,6 +209,11 @@ class AppUser {
   final String? avatarAsset;
   final bool demo;
 
+  /// UID Firebase Authentication. Akun demo lama tetap memakai id lokal
+  /// (`u_ibu`, `u_kader`) agar data yang sudah ada tidak perlu dimigrasikan;
+  /// UID ini menjadi jembatan saat Firestore diaktifkan.
+  final String? authUid;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -216,6 +222,7 @@ class AppUser {
     'posyanduId': posyanduId,
     'avatarAsset': avatarAsset,
     'demo': demo,
+    'authUid': authUid,
   };
 
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
@@ -226,6 +233,7 @@ class AppUser {
     posyanduId: json['posyanduId'] as String?,
     avatarAsset: json['avatarAsset'] as String?,
     demo: json['demo'] as bool? ?? true,
+    authUid: json['authUid'] as String?,
   );
 }
 

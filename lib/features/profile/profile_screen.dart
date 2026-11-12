@@ -665,8 +665,8 @@ class ProfileScreen extends ConsumerWidget {
             const InfoBanner(
               title: 'Privasi',
               body:
-                  'Data demo bersifat sintetis dan tersimpan lokal di perangkat. Tidak ada foto atau data kesehatan '
-                  'yang diunggah pada versi demo ini.',
+                  'Kredensial login diproses oleh Firebase Authentication. Data kesehatan demo masih tersimpan '
+                  'lokal di perangkat dan belum diunggah ke Firestore pada tahap ini.',
               icon: Icons.lock_outline_rounded,
             ),
             const SizedBox(height: 14),
@@ -722,10 +722,19 @@ class _ProfileCard extends StatelessWidget {
                     color: AppColors.muted,
                   ),
                 ),
-                if (user.demo) ...[
+                if (user.authUid != null) ...[
                   const SizedBox(height: 6),
                   const Pill(
-                    label: 'Akun demo lokal',
+                    label: 'Firebase Auth',
+                    icon: Icons.verified_user_outlined,
+                    fontSize: 11,
+                    background: AppColors.mint,
+                    foreground: AppColors.primary,
+                  ),
+                ] else if (user.demo) ...[
+                  const SizedBox(height: 6),
+                  const Pill(
+                    label: 'Akun demo',
                     fontSize: 11,
                     background: AppColors.surfaceSubtle,
                     foreground: AppColors.muted,
