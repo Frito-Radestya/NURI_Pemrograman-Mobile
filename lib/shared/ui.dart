@@ -156,6 +156,11 @@ class NuriTextField extends StatelessWidget {
           style: const TextStyle(fontSize: 14.5, color: AppColors.text),
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: TextStyle(
+              color: AppColors.muted.withValues(alpha: 0.45),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
             prefixIcon: prefixIcon == null ? null : Icon(prefixIcon, size: 20),
             suffixIcon: suffixIcon,
           ),

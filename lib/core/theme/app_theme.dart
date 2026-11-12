@@ -213,7 +213,11 @@ class AppTheme {
           horizontal: 15,
           vertical: 14,
         ),
-        hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
+        hintStyle: TextStyle(
+          color: AppColors.muted.withValues(alpha: 0.45),
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
         labelStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
         prefixIconColor: AppColors.muted,
         suffixIconColor: AppColors.muted,
