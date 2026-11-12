@@ -1,29 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+import 'app.dart';
+import 'data/app_controller.dart';
+import 'data/demo_seed.dart';
+import 'data/local_repository.dart';
+import 'domain/growth/who_lms.dart';
+import 'domain/nutrition/food_catalog.dart';
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID');
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const NuriApp());
-}
 
-class NuriApp extends StatelessWidget {
-  const NuriApp({super.key});
+  final who = WhoReference(
+    boys: WhoLmsTable.fromJsonString(
+      await rootBundle.loadString('assets/data/who_hfa_boys.json'),
+    ),
+    girls: WhoLmsTable.fromJsonString(
+      await rootBundle.loadString('assets/data/who_hfa_girls.json'),
+    ),
+  );
+  WhoReference.setInstance(who);
+  FoodCatalog.setInstance(
+    FoodCatalog.fromJsonString(
+      await rootBundle.loadString('assets/data/tkpi_v1.json'),
+    ),
+  );
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NURI',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: const SplashScreen(),
-    );
-  }
+  final prefs = await SharedPreferences.getInstance();
+  final repository = LocalRepository(prefs);
+  final restored = repository.load();
+  final initial = restored ?? DemoSeed.build(who: who);
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        localRepositoryProvider.overrideWithValue(repository),
+        appControllerProvider.overrideWith(
+          () => AppController(initial, repository),
+        ),
+      ],
+      child: const NuriApp(),
+    ),
+  );
 }
