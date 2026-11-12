@@ -27,7 +27,7 @@ flutter build apk --release    # APK demo
 
 Hasil build APK: `build/app/outputs/flutter-apk/app-release.apk`.
 
-Data demo disimpan lokal melalui `SharedPreferences` (kunci `nuri_state_v1`). Untuk mengulang dari awal:
+Di Android, data demo disimpan di SQLite (`nuri.db`) dengan migrasi otomatis dari `SharedPreferences` lama (`nuri_state_v1`). Preview web tetap memakai `SharedPreferences`/localStorage. Untuk mengulang dari awal:
 
 - **Android:** hapus data aplikasi / uninstall, atau gunakan tombol reset di Profil.
 - **Web:** hapus `localStorage` untuk `127.0.0.1`, atau tombol reset di Profil.
@@ -81,9 +81,13 @@ lib/
     nutrition/                  katalog TKPI + NutritionCalculator (AKG)
     pregnancy/                  PregnancyCalculator
   data/
-    local_repository.dart       kontrak AppRepository + implementasi lokal
+    app_repository.dart         kontrak penyimpanan (seam Firebase)
+    sqlite_repository.dart      penyimpanan Android: tabel per domain + migrasi
+    local_repository.dart       fallback web/test berbasis SharedPreferences
+    app_selectors.dart          selector Riverpod untuk rebuild terbatas
     demo_seed.dart              data demo 52 sasaran, artikel, akun
-    app_controller.dart         Riverpod Notifier: semua aksi pengguna/kader
+    app_controller.dart         state inti + re-export aksi fitur
+    controllers/                aksi auth, kehamilan, anak, makan, kader
   features/
     landing/ auth/ shell/       alur masuk, onboarding, navigasi per peran
     mother/                     beranda, pertumbuhan, makan, diary, kehamilan
@@ -94,16 +98,25 @@ assets/
   data/                         WHO HFA (LMS harian) + subset TKPI 2017
   fonts/ images/                Nunito, Inter, foto demo
 test/
-  domain_test.dart              31 uji domain + konsistensi data demo
+  domain_test.dart              36 uji domain + konsistensi data demo
   widget_test.dart              smoke test landing page
 ```
 
 Prinsip utama:
 
-- **Offline-first.** Seluruh state disimpan sebagai JSON di perangkat. Aksi kader dan pencatatan harian tidak membutuhkan jaringan.
-- **Satu seam untuk backend.** UI dan `AppController` hanya bergantung pada `AppRepository`. Implementasi Firebase dapat menggantikan `LocalRepository` tanpa mengubah layar.
+- **Offline-first.** Di Android, state disimpan di SQLite dengan tabel terpisah untuk pengguna, anak, kehamilan, catatan makan, roster, sesi, konten, dan grant akses. Hanya perubahan baris yang ditulis ulang. Aksi kader dan pencatatan harian tidak membutuhkan jaringan.
+- **Satu seam untuk backend.** UI dan `AppController` hanya bergantung pada `AppRepository`. Implementasi Firebase dapat menggantikan `SqliteRepository` tanpa mengubah layar.
+- **Aksi terpisah per fitur.** `AppController` menyimpan state inti; aksi auth, kehamilan, anak, makan, dan kader berada di `lib/data/controllers/` dan memakai `commitState` sebagai satu jalur tulis.
+- **Rebuild terbatas.** Selector di `app_selectors.dart` memakai `select()` agar dashboard kader tidak dibangun ulang saat data yang tidak relevan berubah.
 - **Logika domain terpisah dari UI.** Perhitungan z-score, AKG, dan kehamilan dapat diuji tanpa widget.
 - **Aset terbundel.** Tabel WHO dan TKPI dimuat saat startup; `WhoReference.setInstance` dan `FoodCatalog.setInstance` harus dipanggil sebelum `DemoSeed.build` (sudah dilakukan di `main.dart` dan setup test).
+
+### Penyimpanan
+
+- `SqliteRepository` membuat tabel `users`, `pregnancies`, `children`, `food_logs`, `roster`, `sessions`, `contents`, `access_grants`, dan `meta`.
+- Setiap koleksi disimpan per baris (`id`, `payload` JSON), sehingga penambahan catatan makan atau sesi tidak menulis ulang seluruh state.
+- Saat pertama dijalankan, data `SharedPreferences` lama dimigrasikan ke SQLite lalu kunci lama dihapus.
+- Preview web memakai `LocalRepository` karena sqflite tidak tersedia di browser.
 
 ### Perhitungan pertumbuhan
 
@@ -147,7 +160,7 @@ Nama, usia, dan nominal mengikuti skenario PRD/screenshot. Data ini fiktif dan h
 
 ```bash
 flutter analyze   # harus: No issues found!
-flutter test      # 32 test lulus
+flutter test      # 37 test lulus
 ```
 
 Cakupan test:
@@ -158,6 +171,8 @@ Cakupan test:
 - AKG per kelompok usia/trimester, status gizi, protein hewani, total nutrisi.
 - Rumus HPL, trimester, progres, dan ukuran janin.
 - Konsistensi data demo (52 sasaran, 38 hadir, distribusi kategori, 685 kkal, akun demo).
+- Label ramah keluarga untuk kategori pertumbuhan.
+- Aksi controller: login kader, pengukuran kader (hadir + antrean sinkron), dan pengukuran ibu (langsung tersinkron).
 - Smoke test landing page setelah splash.
 
 ---

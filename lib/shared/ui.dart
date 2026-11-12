@@ -524,27 +524,35 @@ Future<T?> showNuriSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool isScrollControlled = true,
+  bool isDismissible = true,
 }) {
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: isScrollControlled,
+    isDismissible: isDismissible,
+    enableDrag: isDismissible,
     useSafeArea: true,
-    builder: (context) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36,
-            height: 4,
-            margin: const EdgeInsets.only(top: 10, bottom: 8),
-            decoration: BoxDecoration(
-              color: AppColors.line,
-              borderRadius: BorderRadius.circular(10),
+    builder: (context) => PopScope(
+      canPop: isDismissible,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(top: 10, bottom: 8),
+              decoration: BoxDecoration(
+                color: AppColors.line,
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
-          Flexible(child: builder(context)),
-        ],
+            Flexible(child: builder(context)),
+          ],
+        ),
       ),
     ),
   );

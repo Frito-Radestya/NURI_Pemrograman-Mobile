@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:nuri/data/app_controller.dart';
+import 'package:nuri/data/app_repository.dart';
 import 'package:nuri/data/demo_seed.dart';
-import 'package:nuri/data/local_repository.dart';
 import 'package:nuri/domain/growth/growth_calculator.dart';
 import 'package:nuri/domain/growth/who_lms.dart';
 import 'package:nuri/domain/models.dart';
@@ -25,6 +25,7 @@ void main() {
         await rootBundle.loadString('assets/data/who_hfa_girls.json'),
       ),
     );
+    WhoReference.setInstance(who);
     growth = GrowthCalculator(reference: who);
   });
 
@@ -550,6 +551,101 @@ void main() {
         ),
         isNull,
       );
+    });
+  });
+
+  group('Label ramah keluarga', () {
+    test('setiap kategori pertumbuhan punya label non-klinis', () {
+      expect(GrowthCategory.normal.plainLabel, 'Tumbuh optimal');
+      expect(GrowthCategory.stunted.plainLabel, 'Perlu perhatian');
+      expect(GrowthCategory.severelyStunted.plainLabel, 'Perlu rujukan');
+      expect(GrowthCategory.tall.plainLabel, 'Tinggi, tetap pantau');
+    });
+  });
+
+  group('AppController aksi fitur', () {
+    ProviderContainer makeContainer(AppState seed) {
+      final repo = _MemoryRepository();
+      return ProviderContainer(
+        overrides: [
+          localRepositoryProvider.overrideWithValue(repo),
+          appControllerProvider.overrideWith(() => AppController(seed, repo)),
+        ],
+      );
+    }
+
+    test('loginDemo kader mengaktifkan konteks kader', () {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final container = makeContainer(seed);
+      addTearDown(container.dispose);
+
+      container.read(appControllerProvider.notifier).loginDemo(UserRole.cadre);
+
+      final state = container.read(appControllerProvider);
+      expect(state.currentUser?.role, UserRole.cadre);
+      expect(state.isCadre, isTrue);
+    });
+
+    test('pengukuran kader menandai hadir dan menambah antrean sinkron', () {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_kader');
+      final waiting = seed.roster.firstWhere(
+        (entry) =>
+            entry.type == RosterType.child &&
+            entry.attendance == AttendanceStatus.waiting &&
+            entry.subjectId != null,
+      );
+      final child = seed.children.firstWhere(
+        (item) => item.id == waiting.subjectId,
+      );
+      final container = makeContainer(seed);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+      final before = container.read(appControllerProvider);
+
+      final result = controller.addMeasurement(
+        childId: child.id,
+        weightKg: 11.2,
+        heightCm: 82.5,
+        date: DateTime(2026, 3, 15),
+      );
+
+      expect(result, isNotNull);
+      final after = container.read(appControllerProvider);
+      expect(after.pendingWrites, before.pendingWrites + 1);
+      expect(
+        after.roster
+            .firstWhere((entry) => entry.subjectId == child.id)
+            .attendance,
+        AttendanceStatus.present,
+      );
+    });
+
+    test('pengukuran ibu langsung tersinkron tanpa antrean', () {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final rafi = seed.children.firstWhere((child) => child.id == 'c_rafi');
+      final container = makeContainer(seed);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+      final before = container.read(appControllerProvider);
+
+      final result = controller.addMeasurement(
+        childId: rafi.id,
+        weightKg: 11.2,
+        heightCm: 82.5,
+        date: DateTime(2026, 3, 15),
+      );
+
+      expect(result, isNotNull);
+      expect(result!.source, 'mandiri');
+      expect(result.synced, isTrue);
+      final after = container.read(appControllerProvider);
+      expect(after.pendingWrites, before.pendingWrites);
     });
   });
 }

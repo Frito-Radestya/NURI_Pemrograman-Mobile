@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/app_controller.dart';
+import '../../data/app_selectors.dart';
 import '../../domain/models.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
-import 'add_target_screen.dart';
 import 'followup_screen.dart';
 import 'recap_screen.dart';
 import 'scan_screen.dart';
@@ -21,10 +21,11 @@ class KaderHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(appControllerProvider);
-    final user = state.currentUser;
-    final session = state.activeSession;
-    final roster = state.roster;
+    final user = ref.watch(currentUserProvider);
+    final session = ref.watch(activeSessionProvider);
+    final roster = ref.watch(rosterProvider);
+    final pendingWrites = ref.watch(pendingWritesProvider);
+    final posyanduName = ref.watch(posyanduNameProvider);
     final children = roster.where((r) => r.type == RosterType.child).toList();
     final categorized = children.where((r) => r.category != null).toList();
     final normal = categorized
@@ -80,11 +81,15 @@ class KaderHomeScreen extends ConsumerWidget {
                         ),
                         Text(
                           user?.name ?? 'Nur Aisyah',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(fontSize: 21, letterSpacing: -0.35),
                         ),
                         Text(
-                          state.posyanduName,
+                          posyanduName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 12.5,
                             color: AppColors.muted,
@@ -94,7 +99,7 @@ class KaderHomeScreen extends ConsumerWidget {
                     ),
                   ),
                   _SyncButton(
-                    pending: state.pendingWrites,
+                    pending: pendingWrites,
                     onTap: () {
                       ref.read(appControllerProvider.notifier).syncNow();
                       showNuriSnack(
@@ -115,8 +120,6 @@ class KaderHomeScreen extends ConsumerWidget {
                 target: target,
                 followUpCount: followUps.length,
                 onMeasure: () => _push(context, const ScanScreen()),
-                onRecap: () =>
-                    _push(context, const RecapScreen(embedded: false)),
                 onComplete: session == null || session.isDone
                     ? null
                     : () async {
@@ -139,83 +142,26 @@ class KaderHomeScreen extends ConsumerWidget {
                       },
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _OfflineStrip(pending: state.pendingWrites),
-            ),
-            const SizedBox(height: 22),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: SectionHeader(title: 'Aksi cepat'),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 2.35,
-                children: [
-                  _QuickAction(
-                    icon: Icons.qr_code_scanner_rounded,
-                    title: 'Pindai QR',
-                    subtitle: 'Kode Keluarga',
-                    color: AppColors.primary,
-                    background: AppColors.mint,
-                    onTap: () => _push(context, const ScanScreen()),
-                  ),
-                  _QuickAction(
-                    icon: Icons.person_add_alt_1_rounded,
-                    title: 'Tambah sasaran',
-                    subtitle: 'Tanpa akun',
-                    color: AppColors.coral,
-                    background: AppColors.peachSoft,
-                    onTap: () => _push(context, const AddTargetScreen()),
-                  ),
-                  _QuickAction(
-                    icon: Icons.insert_chart_rounded,
-                    title: 'Rekap sesi',
-                    subtitle: '${categorized.length} balita',
-                    color: AppColors.blue,
-                    background: AppColors.blueSoft,
-                    onTap: () =>
-                        _push(context, const RecapScreen(embedded: false)),
-                  ),
-                  _QuickAction(
-                    icon: Icons.follow_the_signs_rounded,
-                    title: 'Tindak lanjut',
-                    subtitle: '${followUps.length} perlu perhatian',
-                    color: AppColors.amber,
-                    background: AppColors.amberSoft,
-                    onTap: () =>
-                        _push(context, const FollowUpScreen(embedded: false)),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 22),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _DistributionCard(
+              child: _NutritionSnapshot(
                 normal: normal,
                 stunted: stunted,
                 severe: severe,
                 total: categorized.length,
                 notPresent: notPresent,
+                onTap: () => _push(context, const RecapScreen(embedded: false)),
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SectionHeader(
                 title: 'Perlu perhatian',
                 subtitle:
                     '${followUps.length} sasaran masuk daftar tindak lanjut',
-                actionLabel: 'Semua',
+                actionLabel: followUps.isEmpty ? null : 'Semua',
                 onAction: () =>
                     _push(context, const FollowUpScreen(embedded: false)),
               ),
@@ -231,21 +177,15 @@ class KaderHomeScreen extends ConsumerWidget {
                 ),
               )
             else
-              ...followUps
-                  .take(3)
-                  .map(
-                    (entry) => Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 9),
-                      child: _FollowUpPreview(
-                        entry: entry,
-                        onTap: () => _push(
-                          context,
-                          const FollowUpScreen(embedded: false),
-                        ),
-                      ),
-                    ),
-                  ),
-            const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _FollowUpList(
+                  entries: followUps.take(3).toList(),
+                  onTap: () =>
+                      _push(context, const FollowUpScreen(embedded: false)),
+                ),
+              ),
+            const SizedBox(height: 14),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: NuriDisclaimer(),
@@ -308,7 +248,6 @@ class _SessionCard extends StatelessWidget {
     required this.target,
     required this.followUpCount,
     required this.onMeasure,
-    required this.onRecap,
     required this.onComplete,
   });
 
@@ -317,7 +256,6 @@ class _SessionCard extends StatelessWidget {
   final int target;
   final int followUpCount;
   final VoidCallback onMeasure;
-  final VoidCallback onRecap;
   final VoidCallback? onComplete;
 
   @override
@@ -467,58 +405,33 @@ class _SessionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onMeasure,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primaryDark,
-                    minimumSize: const Size(0, 46),
-                    textStyle: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  icon: const Icon(Icons.straighten_rounded, size: 18),
-                  label: const Text('Mulai ukur'),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: done ? null : onMeasure,
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.primaryDark,
+                disabledBackgroundColor: Colors.white.withValues(alpha: 0.4),
+                minimumSize: const Size(0, 46),
+                textStyle: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onRecap,
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(0, 46),
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.36),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.insert_chart_outlined_rounded,
-                    size: 18,
-                  ),
-                  label: const Text('Rekap'),
-                ),
-              ),
-            ],
+              icon: const Icon(Icons.straighten_rounded, size: 18),
+              label: Text(present == 0 ? 'Mulai ukur' : 'Lanjut ukur'),
+            ),
           ),
           if (onComplete != null) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             SizedBox(
               width: double.infinity,
               child: TextButton(
                 onPressed: onComplete,
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white.withValues(alpha: 0.85),
-                  minimumSize: const Size(0, 40),
+                  minimumSize: const Size(0, 38),
                 ),
                 child: const Text('Selesaikan sesi'),
               ),
@@ -565,125 +478,14 @@ class _SessionStat extends StatelessWidget {
   }
 }
 
-class _OfflineStrip extends StatelessWidget {
-  const _OfflineStrip({required this.pending});
-
-  final int pending;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      radius: 14,
-      child: Row(
-        children: [
-          const Icon(
-            Icons.wifi_off_rounded,
-            size: 18,
-            color: AppColors.primary,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Mode offline aktif',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  pending > 0
-                      ? '$pending perubahan tersimpan di perangkat, siap sinkron saat online.'
-                      : 'Semua perubahan tersimpan aman dan tersinkron.',
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: AppColors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickAction extends StatelessWidget {
-  const _QuickAction({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.background,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final Color background;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      radius: 15,
-      onTap: onTap,
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: background,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 19, color: color),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: AppColors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DistributionCard extends StatelessWidget {
-  const _DistributionCard({
+class _NutritionSnapshot extends StatelessWidget {
+  const _NutritionSnapshot({
     required this.normal,
     required this.stunted,
     required this.severe,
     required this.total,
     required this.notPresent,
+    required this.onTap,
   });
 
   final int normal;
@@ -691,92 +493,114 @@ class _DistributionCard extends StatelessWidget {
   final int severe;
   final int total;
   final int notPresent;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final safeTotal = total == 0 ? 1 : total;
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Distribusi status gizi',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              Pill(
-                label: '$total balita',
-                background: AppColors.surfaceSubtle,
-                foreground: AppColors.primaryDark,
-                fontSize: 11.5,
-              ),
-            ],
-          ),
-          const SizedBox(height: 3),
-          const Text(
-            'Panjang/tinggi badan menurut umur • WHO 2006',
-            style: TextStyle(fontSize: 12, color: AppColors.muted),
-          ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: 11,
-              child: Row(
-                children: [
-                  if (normal > 0)
-                    Expanded(
-                      flex: normal,
-                      child: Container(color: AppColors.primary),
-                    ),
-                  if (stunted > 0)
-                    Expanded(
-                      flex: stunted,
-                      child: Container(color: AppColors.amber),
-                    ),
-                  if (severe > 0)
-                    Expanded(
-                      flex: severe,
-                      child: Container(color: AppColors.red),
-                    ),
-                ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Status gizi sesi ini',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
               ),
             ),
+            TextButton(
+              onPressed: onTap,
+              style: TextButton.styleFrom(
+                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text('Rekap'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _SnapshotCount(
+              label: 'Normal',
+              value: normal,
+              color: AppColors.primary,
+              background: AppColors.mint,
+            ),
+            _SnapshotCount(
+              label: 'Pendek',
+              value: stunted,
+              color: AppColors.amber,
+              background: AppColors.amberSoft,
+            ),
+            _SnapshotCount(
+              label: 'Sangat pendek',
+              value: severe,
+              color: AppColors.red,
+              background: AppColors.redSoft,
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '$total balita terukur • $notPresent belum hadir',
+          style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
+        ),
+      ],
+    );
+  }
+}
+
+class _SnapshotCount extends StatelessWidget {
+  const _SnapshotCount({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.background,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              _DistributionLegend(
-                color: AppColors.primary,
-                label: 'Normal',
-                value: normal,
-                percent: normal / safeTotal,
-              ),
-              _DistributionLegend(
-                color: AppColors.amber,
-                label: 'Pendek',
-                value: stunted,
-                percent: stunted / safeTotal,
-              ),
-              _DistributionLegend(
-                color: AppColors.red,
-                label: 'Sangat pendek',
-                value: severe,
-                percent: severe / safeTotal,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(width: 5),
           Text(
-            '$notPresent sasaran belum hadir. Status diambil dari pengukuran terakhir.',
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.muted,
-              height: 1.4,
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$value',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              color: color,
             ),
           ),
         ],
@@ -785,60 +609,22 @@ class _DistributionCard extends StatelessWidget {
   }
 }
 
-class _DistributionLegend extends StatelessWidget {
-  const _DistributionLegend({
-    required this.color,
-    required this.label,
-    required this.value,
-    required this.percent,
-  });
+class _FollowUpList extends StatelessWidget {
+  const _FollowUpList({required this.entries, required this.onTap});
 
-  final Color color;
-  final String label;
-  final int value;
-  final double percent;
+  final List<RosterEntry> entries;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return AppCard(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: AppColors.muted,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 3),
-          Text(
-            '$value',
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
-          ),
-          Text(
-            '${(percent * 100).round()}%',
-            style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
-          ),
+          for (var i = 0; i < entries.length; i++) ...[
+            _FollowUpPreview(entry: entries[i], onTap: onTap),
+            if (i < entries.length - 1) const Divider(height: 1),
+          ],
         ],
       ),
     );
@@ -853,66 +639,71 @@ class _FollowUpPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(14),
+    return InkWell(
       onTap: onTap,
-      child: Row(
-        children: [
-          AppAvatar(name: entry.name, index: entry.avatarIndex, size: 42),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        entry.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        child: Row(
+          children: [
+            AppAvatar(name: entry.name, index: entry.avatarIndex, size: 42),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          entry.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 6),
+                      Pill(
+                        label: switch (entry.followUpStatus) {
+                          FollowUpStatus.open => 'Terbuka',
+                          FollowUpStatus.visited => 'Dikunjungi',
+                          FollowUpStatus.referred => 'Dirujuk',
+                          FollowUpStatus.unreachable => 'Absen',
+                          FollowUpStatus.closed => 'Selesai',
+                        },
+                        background: entry.followUpStatus == FollowUpStatus.open
+                            ? AppColors.amberSoft
+                            : AppColors.blueSoft,
+                        foreground: entry.followUpStatus == FollowUpStatus.open
+                            ? AppColors.amber
+                            : AppColors.blue,
+                        fontSize: 11,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    entry.reason ?? 'Perlu konfirmasi kader',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted,
                     ),
-                    const SizedBox(width: 6),
-                    Pill(
-                      label: switch (entry.followUpStatus) {
-                        FollowUpStatus.open => 'Terbuka',
-                        FollowUpStatus.visited => 'Dikunjungi',
-                        FollowUpStatus.referred => 'Dirujuk',
-                        FollowUpStatus.unreachable => 'Absen',
-                        FollowUpStatus.closed => 'Selesai',
-                      },
-                      background: entry.followUpStatus == FollowUpStatus.open
-                          ? AppColors.amberSoft
-                          : AppColors.blueSoft,
-                      foreground: entry.followUpStatus == FollowUpStatus.open
-                          ? AppColors.amber
-                          : AppColors.blue,
-                      fontSize: 11,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  entry.reason ?? 'Perlu konfirmasi kader',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 20,
-            color: AppColors.muted,
-          ),
-        ],
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.muted,
+            ),
+          ],
+        ),
       ),
     );
   }

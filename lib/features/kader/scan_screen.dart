@@ -8,7 +8,6 @@ import '../../domain/models.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
 import '../mother/growth_screens.dart';
-import 'roster_screen.dart';
 
 class ScanScreen extends ConsumerStatefulWidget {
   const ScanScreen({super.key});
@@ -256,46 +255,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                 );
               },
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      if (entry != null) {
-                        ref
-                            .read(appControllerProvider.notifier)
-                            .markAttendance(entry.id, AttendanceStatus.present);
-                      }
-                      Navigator.of(sheetContext).pop();
-                      showNuriSnack(context, '$name ditandai hadir di sesi.');
-                    },
-                    icon: const Icon(Icons.how_to_reg_rounded, size: 17),
-                    label: const Text(
-                      'Tandai hadir',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.of(sheetContext).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const RosterScreen(embedded: false),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.groups_rounded, size: 17),
-                    label: const Text(
-                      'Daftar sasaran',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 6),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                child: const Text('Batal'),
+              ),
             ),
           ],
         ),

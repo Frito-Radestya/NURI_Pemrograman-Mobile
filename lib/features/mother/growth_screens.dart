@@ -992,11 +992,124 @@ class _MeasurementInputScreenState
       );
       return;
     }
-    showNuriSnack(
-      context,
-      'Pengukuran tersimpan • ${result.category.label} (${result.zHfa.toStringAsFixed(2)} SD)',
+    final status = result.category.plainLabel;
+    if (!widget.isCadre) {
+      showNuriSnack(context, 'Pengukuran tersimpan • $status');
+      Navigator.of(context).pop(result);
+      return;
+    }
+
+    final next = _nextWaitingChild(child.id);
+    await showNuriSheet<void>(
+      context: context,
+      isDismissible: false,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: AppColors.mint,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pengukuran tersimpan',
+                        style: Theme.of(sheetContext).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${child.nickname} • $status',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            InfoBanner(
+              title:
+                  'Berat ${fmt1(result.weightKg)} kg • Panjang ${fmt1(result.measuredCm)} cm',
+              body: 'Sasaran otomatis ditandai hadir pada sesi ini.',
+              icon: Icons.straighten_rounded,
+            ),
+            const SizedBox(height: 14),
+            if (next != null) ...[
+              NuriButton(
+                label: 'Ukur ${next.name} berikutnya',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => MeasurementInputScreen(
+                        childId: next.subjectId!,
+                        isCadre: true,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                  child: const Text('Selesai'),
+                ),
+              ),
+            ] else
+              NuriButton(
+                label: 'Kembali ke sesi',
+                icon: Icons.check_rounded,
+                onPressed: () {
+                  Navigator.of(sheetContext).pop();
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+              ),
+          ],
+        ),
+      ),
     );
-    Navigator.of(context).pop(result);
+  }
+
+  RosterEntry? _nextWaitingChild(String currentChildId) {
+    final roster = ref.read(appControllerProvider).roster;
+    final candidates =
+        roster
+            .where(
+              (entry) =>
+                  entry.type == RosterType.child &&
+                  entry.attendance == AttendanceStatus.waiting &&
+                  entry.subjectId != null &&
+                  entry.subjectId != currentChildId,
+            )
+            .toList()
+          ..sort((a, b) => a.name.compareTo(b.name));
+    return candidates.isEmpty ? null : candidates.first;
   }
 
   @override

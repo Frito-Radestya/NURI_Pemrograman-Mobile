@@ -118,7 +118,7 @@ class MotherHomeScreen extends ConsumerWidget {
                   ],
                 ),
                 if (hasBoth) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   NuriSegmentedControl<bool>(
                     values: const [true, false],
                     selected: showPregnancy,
@@ -143,70 +143,29 @@ class MotherHomeScreen extends ConsumerWidget {
                   )
                 else
                   const _EmptyDataCard(),
-                const SizedBox(height: 12),
-                if (showPregnancy)
-                  _PregnancyQuickActions(
+                const SizedBox(height: 14),
+                if (showPregnancy) ...[
+                  _PregnancyTodayCard(
+                    pregnancy: pregnancy,
+                    today: today,
                     onTtd: () => _push(context, const TtdScreen()),
+                    onTakeTtd: () {
+                      HapticFeedback.lightImpact();
+                      ref
+                          .read(appControllerProvider.notifier)
+                          .toggleTtdForDate(today);
+                      showNuriSnack(
+                        context,
+                        pregnancy.ttdDates.contains(dateToIso(today))
+                            ? 'Catatan TTD hari ini dibatalkan.'
+                            : 'Hebat! TTD hari ini sudah dicatat.',
+                      );
+                    },
                     onAnc: () => _push(context, const AncScreen()),
                     onCheckup: () =>
                         _push(context, const PregnancyCheckupScreen()),
-                  )
-                else if (child != null)
-                  _ChildQuickActions(
-                    onMeasure: () => _push(
-                      context,
-                      MeasurementInputScreen(childId: child.id),
-                    ),
-                    onFood: () =>
-                        _openCamera(context, child.id, child.nickname),
-                    onGrowth: () => _push(context, const GrowthDetailScreen()),
                   ),
-                const SizedBox(height: 24),
-                if (showPregnancy) ...[
-                  const SectionHeader(
-                    title: 'Pemantauan kehamilan',
-                    subtitle: 'Rutin harian untuk Ibu dan janin',
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _TtdCard(
-                          pregnancy: pregnancy,
-                          today: today,
-                          onTap: () => _push(context, const TtdScreen()),
-                          onTake: () {
-                            HapticFeedback.lightImpact();
-                            ref
-                                .read(appControllerProvider.notifier)
-                                .toggleTtdForDate(today);
-                            showNuriSnack(
-                              context,
-                              pregnancy.ttdDates.contains(dateToIso(today))
-                                  ? 'Catatan TTD hari ini dibatalkan.'
-                                  : 'Hebat! TTD hari ini sudah dicatat.',
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _AncCard(
-                          pregnancy: pregnancy,
-                          onTap: () => _push(context, const AncScreen()),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  _CheckupCard(
-                    pregnancy: pregnancy,
-                    onTap: () => _push(context, const PregnancyCheckupScreen()),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-                if (showPregnancy) ...[
+                  const SizedBox(height: 14),
                   _NutritionCard(
                     title: 'Gizi kehamilan hari ini',
                     subtitle: 'Perkiraan dari catatan makan Ibu',
@@ -223,6 +182,7 @@ class MotherHomeScreen extends ConsumerWidget {
                     ),
                     onLog: () =>
                         _openCamera(context, pregnancy.id, 'Kehamilan'),
+                    primaryAction: false,
                   ),
                 ] else if (child != null) ...[
                   _NutritionCard(
@@ -241,10 +201,15 @@ class MotherHomeScreen extends ConsumerWidget {
                       ),
                     ),
                     onLog: () => _openCamera(context, child.id, child.nickname),
+                    primaryAction: true,
+                    onMeasure: () => _push(
+                      context,
+                      MeasurementInputScreen(childId: child.id),
+                    ),
                   ),
                 ],
                 if (state.nextPosyanduDate != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   _PosyanduReminder(
                     date: state.nextPosyanduDate!,
                     name: state.posyanduName,
@@ -255,14 +220,14 @@ class MotherHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 SectionHeader(
                   title: 'Untuk Ibu',
-                  actionLabel: 'Semua',
+                  actionLabel: 'Edukasi',
                   onAction: () =>
                       _push(context, const EducationScreen(showBack: true)),
                 ),
                 const SizedBox(height: 10),
-                _ArticleCard(
+                _ForYouCard(
                   article: _articleFor(state.contents, showPregnancy),
-                  onTap: () {
+                  onArticle: () {
                     final article = _articleFor(state.contents, showPregnancy);
                     if (article == null) return;
                     ref
@@ -270,12 +235,7 @@ class MotherHomeScreen extends ConsumerWidget {
                         .markArticleRead(article.id);
                     _push(context, ArticleDetailScreen(article: article));
                   },
-                ),
-                const SizedBox(height: 10),
-                _KaderNoteCard(pregnancy: showPregnancy),
-                const SizedBox(height: 10),
-                _MenuInspirationCard(
-                  onTap: () => _push(
+                  onMenu: () => _push(
                     context,
                     RecommendationScreen(
                       subjectLabel: showPregnancy
@@ -285,6 +245,8 @@ class MotherHomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 10),
+                _KaderNoteCard(pregnancy: showPregnancy),
                 const SizedBox(height: 14),
                 const NuriDisclaimer(),
               ],
@@ -600,6 +562,7 @@ class _ChildHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final latest = child.latestMeasurement;
+    final status = latest == null ? null : _plainGrowthStatus(latest.category);
     return AppCard(
       onTap: onTap,
       shadow: true,
@@ -639,7 +602,15 @@ class _ChildHero extends StatelessWidget {
                   ],
                 ),
               ),
-              if (latest != null) GrowthStatusBadge(category: latest.category),
+              if (status != null)
+                Pill(
+                  label: status.label,
+                  icon: status.icon,
+                  background: status.background,
+                  foreground: status.foreground,
+                  fontSize: 11,
+                  bold: true,
+                ),
             ],
           ),
           if (latest != null) ...[
@@ -662,12 +633,6 @@ class _ChildHero extends StatelessWidget {
                     label: 'Panjang',
                     value: fmt1(latest.measuredCm),
                     unit: 'cm',
-                  ),
-                  const _MetricDivider(),
-                  _HeroMetric(
-                    label: 'Z-score',
-                    value: '${latest.zHfa >= 0 ? '+' : ''}${fmt2(latest.zHfa)}',
-                    unit: 'SD',
                   ),
                 ],
               ),
@@ -710,6 +675,29 @@ class _ChildHero extends StatelessWidget {
     );
   }
 }
+
+({String label, IconData icon, Color background, Color foreground})
+_plainGrowthStatus(GrowthCategory category) => (
+  label: category.plainLabel,
+  icon: switch (category) {
+    GrowthCategory.normal => Icons.check_circle_outline_rounded,
+    GrowthCategory.stunted => Icons.trending_down_rounded,
+    GrowthCategory.severelyStunted => Icons.error_outline_rounded,
+    GrowthCategory.tall => Icons.trending_up_rounded,
+  },
+  background: switch (category) {
+    GrowthCategory.normal => AppColors.mint,
+    GrowthCategory.stunted => AppColors.amberSoft,
+    GrowthCategory.severelyStunted => AppColors.redSoft,
+    GrowthCategory.tall => AppColors.blueSoft,
+  },
+  foreground: switch (category) {
+    GrowthCategory.normal => AppColors.primaryDark,
+    GrowthCategory.stunted => AppColors.amber,
+    GrowthCategory.severelyStunted => AppColors.red,
+    GrowthCategory.tall => AppColors.blue,
+  },
+);
 
 class _HeroMetric extends StatelessWidget {
   const _HeroMetric({
@@ -812,411 +800,115 @@ class _EmptyDataCard extends StatelessWidget {
   }
 }
 
-class _PregnancyQuickActions extends StatelessWidget {
-  const _PregnancyQuickActions({
+class _PregnancyTodayCard extends StatelessWidget {
+  const _PregnancyTodayCard({
+    required this.pregnancy,
+    required this.today,
     required this.onTtd,
+    required this.onTakeTtd,
     required this.onAnc,
     required this.onCheckup,
   });
 
+  final Pregnancy pregnancy;
+  final DateTime today;
   final VoidCallback onTtd;
+  final VoidCallback onTakeTtd;
   final VoidCallback onAnc;
   final VoidCallback onCheckup;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.medication_rounded,
-            label: 'Minum TTD',
-            color: AppColors.coral,
-            tint: AppColors.peachSoft,
-            onTap: onTtd,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.event_available_rounded,
-            label: 'Jadwal ANC',
-            color: AppColors.primary,
-            tint: AppColors.mint,
-            onTap: onAnc,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.monitor_heart_outlined,
-            label: 'Catat periksa',
-            color: AppColors.blue,
-            tint: AppColors.blueSoft,
-            onTap: onCheckup,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ChildQuickActions extends StatelessWidget {
-  const _ChildQuickActions({
-    required this.onMeasure,
-    required this.onFood,
-    required this.onGrowth,
-  });
-
-  final VoidCallback onMeasure;
-  final VoidCallback onFood;
-  final VoidCallback onGrowth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.straighten_rounded,
-            label: 'Ukur anak',
-            color: AppColors.primary,
-            tint: AppColors.mint,
-            onTap: onMeasure,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.restaurant_rounded,
-            label: 'Catat makan',
-            color: AppColors.coral,
-            tint: AppColors.peachSoft,
-            onTap: onFood,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.show_chart_rounded,
-            label: 'Lihat grafik',
-            color: AppColors.blue,
-            tint: AppColors.blueSoft,
-            onTap: onGrowth,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickAction extends StatelessWidget {
-  const _QuickAction({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.tint,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color tint;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      radius: 16,
-      child: Column(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: tint,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TtdCard extends StatelessWidget {
-  const _TtdCard({
-    required this.pregnancy,
-    required this.today,
-    required this.onTap,
-    required this.onTake,
-  });
-
-  final Pregnancy pregnancy;
-  final DateTime today;
-  final VoidCallback onTap;
-  final VoidCallback onTake;
-
-  @override
-  Widget build(BuildContext context) {
     final takenToday = pregnancy.ttdDates.contains(dateToIso(today));
-    final progress = (pregnancy.ttdCount / AkgReference.ttdTarget).clamp(
-      0.0,
-      1.0,
-    );
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.medication_rounded,
-                size: 18,
-                color: AppColors.coral,
-              ),
-              const Spacer(),
-              Text(
-                '${pregnancy.ttdCount}/${AkgReference.ttdTarget}',
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Tablet Tambah Darah',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 2),
-          const Text(
-            'Diminum setiap hari',
-            style: TextStyle(fontSize: 11.5, color: AppColors.muted),
-          ),
-          const SizedBox(height: 10),
-          LinearProgress(
-            value: progress,
-            color: AppColors.coral,
-            background: AppColors.peachSoft,
-            height: 6,
-          ),
-          const SizedBox(height: 10),
-          if (takenToday)
-            const Row(
-              children: [
-                Icon(
-                  Icons.check_circle_rounded,
-                  size: 15,
-                  color: AppColors.primary,
-                ),
-                SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    'Sudah hari ini',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            )
-          else
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: onTake,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.coral,
-                  backgroundColor: AppColors.peachSoft,
-                  side: BorderSide.none,
-                  minimumSize: const Size(0, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                child: const Text('+ Catat hari ini'),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AncCard extends StatelessWidget {
-  const _AncCard({required this.pregnancy, required this.onTap});
-
-  final Pregnancy pregnancy;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = (pregnancy.ancCount / AkgReference.ancTarget).clamp(
-      0.0,
-      1.0,
-    );
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.event_available_rounded,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              const Spacer(),
-              Text(
-                '${pregnancy.ancCount}/${AkgReference.ancTarget}',
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Kunjungan ANC',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 2),
-          const Text(
-            'Minimal 6 kali periksa',
-            style: TextStyle(fontSize: 11.5, color: AppColors.muted),
-          ),
-          const SizedBox(height: 10),
-          LinearProgress(
-            value: progress,
-            color: AppColors.primary,
-            background: AppColors.mint,
-            height: 6,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            pregnancy.ancCount >= AkgReference.ancTarget
-                ? 'Semua tercatat'
-                : '${AkgReference.ancTarget - pregnancy.ancCount} kunjungan tersisa',
-            style: const TextStyle(fontSize: 12, color: AppColors.muted),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CheckupCard extends StatelessWidget {
-  const _CheckupCard({required this.pregnancy, required this.onTap});
-
-  final Pregnancy pregnancy;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
     final checkup = pregnancy.latestCheckup;
+    final ancRemaining = (AkgReference.ancTarget - pregnancy.ancCount).clamp(
+      0,
+      AkgReference.ancTarget,
+    );
     return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.monitor_heart_outlined,
-                size: 18,
-                color: AppColors.blue,
-              ),
-              const SizedBox(width: 7),
-              const Text(
-                'Pemeriksaan terakhir',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
-              ),
+              Text('Hari ini', style: Theme.of(context).textTheme.titleMedium),
               const Spacer(),
               Text(
-                checkup == null ? 'Belum ada' : relativeDayLabel(checkup.date),
+                formatDateId(today, withYear: false),
                 style: const TextStyle(fontSize: 12, color: AppColors.muted),
               ),
             ],
           ),
-          if (checkup != null) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _CheckupMetric(
-                  label: 'Berat',
-                  value: '${fmt1(checkup.weightKg)} kg',
-                ),
-                _CheckupMetric(
-                  label: 'LiLA',
-                  value: '${fmt1(checkup.lilaCm)} cm',
-                  warning: checkup.lilaCm < 23.5,
-                ),
-                _CheckupMetric(
-                  label: 'Hb',
-                  value: checkup.hbGdl == null
-                      ? '—'
-                      : '${fmt1(checkup.hbGdl)} g/dL',
-                  warning: checkup.hbGdl != null && checkup.hbGdl! < 11,
-                ),
-                _CheckupMetric(
-                  label: 'Tekanan',
-                  value: checkup.systolic == null
-                      ? '—'
-                      : '${checkup.systolic}/${checkup.diastolic}',
-                ),
-              ],
+          const SizedBox(height: 12),
+          _TodayRow(
+            icon: Icons.medication_rounded,
+            color: AppColors.coral,
+            tint: AppColors.peachSoft,
+            title: 'Tablet Tambah Darah',
+            subtitle: takenToday
+                ? 'Sudah dicatat hari ini'
+                : 'Minum 1 tablet setelah makan malam',
+            onTap: onTtd,
+            trailing: takenToday
+                ? const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.primary,
+                    size: 22,
+                  )
+                : FilledButton(
+                    onPressed: onTakeTtd,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      textStyle: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    child: const Text('Catat'),
+                  ),
+          ),
+          const Divider(height: 24),
+          _TodayRow(
+            icon: Icons.event_available_rounded,
+            color: AppColors.primary,
+            tint: AppColors.mint,
+            title: 'Kunjungan ANC',
+            subtitle: ancRemaining == 0
+                ? '${pregnancy.ancCount} kunjungan tercatat'
+                : '${pregnancy.ancCount}/${AkgReference.ancTarget} tercatat • $ancRemaining lagi',
+            onTap: onAnc,
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.muted,
             ),
-            if (checkup.needsConsultation) ...[
-              const SizedBox(height: 12),
-              const InfoBanner(
-                title: 'Perlu konsultasi',
-                body: 'LiLA < 23,5 cm atau Hb < 11 g/dL. Diskusikan dengan bidan atau dokter.',
-                icon: Icons.warning_amber_rounded,
-                background: AppColors.amberSoft,
-                foreground: AppColors.amber,
-              ),
-            ],
-          ] else ...[
-            const SizedBox(height: 6),
-            const Text(
-              'Catat hasil pemeriksaan dari bidan atau puskesmas.',
-              style: TextStyle(fontSize: 12.5, color: AppColors.muted),
+          ),
+          const Divider(height: 24),
+          _TodayRow(
+            icon: Icons.monitor_heart_outlined,
+            color: AppColors.blue,
+            tint: AppColors.blueSoft,
+            title: 'Pemeriksaan terakhir',
+            subtitle: checkup == null
+                ? 'Belum ada catatan pemeriksaan'
+                : '${relativeDayLabel(checkup.date)} • BB ${fmt1(checkup.weightKg)} kg • LiLA ${fmt1(checkup.lilaCm)} cm',
+            onTap: onCheckup,
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.muted,
+            ),
+          ),
+          if (checkup?.needsConsultation == true) ...[
+            const SizedBox(height: 12),
+            const InfoBanner(
+              title: 'Perlu konsultasi',
+              body: 'LiLA < 23,5 cm atau Hb < 11 g/dL. Diskusikan dengan bidan atau dokter.',
+              icon: Icons.warning_amber_rounded,
+              background: AppColors.amberSoft,
+              foreground: AppColors.amber,
             ),
           ],
         ],
@@ -1225,46 +917,83 @@ class _CheckupCard extends StatelessWidget {
   }
 }
 
-class _CheckupMetric extends StatelessWidget {
-  const _CheckupMetric({
-    required this.label,
-    required this.value,
-    this.warning = false,
+class _TodayRow extends StatelessWidget {
+  const _TodayRow({
+    required this.icon,
+    required this.color,
+    required this.tint,
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+    this.onTap,
   });
 
-  final String label;
-  final String value;
-  final bool warning;
+  final IconData icon;
+  final Color color;
+  final Color tint;
+  final String title;
+  final String subtitle;
+  final Widget trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
+    final content = Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: tint,
+            borderRadius: BorderRadius.circular(11),
           ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              color: warning ? AppColors.red : AppColors.text,
-            ),
+          child: Icon(icon, size: 19, color: color),
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.muted,
+                  height: 1.35,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+        const SizedBox(width: 8),
+        trailing,
+      ],
+    );
+    if (onTap == null) return content;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: content,
       ),
     );
   }
 }
 
-class _NutritionCard extends StatelessWidget {
+class _NutritionCard extends StatefulWidget {
   const _NutritionCard({
     required this.title,
     required this.subtitle,
@@ -1272,6 +1001,8 @@ class _NutritionCard extends StatelessWidget {
     required this.target,
     required this.onOpenDiary,
     required this.onLog,
+    required this.primaryAction,
+    this.onMeasure,
   });
 
   final String title;
@@ -1280,9 +1011,20 @@ class _NutritionCard extends StatelessWidget {
   final AkgTarget target;
   final VoidCallback onOpenDiary;
   final VoidCallback onLog;
+  final bool primaryAction;
+  final VoidCallback? onMeasure;
+
+  @override
+  State<_NutritionCard> createState() => _NutritionCardState();
+}
+
+class _NutritionCardState extends State<_NutritionCard> {
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
+    final totals = widget.totals;
+    final target = widget.target;
     final kcal = totals.kcal;
     final percent =
         (NutritionCalculator.percent(kcal, target.energyKcal) ?? 0) / 100;
@@ -1310,10 +1052,13 @@ class _NutritionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      widget.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 2),
                     Text(
-                      subtitle,
+                      widget.subtitle,
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.muted,
@@ -1323,7 +1068,7 @@ class _NutritionCard extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: onOpenDiary,
+                onPressed: widget.onOpenDiary,
                 style: TextButton.styleFrom(
                   minimumSize: const Size(0, 36),
                   padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1407,59 +1152,145 @@ class _NutritionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _MacroBar(
-                  label: 'Protein',
-                  value: totals.proteinG,
-                  target: target.proteinG,
-                  color: AppColors.coral,
-                ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => setState(() => _expanded = !_expanded),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                minimumSize: const Size(0, 34),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _MacroBar(
-                  label: 'Lemak',
-                  value: totals.fatG,
-                  target: target.fatG,
-                  color: AppColors.amber,
-                ),
+              icon: Icon(
+                _expanded
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 18,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _MacroBar(
-                  label: 'Karbo',
-                  value: totals.carbG,
-                  target: target.carbG,
-                  color: AppColors.blue,
-                ),
+              label: Text(
+                _expanded ? 'Sembunyikan rincian' : 'Lihat rincian gizi',
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onLog,
-                  icon: const Icon(Icons.add_a_photo_outlined, size: 18),
-                  label: const Text('Catat makan'),
-                  style: FilledButton.styleFrom(minimumSize: const Size(0, 46)),
+          if (_expanded) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: _MacroBar(
+                    label: 'Protein',
+                    value: totals.proteinG,
+                    target: target.proteinG,
+                    color: AppColors.coral,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: onOpenDiary,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(48, 46),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MacroBar(
+                    label: 'Lemak',
+                    value: totals.fatG,
+                    target: target.fatG,
+                    color: AppColors.amber,
+                  ),
                 ),
-                child: const Icon(Icons.calendar_today_rounded, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MacroBar(
+                    label: 'Karbo',
+                    value: totals.carbG,
+                    target: target.carbG,
+                    color: AppColors.blue,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _MicroValue(
+                  label: 'Zat besi',
+                  value: totals.ironMg,
+                  unit: 'mg',
+                ),
+                const SizedBox(width: 10),
+                _MicroValue(label: 'Zink', value: totals.zincMg, unit: 'mg'),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          if (widget.primaryAction)
+            NuriButton(
+              label: 'Catat makan',
+              icon: Icons.add_a_photo_outlined,
+              height: 46,
+              onPressed: widget.onLog,
+            )
+          else
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: widget.onLog,
+                icon: const Icon(Icons.add_a_photo_outlined, size: 18),
+                label: const Text('Catat makan'),
               ),
-            ],
-          ),
+            ),
+          if (widget.onMeasure != null) ...[
+            const Divider(height: 24),
+            _TodayRow(
+              icon: Icons.straighten_rounded,
+              color: AppColors.primary,
+              tint: AppColors.mint,
+              title: 'Ukur anak',
+              subtitle: 'Perbarui berat dan panjang badan',
+              onTap: widget.onMeasure,
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: AppColors.muted,
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _MicroValue extends StatelessWidget {
+  const _MicroValue({
+    required this.label,
+    required this.value,
+    required this.unit,
+  });
+
+  final String label;
+  final double? value;
+  final String unit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceSubtle,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
+              ),
+            ),
+            Text(
+              value == null ? '—' : '${value!.toStringAsFixed(1)} $unit',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1638,69 +1469,137 @@ class _PosyanduReminder extends StatelessWidget {
   }
 }
 
-class _ArticleCard extends StatelessWidget {
-  const _ArticleCard({required this.article, required this.onTap});
+class _ForYouCard extends StatelessWidget {
+  const _ForYouCard({
+    required this.article,
+    required this.onArticle,
+    required this.onMenu,
+  });
 
   final ContentArticle? article;
-  final VoidCallback onTap;
+  final VoidCallback onArticle;
+  final VoidCallback onMenu;
 
   @override
   Widget build(BuildContext context) {
     final item = article;
-    if (item == null) return const SizedBox.shrink();
     return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(12),
-      child: Row(
+      padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          NuriImage(
-            asset: item.imageAsset ?? 'assets/images/article_food.jpg',
-            width: 88,
-            height: 88,
-            radius: 14,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Pill(
-                  label: item.category,
-                  background: AppColors.mint,
-                  foreground: AppColors.primaryDark,
-                  fontSize: 11,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  item.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 14.5,
-                    height: 1.25,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Row(
+          if (item != null)
+            InkWell(
+              onTap: onArticle,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
                   children: [
-                    const Icon(
-                      Icons.schedule_rounded,
-                      size: 13,
-                      color: AppColors.muted,
+                    NuriImage(
+                      asset:
+                          item.imageAsset ?? 'assets/images/article_food.jpg',
+                      width: 72,
+                      height: 72,
+                      radius: 12,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item.readMinutes} menit baca',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.muted,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.category,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            item.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 14.5,
+                              height: 1.25,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${item.readMinutes} menit baca',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: AppColors.muted,
                     ),
                   ],
                 ),
-              ],
+              ),
+            ),
+          if (item != null) const Divider(height: 1),
+          InkWell(
+            onTap: onMenu,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            child: const Padding(
+              padding: EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 38,
+                    height: 38,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.mint,
+                        borderRadius: BorderRadius.all(Radius.circular(11)),
+                      ),
+                      child: Icon(
+                        Icons.restaurant_menu_rounded,
+                        color: AppColors.primary,
+                        size: 19,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Inspirasi menu hari ini',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Menu tinggi protein hewani yang mudah dibuat.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: AppColors.muted,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -1771,63 +1670,6 @@ class _KaderNoteCard extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MenuInspirationCard extends StatelessWidget {
-  const _MenuInspirationCard({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.mint,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.restaurant_menu_rounded,
-              color: AppColors.primary,
-              size: 21,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Inspirasi menu hari ini',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Menu tinggi protein hewani yang mudah dibuat di rumah.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.muted,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 20,
-            color: AppColors.muted,
           ),
         ],
       ),
