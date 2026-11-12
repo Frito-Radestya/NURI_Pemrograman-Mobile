@@ -1,0 +1,572 @@
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:nuri/data/app_controller.dart';
+import 'package:nuri/data/demo_seed.dart';
+import 'package:nuri/data/local_repository.dart';
+import 'package:nuri/domain/growth/growth_calculator.dart';
+import 'package:nuri/domain/growth/who_lms.dart';
+import 'package:nuri/domain/models.dart';
+import 'package:nuri/domain/nutrition/nutrition_calculator.dart';
+import 'package:nuri/domain/pregnancy/pregnancy_calculator.dart';
+
+void main() {
+  late WhoReference who;
+  late GrowthCalculator growth;
+
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    who = WhoReference(
+      boys: WhoLmsTable.fromJsonString(
+        await rootBundle.loadString('assets/data/who_hfa_boys.json'),
+      ),
+      girls: WhoLmsTable.fromJsonString(
+        await rootBundle.loadString('assets/data/who_hfa_girls.json'),
+      ),
+    );
+    growth = GrowthCalculator(reference: who);
+  });
+
+  group('WHO LMS', () {
+    test('median panjang lahir sesuai tabel WHO', () {
+      expect(who.boys.atAgeDays(0).m, closeTo(49.8842, 0.0001));
+      expect(who.girls.atAgeDays(0).m, closeTo(49.1477, 0.0001));
+    });
+
+    test('valueAtZ(0) sama dengan median', () {
+      expect(
+        who.boys.valueAtZ(548, 0),
+        closeTo(who.boys.atAgeDays(548).m, 1e-9),
+      );
+      expect(
+        who.girls.valueAtZ(548, 0),
+        closeTo(who.girls.atAgeDays(548).m, 1e-9),
+      );
+    });
+
+    test('interpolasi linear antar baris harian', () {
+      final a = who.boys.atAgeDays(100).m;
+      final b = who.boys.atAgeDays(101).m;
+      expect(who.boys.atAgeDays(100.5).m, closeTo((a + b) / 2, 1e-9));
+    });
+
+    test('nilai di luar rentang di-clamp ke baris terakhir', () {
+      final last = who.boys.lms.last;
+      final point = who.boys.atAgeDays(5000);
+      expect(point.m, closeTo(last.m, 1e-9));
+    });
+  });
+
+  group('GrowthCalculator', () {
+    final dob = DateTime(2024, 1, 1);
+    final at18m = dob.add(const Duration(days: 548));
+
+    test('median tepat menghasilkan z 0 dan kategori normal', () {
+      final result = growth.evaluate(
+        heightCm: 82.2628,
+        weightKg: 11.0,
+        sex: Sex.male,
+        dob: dob,
+        measureDate: at18m,
+        method: MeasurementMethod.lying,
+      );
+      expect(result.zScore, closeTo(0, 0.001));
+      expect(result.category, GrowthCategory.normal);
+      expect(result.ageMonths, 18);
+      expect(result.medianCm, closeTo(82.2628, 0.001));
+      expect(result.correctionNote, isNull);
+    });
+
+    test('kategori pendek dan sangat pendek sesuai ambang -2/-3 SD', () {
+      GrowthEvaluation evalAt(double height) => growth.evaluate(
+        heightCm: height,
+        weightKg: 10.5,
+        sex: Sex.male,
+        dob: dob,
+        measureDate: at18m,
+        method: MeasurementMethod.lying,
+      );
+
+      final stunted = evalAt(75);
+      expect(stunted.zScore, closeTo(-2.69, 0.02));
+      expect(stunted.category, GrowthCategory.stunted);
+      expect(stunted.isBelowMinus2, isTrue);
+      expect(stunted.isBelowMinus3, isFalse);
+
+      final severe = evalAt(72);
+      expect(severe.zScore, lessThan(-3));
+      expect(severe.category, GrowthCategory.severelyStunted);
+      expect(severe.isBelowMinus3, isTrue);
+
+      final tall = evalAt(93);
+      expect(tall.zScore, greaterThan(3));
+      expect(tall.category, GrowthCategory.tall);
+    });
+
+    test('koreksi +0,7 cm saat berdiri di bawah 24 bulan', () {
+      final result = growth.evaluate(
+        heightCm: 82.0,
+        weightKg: 11.0,
+        sex: Sex.male,
+        dob: dob,
+        measureDate: at18m,
+        method: MeasurementMethod.standing,
+      );
+      expect(result.correctedCm, closeTo(82.7, 1e-9));
+      expect(result.correctionNote, contains('+0,7'));
+      expect(result.flags, contains('Koreksi PB +0,7 cm'));
+    });
+
+    test('koreksi -0,7 cm saat berbaring di usia 24 bulan atau lebih', () {
+      final result = growth.evaluate(
+        heightCm: 87.8,
+        weightKg: 12.0,
+        sex: Sex.male,
+        dob: dob,
+        measureDate: dob.add(const Duration(days: 731)),
+        method: MeasurementMethod.lying,
+      );
+      expect(result.ageMonths, 24);
+      expect(result.correctedCm, closeTo(87.1, 1e-9));
+      expect(result.correctionNote, contains('−0,7'));
+      expect(result.flags, contains('Koreksi TB −0,7 cm'));
+    });
+
+    test('klasifikasi batas -3, -2, dan 3 SD', () {
+      expect(GrowthCalculator.classify(-3.001), GrowthCategory.severelyStunted);
+      expect(GrowthCalculator.classify(-3), GrowthCategory.stunted);
+      expect(GrowthCalculator.classify(-2.001), GrowthCategory.stunted);
+      expect(GrowthCalculator.classify(-2), GrowthCategory.normal);
+      expect(GrowthCalculator.classify(3), GrowthCategory.normal);
+      expect(GrowthCalculator.classify(3.001), GrowthCategory.tall);
+    });
+
+    test('menolak tinggi, berat, tanggal, dan usia di luar batas', () {
+      expect(
+        () => growth.evaluate(
+          heightCm: 34,
+          weightKg: 10,
+          sex: Sex.male,
+          dob: dob,
+          measureDate: at18m,
+          method: MeasurementMethod.lying,
+        ),
+        throwsA(isA<GrowthValidationException>()),
+      );
+      expect(
+        () => growth.evaluate(
+          heightCm: 80,
+          weightKg: 40,
+          sex: Sex.male,
+          dob: dob,
+          measureDate: at18m,
+          method: MeasurementMethod.lying,
+        ),
+        throwsA(isA<GrowthValidationException>()),
+      );
+      expect(
+        () => growth.evaluate(
+          heightCm: 80,
+          weightKg: 10,
+          sex: Sex.male,
+          dob: dob,
+          measureDate: dob.subtract(const Duration(days: 1)),
+          method: MeasurementMethod.lying,
+        ),
+        throwsA(isA<GrowthValidationException>()),
+      );
+      expect(
+        () => growth.evaluate(
+          heightCm: 110,
+          weightKg: 18,
+          sex: Sex.male,
+          dob: dob,
+          measureDate: dob.add(const Duration(days: 1857)),
+          method: MeasurementMethod.standing,
+        ),
+        throwsA(isA<GrowthValidationException>()),
+      );
+    });
+
+    test('z ekstrem ditolak kecuali allowImplausible', () {
+      expect(
+        () => growth.evaluate(
+          heightCm: 120,
+          weightKg: 11,
+          sex: Sex.male,
+          dob: dob,
+          measureDate: at18m,
+          method: MeasurementMethod.lying,
+        ),
+        throwsA(isA<GrowthValidationException>()),
+      );
+      final allowed = growth.evaluate(
+        heightCm: 120,
+        weightKg: 11,
+        sex: Sex.male,
+        dob: dob,
+        measureDate: at18m,
+        method: MeasurementMethod.lying,
+        allowImplausible: true,
+      );
+      expect(allowed.implausible, isTrue);
+      expect(allowed.flags.any((f) => f.contains('di luar ±6')), isTrue);
+    });
+
+    test('default method mengikuti umur', () {
+      expect(GrowthCalculator.defaultMethodForAge(23), MeasurementMethod.lying);
+      expect(
+        GrowthCalculator.defaultMethodForAge(24),
+        MeasurementMethod.standing,
+      );
+    });
+  });
+
+  group('Measurement derived flags', () {
+    Measurement measurement(List<String> flags) => Measurement(
+      id: 'm1',
+      date: DateTime(2026, 1, 1),
+      ageDays: 548,
+      ageMonths: 18,
+      weightKg: 11,
+      measuredCm: 82,
+      method: MeasurementMethod.standing,
+      correctedCm: 82.7,
+      zHfa: 0,
+      category: GrowthCategory.normal,
+      source: 'kader',
+      flags: flags,
+    );
+
+    test('catatan koreksi diturunkan dari flag', () {
+      expect(
+        measurement(['Koreksi PB +0,7 cm']).correctionNote,
+        contains('berdiri'),
+      );
+      expect(
+        measurement(['Koreksi TB −0,7 cm']).correctionNote,
+        contains('berbaring'),
+      );
+      expect(measurement([]).correctionNote, isNull);
+    });
+
+    test('flag z ekstrem menandai implausible', () {
+      expect(
+        measurement(['Nilai z di luar ±6; periksa kembali input']).implausible,
+        isTrue,
+      );
+      expect(measurement([]).implausible, isFalse);
+    });
+  });
+
+  group('NutritionCalculator', () {
+    test('persen dan status null-safe', () {
+      expect(NutritionCalculator.percent(null, 100), isNull);
+      expect(NutritionCalculator.percent(50, 0), isNull);
+      expect(NutritionCalculator.percent(50, 100), 50);
+      expect(NutritionCalculator.status(null, 100), isNull);
+    });
+
+    test('batas status gizi 80% dan 110%', () {
+      expect(NutrientStatus.fromPercent(79.9), NutrientStatus.low);
+      expect(NutrientStatus.fromPercent(80), NutrientStatus.adequate);
+      expect(NutrientStatus.fromPercent(110), NutrientStatus.adequate);
+      expect(NutrientStatus.fromPercent(110.1), NutrientStatus.high);
+    });
+
+    test('status protein hewani memakai target gram', () {
+      expect(
+        NutritionCalculator.animalProteinStatus(null, 15),
+        NutrientStatus.low,
+      );
+      expect(
+        NutritionCalculator.animalProteinStatus(11.9, 15),
+        NutrientStatus.low,
+      );
+      expect(
+        NutritionCalculator.animalProteinStatus(12, 15),
+        NutrientStatus.adequate,
+      );
+      expect(
+        NutritionCalculator.animalProteinStatus(17, 15),
+        NutrientStatus.high,
+      );
+    });
+
+    test('AKG anak berpindah pada batas usia', () {
+      const akg = AkgReference();
+      expect(akg.forChild(5, Sex.male).energyKcal, 550);
+      expect(akg.forChild(6, Sex.male).energyKcal, 800);
+      expect(akg.forChild(11, Sex.male).energyKcal, 800);
+      expect(akg.forChild(12, Sex.male).energyKcal, 1350);
+      expect(akg.forChild(35, Sex.female).energyKcal, 1350);
+      expect(akg.forChild(36, Sex.female).energyKcal, 1400);
+    });
+
+    test('AKG kehamilan per trimester', () {
+      const akg = AkgReference();
+      expect(akg.forPregnancy(1).energyKcal, 2250);
+      expect(akg.forPregnancy(2).energyKcal, 2550);
+      expect(akg.forPregnancy(3).proteinG, 85);
+      expect(AkgReference.ttdTarget, 90);
+      expect(AkgReference.ancTarget, 6);
+    });
+
+    test('targetFor mengembalikan nilai sesuai nutrisi', () {
+      const akg = AkgReference();
+      final target = akg.forChild(18, Sex.male);
+      expect(target.targetFor('protein'), 20);
+      expect(target.targetFor('zat besi'), 7);
+      expect(target.targetFor('tidak dikenal'), target.energyKcal);
+    });
+  });
+
+  group('NutritionTotals', () {
+    test('menjumlahkan item dan menandai nutrisi yang hilang', () {
+      const items = [
+        FoodLogItem(
+          foodId: 'a',
+          name: 'Nasi',
+          grams: 100,
+          kcalPer100: 180,
+          proteinPer100: 3,
+          fatPer100: 0.3,
+          carbPer100: 39.8,
+          ironPer100: 0.4,
+          zincPer100: 0.4,
+        ),
+        FoodLogItem(
+          foodId: 'b',
+          name: 'Telur',
+          grams: 50,
+          kcalPer100: 154,
+          proteinPer100: 12.4,
+          fatPer100: 10.8,
+          carbPer100: 0.7,
+          ironPer100: 1.2,
+          zincPer100: 1.0,
+        ),
+      ];
+      final totals = NutritionTotals.fromItems(items);
+      expect(totals.kcal, closeTo(180 + 77, 0.001));
+      expect(totals.proteinG, closeTo(3 + 6.2, 0.001));
+      expect(totals.incomplete, isFalse);
+
+      const partial = [
+        FoodLogItem(foodId: 'c', name: 'Air', grams: 200, kcalPer100: 0),
+      ];
+      final partialTotals = NutritionTotals.fromItems(partial);
+      expect(partialTotals.kcal, 0);
+      expect(partialTotals.proteinG, isNull);
+      expect(partialTotals.incomplete, isTrue);
+      expect(partialTotals.incompleteNutrients, contains('protein'));
+    });
+
+    test('daftar kosong menghasilkan total kosong', () {
+      final totals = NutritionTotals.fromItems(const []);
+      expect(totals.kcal, isNull);
+      expect(totals.incomplete, isFalse);
+    });
+  });
+
+  group('PregnancyCalculator', () {
+    test('HPL = HPHT + 280 hari dan sebaliknya', () {
+      final hpht = DateTime(2026, 1, 1);
+      expect(PregnancyCalculator.hplFromHpht(hpht), DateTime(2026, 10, 8));
+      expect(PregnancyCalculator.hphtFromHpl(DateTime(2026, 10, 8)), hpht);
+    });
+
+    test('trimester berpindah pada minggu 14 dan 28', () {
+      expect(PregnancyCalculator.trimesterForWeeks(13), 1);
+      expect(PregnancyCalculator.trimesterForWeeks(14), 2);
+      expect(PregnancyCalculator.trimesterForWeeks(27), 2);
+      expect(PregnancyCalculator.trimesterForWeeks(28), 3);
+    });
+
+    test('progres 20 minggu menghasilkan setengah perjalanan', () {
+      final hpht = DateTime(2026, 1, 1);
+      final hpl = PregnancyCalculator.hplFromHpht(hpht);
+      final progress = PregnancyCalculator.progress(
+        hpht: hpht,
+        hpl: hpl,
+        today: hpht.add(const Duration(days: 140)),
+      );
+      expect(progress.weeks, 20);
+      expect(progress.days, 0);
+      expect(progress.trimester, 2);
+      expect(progress.progress, closeTo(0.5, 1e-9));
+      expect(progress.daysToHpl, 140);
+      expect(progress.fetalLengthCm, closeTo(25.6, 1e-9));
+      expect(progress.fetalWeightG, 300);
+      expect(progress.ageLabel, '20 minggu 0 hari');
+    });
+
+    test('HPHT di masa depan tidak menghasilkan progres negatif', () {
+      final today = DateTime(2026, 3, 1);
+      final hpht = today.add(const Duration(days: 30));
+      final progress = PregnancyCalculator.progress(
+        hpht: hpht,
+        hpl: PregnancyCalculator.hplFromHpht(hpht),
+        today: today,
+      );
+      expect(progress.weeks, 0);
+      expect(progress.progress, 0);
+      expect(progress.daysToHpl, 310);
+    });
+
+    test('ukuran janin diinterpolasi antar minggu', () {
+      final hpht = DateTime(2026, 1, 1);
+      final progress = PregnancyCalculator.progress(
+        hpht: hpht,
+        hpl: PregnancyCalculator.hplFromHpht(hpht),
+        today: hpht.add(const Duration(days: 7 * 21)),
+      );
+      expect(progress.weeks, 21);
+      expect(progress.fetalLengthCm, greaterThan(25.6));
+      expect(progress.fetalLengthCm, lessThan(27.8));
+      expect(progress.fetalWeightG, greaterThan(300));
+      expect(progress.fetalWeightG, lessThan(430));
+    });
+  });
+
+  group('DemoSeed', () {
+    final today = DateTime(2026, 3, 15);
+    late AppState state;
+
+    setUpAll(() {
+      state = DemoSeed.build(who: who, today: today);
+    });
+
+    test('menyediakan 52 sasaran dan 38 hadir pada sesi berjalan', () {
+      expect(state.roster.length, 52);
+      final session = state.sessions.single;
+      expect(session.targetCount, 52);
+      expect(session.presentCount, 38);
+      expect(
+        state.roster
+            .where((r) => r.attendance == AttendanceStatus.present)
+            .length,
+        38,
+      );
+    });
+
+    test('distribusi kategori anak konsisten dengan dashboard kader', () {
+      final children = state.roster.where((r) => r.type == RosterType.child);
+      expect(children.length, 38);
+      expect(
+        children.where((r) => r.category == GrowthCategory.normal).length,
+        31,
+      );
+      expect(
+        children.where((r) => r.category == GrowthCategory.stunted).length,
+        5,
+      );
+      expect(
+        children
+            .where((r) => r.category == GrowthCategory.severelyStunted)
+            .length,
+        2,
+      );
+    });
+
+    test('total energi sarapan dan makan siang Rafi = 685 kkal', () {
+      final logs = state.foodLogsFor('c_rafi', today);
+      expect(logs.length, 2);
+      expect(logs.first.meal, MealType.breakfast);
+      expect(logs.last.meal, MealType.lunch);
+      final total = logs.fold<double>(
+        0,
+        (sum, log) => sum + (log.totals.kcal ?? 0),
+      );
+      expect(total, closeTo(685, 0.5));
+    });
+
+    test('akun demo ibu dan kader tersedia', () {
+      expect(
+        state.users.map((u) => u.email),
+        containsAll(['ibu@nuri.id', 'kader@nuri.id']),
+      );
+      expect(
+        state.users.firstWhere((u) => u.email == 'ibu@nuri.id').role,
+        UserRole.mother,
+      );
+      expect(
+        state.users.firstWhere((u) => u.email == 'kader@nuri.id').role,
+        UserRole.cadre,
+      );
+      expect(state.landingSeen, isFalse);
+    });
+  });
+
+  group('AppController addRosterTarget', () {
+    ProviderContainer makeContainer(AppState seed) {
+      final repo = _MemoryRepository();
+      return ProviderContainer(
+        overrides: [
+          localRepositoryProvider.overrideWithValue(repo),
+          appControllerProvider.overrideWith(() => AppController(seed, repo)),
+        ],
+      );
+    }
+
+    test('menolak BB lahir dan PB lahir di luar batas', () {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_kader');
+      final container = makeContainer(seed);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+
+      expect(
+        controller.addRosterTarget(
+          name: 'Bayi Uji',
+          type: RosterType.child,
+          dob: DateTime(2026, 1, 1),
+          sex: Sex.male,
+          birthWeightKg: 9,
+        ),
+        'BB lahir harus di antara 0,5–6 kg.',
+      );
+      expect(
+        controller.addRosterTarget(
+          name: 'Bayi Uji',
+          type: RosterType.child,
+          dob: DateTime(2026, 1, 1),
+          sex: Sex.male,
+          birthLengthCm: 15,
+        ),
+        'PB lahir harus di antara 20–70 cm.',
+      );
+      expect(
+        controller.addRosterTarget(
+          name: 'Bayi Uji',
+          type: RosterType.child,
+          dob: DateTime(2026, 1, 1),
+          sex: Sex.male,
+          birthWeightKg: 3.1,
+          birthLengthCm: 49,
+        ),
+        isNull,
+      );
+    });
+  });
+}
+
+class _MemoryRepository implements AppRepository {
+  AppState? _saved;
+
+  @override
+  AppState? load() => _saved;
+
+  @override
+  Future<void> save(AppState state) async {
+    _saved = state;
+  }
+
+  @override
+  Future<void> clear() async {
+    _saved = null;
+  }
+}
