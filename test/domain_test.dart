@@ -884,6 +884,23 @@ void main() {
       expect(db.foodLogs.isNotEmpty, isTrue);
     });
 
+    test(
+      'seedAllDemoData memasukkan semua akun dan entitas ke database',
+      () async {
+        final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+        final db = _FakeDatabaseService();
+
+        await db.seedAllDemoData(seedData: seed);
+
+        expect(db.users.containsKey('u_ibu'), isTrue);
+        expect(db.users.containsKey('u_kader'), isTrue);
+        expect(db.users.containsKey('u_maya'), isTrue);
+        expect(db.children.containsKey('c_rafi'), isTrue);
+        expect(db.roster.length, 52);
+        expect(db.seedAllDemoCalls, 1);
+      },
+    );
+
     test('addChild menyinkronkan data anak baru ke Firestore', () async {
       final seed = DemoSeed.build(
         who: who,
@@ -1052,6 +1069,7 @@ class _FakeDatabaseService implements DatabaseService {
   int syncChangesCalls = 0;
   int syncAllCalls = 0;
   int seedCalls = 0;
+  int seedAllDemoCalls = 0;
   int pullCalls = 0;
 
   @override
@@ -1059,6 +1077,29 @@ class _FakeDatabaseService implements DatabaseService {
 
   @override
   Future<bool> userExists(String userId) async => users.containsKey(userId);
+
+  @override
+  Future<void> seedAllDemoData({required AppState seedData}) async {
+    seedAllDemoCalls++;
+    for (final u in seedData.users) {
+      users[u.id] = u;
+    }
+    for (final c in seedData.children) {
+      children[c.id] = c;
+    }
+    for (final p in seedData.pregnancies) {
+      pregnancies[p.id] = p;
+    }
+    for (final f in seedData.foodLogs) {
+      foodLogs[f.id] = f;
+    }
+    for (final r in seedData.roster) {
+      roster[r.id] = r;
+    }
+    for (final s in seedData.sessions) {
+      sessions[s.id] = s;
+    }
+  }
 
   @override
   Future<void> seedUserDataset({

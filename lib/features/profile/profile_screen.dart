@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -63,24 +62,6 @@ class ProfileScreen extends ConsumerWidget {
               child: _ProfileCard(
                 user: user,
                 onEdit: () => _editName(context, ref, user),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _DemoSwitchCard(
-                users: state.users,
-                currentUserId: user.id,
-                onSwitch: (target) {
-                  HapticFeedback.selectionClick();
-                  ref
-                      .read(appControllerProvider.notifier)
-                      .loginAsUser(target.id);
-                  showNuriSnack(
-                    context,
-                    'Beralih ke ${target.name} (${target.role.label}).',
-                  );
-                },
               ),
             ),
             if (!isCadre) ...[
@@ -328,9 +309,9 @@ class ProfileScreen extends ConsumerWidget {
                       onPressed: () async {
                         final ok = await showNuriConfirm(
                           context: context,
-                          title: 'Reset data demo?',
-                          message: 'Semua perubahan lokal akan diganti dengan data demo awal. Tindakan ini tidak dapat dibatalkan.',
-                          confirmLabel: 'Reset demo',
+                          title: 'Reset akun?',
+                          message: 'Semua perubahan data pada akun ini akan dikembalikan ke kondisi awal. Tindakan ini tidak dapat dibatalkan.',
+                          confirmLabel: 'Reset akun',
                           danger: true,
                         );
                         if (!ok) return;
@@ -338,12 +319,12 @@ class ProfileScreen extends ConsumerWidget {
                         if (context.mounted) {
                           showNuriSnack(
                             context,
-                            'Data demo dikembalikan ke kondisi awal.',
+                            'Data akun berhasil direset ke kondisi awal.',
                           );
                         }
                       },
                       icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                      label: const Text('Reset demo'),
+                      label: const Text('Reset akun'),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -353,7 +334,7 @@ class ProfileScreen extends ConsumerWidget {
                         final ok = await showNuriConfirm(
                           context: context,
                           title: 'Keluar dari akun?',
-                          message: 'Data tetap tersimpan di perangkat. Kamu dapat masuk kembali dengan akun demo.',
+                          message: 'Data tetap tersimpan di perangkat. Kamu dapat masuk kembali kapan saja.',
                           confirmLabel: 'Keluar',
                           danger: true,
                         );
@@ -731,14 +712,6 @@ class _ProfileCard extends StatelessWidget {
                     background: AppColors.mint,
                     foreground: AppColors.primary,
                   ),
-                ] else if (user.demo) ...[
-                  const SizedBox(height: 6),
-                  const Pill(
-                    label: 'Akun demo',
-                    fontSize: 11,
-                    background: AppColors.surfaceSubtle,
-                    foreground: AppColors.muted,
-                  ),
                 ],
               ],
             ),
@@ -751,121 +724,6 @@ class _ProfileCard extends StatelessWidget {
               color: AppColors.primary,
             ),
             tooltip: 'Ubah nama',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DemoSwitchCard extends StatelessWidget {
-  const _DemoSwitchCard({
-    required this.users,
-    required this.currentUserId,
-    required this.onSwitch,
-  });
-
-  final List<AppUser> users;
-  final String currentUserId;
-  final ValueChanged<AppUser> onSwitch;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.switch_account_outlined,
-                size: 18,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 7),
-              const Expanded(
-                child: Text(
-                  'Mode demo • ganti peran',
-                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
-                ),
-              ),
-              Pill(
-                label: '${users.where((u) => u.demo).length} akun',
-                background: AppColors.surfaceSubtle,
-                foreground: AppColors.muted,
-                fontSize: 11,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Beralih antar akun untuk melihat alur ibu dan kader.',
-            style: TextStyle(fontSize: 12, color: AppColors.muted),
-          ),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: users.where((u) => u.demo).map((user) {
-                final selected = user.id == currentUserId;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    onTap: selected ? null : () => onSwitch(user),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 11,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.primary : AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: selected ? AppColors.primary : AppColors.line,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppAvatar(
-                            name: user.name,
-                            index: user.role == UserRole.cadre ? 7 : 0,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 7),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.name.split(' ').first,
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: selected
-                                      ? Colors.white
-                                      : AppColors.text,
-                                ),
-                              ),
-                              Text(
-                                user.role.label,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: selected
-                                      ? Colors.white.withValues(alpha: 0.78)
-                                      : AppColors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
           ),
         ],
       ),
