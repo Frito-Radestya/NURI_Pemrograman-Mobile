@@ -106,10 +106,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  void _demo(UserRole role) {
-    HapticFeedback.selectionClick();
-    ref.read(appControllerProvider.notifier).loginDemo(role);
+  Future<void> _submitGoogle() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final error = await ref
+        .read(appControllerProvider.notifier)
+        .loginWithGoogle(role: _role);
+    if (!mounted) return;
+    if (error != null) {
+      setState(() {
+        _loading = false;
+        _error = error;
+      });
+      return;
+    }
     _finish();
+  }
+
+  void _fillRegisteredDemo(UserRole role) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _role = role;
+      if (role == UserRole.cadre) {
+        _email.text = 'kader@nuri.id';
+        _password.text = 'nuri123';
+      } else {
+        _email.text = 'ibu@nuri.id';
+        _password.text = 'nuri123';
+      }
+      _error = null;
+    });
+    showNuriSnack(
+      context,
+      'Akun terdaftar ${role == UserRole.cadre ? 'Kader' : 'Ibu'} terisi. Klik Masuk.',
+    );
   }
 
   @override
@@ -237,49 +270,82 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       loading: _loading,
                       onPressed: _submit,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 10),
                     Align(
                       alignment: Alignment.center,
-                      child: TextButton(
-                        onPressed: _loading ? null : _forgotPassword,
-                        child: const Text('Lupa password?'),
+                      child: GestureDetector(
+                        onTap: _loading ? null : _forgotPassword,
+                        child: const Text(
+                          'Lupa password?',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                            decoration: TextDecoration.underline,
+                            decorationColor: AppColors.primary,
+                          ),
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 14),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            'atau',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _GoogleSignInButton(
+                      loading: _loading,
+                      onPressed: _submitGoogle,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
               const Row(
                 children: [
                   Expanded(child: Divider()),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
-                      'Masuk cepat dengan demo',
+                      'Akun contoh terdaftar',
                       style: TextStyle(fontSize: 12, color: AppColors.muted),
                     ),
                   ),
                   Expanded(child: Divider()),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
-                    child: _DemoButton(
+                    child: _RegisteredAccountCard(
+                      label: 'Akun Ibu',
+                      subtitle: 'ibu@nuri.id',
                       icon: Icons.favorite_outline_rounded,
-                      label: 'Demo Ibu',
                       color: AppColors.coral,
-                      onTap: () => _demo(UserRole.mother),
+                      onTap: () => _fillRegisteredDemo(UserRole.mother),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _DemoButton(
+                    child: _RegisteredAccountCard(
+                      label: 'Akun Kader',
+                      subtitle: 'kader@nuri.id',
                       icon: Icons.groups_outlined,
-                      label: 'Demo Kader',
                       color: AppColors.primary,
-                      onTap: () => _demo(UserRole.cadre),
+                      onTap: () => _fillRegisteredDemo(UserRole.cadre),
                     ),
                   ),
                 ],
@@ -291,16 +357,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     const Text(
-                      'Belum punya akun?',
+                      'Belum punya akun? ',
                       style: TextStyle(fontSize: 13, color: AppColors.muted),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).push(
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => SignupScreen(initialRole: _role),
                         ),
                       ),
-                      child: const Text('Daftar sekarang'),
+                      child: const Text(
+                        'Daftar sekarang',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -314,38 +389,196 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-class _DemoButton extends StatelessWidget {
-  const _DemoButton({
-    required this.icon,
+class _RegisteredAccountCard extends StatelessWidget {
+  const _RegisteredAccountCard({
     required this.label,
+    required this.subtitle,
+    required this.icon,
     required this.color,
     required this.onTap,
   });
 
-  final IconData icon;
   final String label;
+  final String subtitle;
+  final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.text,
-        backgroundColor: AppColors.surface,
-        minimumSize: const Size(0, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-      ),
-      icon: Icon(icon, size: 18, color: color),
-      label: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.line),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _GoogleSignInButton extends StatelessWidget {
+  const _GoogleSignInButton({
+    required this.loading,
+    required this.onPressed,
+    this.label = 'Masuk dengan Google',
+  });
+
+  final bool loading;
+  final VoidCallback onPressed;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: loading ? null : onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.text,
+        backgroundColor: AppColors.surface,
+        minimumSize: const Size(double.infinity, 48),
+        side: const BorderSide(color: AppColors.line),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+      ),
+      child: loading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const _GoogleLogoIcon(),
+                const SizedBox(width: 10),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text,
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _GoogleLogoIcon extends StatelessWidget {
+  const _GoogleLogoIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(size: const Size(18, 18), painter: _GoogleLogoPainter());
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+    final cy = h / 2;
+    final r = w / 2;
+
+    final blue = Paint()..color = const Color(0xFF4285F4);
+    final red = Paint()..color = const Color(0xFFEA4335);
+    final yellow = Paint()..color = const Color(0xFFFBBC05);
+    final green = Paint()..color = const Color(0xFF34A853);
+
+    // 4 quadrants arcs
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      -0.785,
+      1.57,
+      true,
+      blue,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      0.785,
+      1.57,
+      true,
+      green,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      2.355,
+      1.57,
+      true,
+      yellow,
+    );
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      3.925,
+      1.57,
+      true,
+      red,
+    );
+
+    // Inner cutout
+    final white = Paint()..color = Colors.white;
+    canvas.drawCircle(Offset(cx, cy), r * 0.58, white);
+
+    // Center bar
+    final barRect = Rect.fromLTRB(
+      cx - r * 0.1,
+      cy - r * 0.22,
+      w * 0.95,
+      cy + r * 0.22,
+    );
+    canvas.drawRect(barRect, blue);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ResetPasswordDialog extends StatefulWidget {
@@ -447,6 +680,26 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     super.dispose();
   }
 
+  Future<void> _submitGoogle() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final error = await ref
+        .read(appControllerProvider.notifier)
+        .loginWithGoogle(role: _role);
+    if (!mounted) return;
+    if (error != null) {
+      setState(() {
+        _loading = false;
+        _error = error;
+      });
+      return;
+    }
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
     if (_password.text != _confirm.text) {
@@ -486,11 +739,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ScreenHeader(
+              const ScreenHeader(
                 title: 'Buat akun NURI',
                 subtitle: 'Gratis, tenang, dan bisa dipakai offline.',
-                padding: const EdgeInsets.fromLTRB(0, 6, 0, 14),
-                onBack: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.fromLTRB(0, 6, 0, 14),
               ),
               AppCard(
                 padding: const EdgeInsets.all(16),
@@ -581,10 +833,59 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       loading: _loading,
                       onPressed: _submit,
                     ),
+                    const SizedBox(height: 14),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            'atau',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _GoogleSignInButton(
+                      loading: _loading,
+                      onPressed: _submitGoogle,
+                      label: 'Daftar dengan Google',
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const Text(
+                      'Sudah punya akun? ',
+                      style: TextStyle(fontSize: 13, color: AppColors.muted),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        'Masuk',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
               const NuriDisclaimer(),
             ],
           ),

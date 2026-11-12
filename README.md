@@ -123,7 +123,7 @@ assets/
   data/                         WHO HFA (LMS harian) + subset TKPI 2017
   fonts/ images/                Nunito, Inter, foto demo
 test/
-  domain_test.dart              51 uji domain, auth, firestore CRUD, dan konsistensi data demo
+  domain_test.dart              52 uji domain, auth, firestore CRUD, dan konsistensi data demo
   widget_test.dart              smoke test landing page
 ```
 
@@ -185,7 +185,7 @@ Nama, usia, dan nominal mengikuti skenario PRD/screenshot. Data ini fiktif dan h
 
 ```bash
 flutter analyze   # harus: No issues found!
-flutter test      # 52 test lulus
+flutter test      # 53 test lulus
 ```
 
 Cakupan test:

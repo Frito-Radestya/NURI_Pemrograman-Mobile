@@ -726,6 +726,32 @@ void main() {
       expect(container.read(appControllerProvider).currentUser?.id, 'u_ibu');
       expect(auth.signInCalls, 0);
     });
+
+    test(
+      'loginWithGoogle berhasil masuk dan membuat profil pengguna',
+      () async {
+        final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+        final auth = _FakeAuthService()
+          ..googleSession = const AuthSession(
+            uid: 'google_123',
+            email: 'bunda@gmail.com',
+            displayName: 'Bunda Google',
+          );
+        final container = makeContainer(seed, auth);
+        addTearDown(container.dispose);
+
+        final error = await container
+            .read(appControllerProvider.notifier)
+            .loginWithGoogle(role: UserRole.mother);
+
+        expect(error, isNull);
+        final state = container.read(appControllerProvider);
+        expect(state.currentUser?.id, 'google_123');
+        expect(state.currentUser?.email, 'bunda@gmail.com');
+        expect(state.currentUser?.authUid, 'google_123');
+        expect(auth.googleSignInCalls, 1);
+      },
+    );
   });
 
   group('Label ramah keluarga', () {
@@ -1173,6 +1199,9 @@ class _FakeAuthService implements AuthService {
   int resetCalls = 0;
   int signOutCalls = 0;
   int updateNameCalls = 0;
+  int googleSignInCalls = 0;
+  AuthSession? googleSession;
+  AuthFailure? googleFailure;
 
   @override
   bool get isAvailable => available;
@@ -1185,6 +1214,18 @@ class _FakeAuthService implements AuthService {
     signInCalls++;
     if (signInFailure != null) throw signInFailure!;
     return signInSession ?? AuthSession(uid: 'uid_$email', email: email);
+  }
+
+  @override
+  Future<AuthSession?> signInWithGoogle() async {
+    googleSignInCalls++;
+    if (googleFailure != null) throw googleFailure!;
+    return googleSession ??
+        const AuthSession(
+          uid: 'google_uid',
+          email: 'user.google@gmail.com',
+          displayName: 'Google User',
+        );
   }
 
   @override
