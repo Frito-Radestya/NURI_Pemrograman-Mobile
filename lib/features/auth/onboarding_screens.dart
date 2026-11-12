@@ -126,25 +126,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _finish();
   }
 
-  void _fillRegisteredDemo(UserRole role) {
-    HapticFeedback.selectionClick();
-    setState(() {
-      _role = role;
-      if (role == UserRole.cadre) {
-        _email.text = 'kader@nuri.id';
-        _password.text = 'nuri123';
-      } else {
-        _email.text = 'ibu@nuri.id';
-        _password.text = 'nuri123';
-      }
-      _error = null;
-    });
-    showNuriSnack(
-      context,
-      'Akun terdaftar ${role == UserRole.cadre ? 'Kader' : 'Ibu'} terisi. Klik Masuk.',
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,7 +181,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     NuriTextField(
                       label: 'Email',
                       controller: _email,
-                      hint: 'nama@email.com',
+                      hint: _role == UserRole.mother
+                          ? 'ibu_rina@gmail.com'
+                          : 'kader_nur@gmail.com',
                       prefixIcon: Icons.mail_outline_rounded,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -213,7 +196,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     NuriTextField(
                       label: 'Password',
                       controller: _password,
-                      hint: 'Minimal 6 karakter',
+                      hint: _role == UserRole.mother
+                          ? 'ibu123456'
+                          : 'kader123456',
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: _obscure,
                       textInputAction: TextInputAction.done,
@@ -312,45 +297,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
-              const Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'Akun contoh terdaftar',
-                      style: TextStyle(fontSize: 12, color: AppColors.muted),
-                    ),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _RegisteredAccountCard(
-                      label: 'Akun Ibu',
-                      subtitle: 'ibu@nuri.id',
-                      icon: Icons.favorite_outline_rounded,
-                      color: AppColors.coral,
-                      onTap: () => _fillRegisteredDemo(UserRole.mother),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _RegisteredAccountCard(
-                      label: 'Akun Kader',
-                      subtitle: 'kader@nuri.id',
-                      icon: Icons.groups_outlined,
-                      color: AppColors.primary,
-                      onTap: () => _fillRegisteredDemo(UserRole.cadre),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Center(
                 child: Wrap(
                   alignment: WrapAlignment.center,
@@ -380,81 +327,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 14),
               const NuriDisclaimer(),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RegisteredAccountCard extends StatelessWidget {
-  const _RegisteredAccountCard({
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.line),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 16, color: color),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -762,7 +638,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     NuriTextField(
                       label: 'Email',
                       controller: _email,
-                      hint: 'nama@email.com',
+                      hint: _role == UserRole.mother
+                          ? 'ibu_rina@gmail.com'
+                          : 'kader_nur@gmail.com',
                       prefixIcon: Icons.mail_outline_rounded,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -772,7 +650,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     NuriTextField(
                       label: 'Password',
                       controller: _password,
-                      hint: 'Minimal 6 karakter',
+                      hint: _role == UserRole.mother
+                          ? 'ibu123456'
+                          : 'kader123456',
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: _obscure,
                       textInputAction: TextInputAction.next,
@@ -791,7 +671,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     NuriTextField(
                       label: 'Ulangi password',
                       controller: _confirm,
-                      hint: 'Ketik ulang password',
+                      hint: _role == UserRole.mother
+                          ? 'ibu123456'
+                          : 'kader123456',
                       prefixIcon: Icons.lock_reset_rounded,
                       obscureText: _obscure,
                       textInputAction: TextInputAction.done,
