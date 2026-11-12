@@ -83,6 +83,27 @@ extension AuthActions on AppController {
     }
   }
 
+  Future<String?> loginWithGoogle({UserRole role = UserRole.mother}) async {
+    if (!authService.isAvailable) {
+      return 'Masuk dengan Google memerlukan koneksi Firebase.';
+    }
+    try {
+      final session = await authService.signInWithGoogle();
+      if (session == null) return null; // Dibatalkan oleh pengguna
+      final existing =
+          _findUserByEmail(session.email) ?? _findUserByAuthUid(session.uid);
+      return _applyFirebaseSession(session, role: role, existing: existing);
+    } on AuthFailure catch (failure) {
+      if (failure.code == 'account-exists-with-different-credential') {
+        return 'Email ini sudah terdaftar dengan metode masuk lain.';
+      }
+      return _messageFor(failure);
+    } catch (error) {
+      debugPrint('Google Sign-In gagal: $error');
+      return 'Gagal masuk dengan Google. Pastikan akun Google dipilih dan coba lagi.';
+    }
+  }
+
   String? _loginLocal(AppUser? user) {
     if (user == null) {
       return 'Email belum terdaftar. Periksa kembali atau daftar akun baru.';
