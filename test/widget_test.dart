@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nuri/app.dart';
 import 'package:nuri/core/theme/app_theme.dart';
 import 'package:nuri/data/app_controller.dart';
+import 'package:nuri/data/app_repository.dart';
 import 'package:nuri/data/demo_seed.dart';
 import 'package:nuri/data/local_repository.dart';
 import 'package:nuri/domain/growth/who_lms.dart';

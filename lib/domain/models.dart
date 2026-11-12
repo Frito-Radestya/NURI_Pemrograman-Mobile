@@ -89,6 +89,15 @@ enum GrowthCategory {
 
   bool get needsFollowUp =>
       this == GrowthCategory.stunted || this == GrowthCategory.severelyStunted;
+
+  /// Label ramah keluarga untuk layar harian. Istilah klinis tetap dipakai
+  /// pada layar skrining dan rujukan.
+  String get plainLabel => switch (this) {
+    GrowthCategory.normal => 'Tumbuh optimal',
+    GrowthCategory.stunted => 'Perlu perhatian',
+    GrowthCategory.severelyStunted => 'Perlu rujukan',
+    GrowthCategory.tall => 'Tinggi, tetap pantau',
+  };
 }
 
 enum PregnancyStatus {

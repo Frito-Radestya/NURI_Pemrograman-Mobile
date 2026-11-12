@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,8 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'data/app_controller.dart';
+import 'data/app_repository.dart';
 import 'data/demo_seed.dart';
 import 'data/local_repository.dart';
+import 'data/sqlite_repository.dart';
 import 'domain/growth/who_lms.dart';
 import 'domain/nutrition/food_catalog.dart';
 
@@ -39,9 +42,18 @@ Future<void> main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
-  final repository = LocalRepository(prefs);
+  final AppRepository repository;
+  if (kIsWeb) {
+    // sqflite tidak tersedia di web; preview web tetap memakai localStorage.
+    repository = LocalRepository(prefs);
+  } else {
+    repository = await SqliteRepository.open(legacyPrefs: prefs);
+  }
   final restored = repository.load();
   final initial = restored ?? DemoSeed.build(who: who);
+  if (restored == null) {
+    await repository.save(initial);
+  }
 
   runApp(
     ProviderScope(

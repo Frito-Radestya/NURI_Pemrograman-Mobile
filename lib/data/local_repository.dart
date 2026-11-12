@@ -3,15 +3,12 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/models.dart';
+import 'app_repository.dart';
 
-/// Kontrak penyimpanan. Implementasi Firebase dapat menggantikan kelas lokal
-/// tanpa mengubah UI maupun controller (PRD §9.3).
-abstract class AppRepository {
-  AppState? load();
-  Future<void> save(AppState state);
-  Future<void> clear();
-}
-
+/// Penyimpanan lama berbasis satu string JSON di SharedPreferences.
+///
+/// Produksi memakai SqliteRepository. Kelas ini dipertahankan untuk
+/// migrasi data lama dan pengujian yang tidak membutuhkan plugin database.
 class LocalRepository implements AppRepository {
   LocalRepository(this._prefs);
 
