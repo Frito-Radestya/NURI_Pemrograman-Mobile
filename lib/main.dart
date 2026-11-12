@@ -11,6 +11,7 @@ import 'data/app_controller.dart';
 import 'data/app_repository.dart';
 import 'data/auth_service.dart';
 import 'data/demo_seed.dart';
+import 'data/firestore_service.dart';
 import 'data/local_repository.dart';
 import 'data/sqlite_repository.dart';
 import 'domain/growth/who_lms.dart';
@@ -77,6 +78,7 @@ Future<void> main() async {
             initial,
             repository,
             authService: FirebaseAuthService(),
+            databaseService: FirestoreService(),
           ),
         ),
       ],

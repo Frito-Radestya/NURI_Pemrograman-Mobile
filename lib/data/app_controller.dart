@@ -9,6 +9,7 @@ import '../domain/nutrition/food_catalog.dart';
 import 'app_repository.dart';
 import 'auth_service.dart';
 import 'demo_seed.dart';
+import 'firestore_service.dart';
 
 export 'controllers/auth_actions.dart';
 export 'controllers/cadre_actions.dart';
@@ -35,12 +36,18 @@ final appControllerProvider = NotifierProvider<AppController, AppState>(
 /// Inti state aplikasi. Aksi fitur berada di extension terpisah agar file ini
 /// tetap kecil dan mudah diuji.
 class AppController extends Notifier<AppState> {
-  AppController(this._initial, this._repository, {AuthService? authService})
-    : _authService = authService ?? FirebaseAuthService();
+  AppController(
+    this._initial,
+    this._repository, {
+    AuthService? authService,
+    DatabaseService? databaseService,
+  }) : _authService = authService ?? FirebaseAuthService(),
+       _databaseService = databaseService ?? FirestoreService();
 
   final AppState _initial;
   final AppRepository _repository;
   final AuthService _authService;
+  final DatabaseService _databaseService;
 
   @override
   AppState build() => _initial;
@@ -51,11 +58,25 @@ class AppController extends Notifier<AppState> {
 
   AuthService get authService => _authService;
 
+  DatabaseService get databaseService => _databaseService;
+
   bool get isFirebaseAuthAvailable => _authService.isAvailable;
 
+  bool get isFirestoreAvailable => _databaseService.isAvailable;
+
   void commitState(AppState next) {
+    final previous = state;
     state = next;
     unawaited(_repository.save(next));
+    if (_databaseService.isAvailable && next.currentUser != null) {
+      unawaited(
+        _databaseService.syncChanges(
+          previous: previous,
+          next: next,
+          user: next.currentUser!,
+        ),
+      );
+    }
   }
 
   Future<void> signOutAuthQuietly() async {
