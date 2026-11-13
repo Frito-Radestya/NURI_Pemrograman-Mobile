@@ -9,6 +9,7 @@ import '../../domain/models.dart';
 import '../../domain/pregnancy/pregnancy_calculator.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
+import '../consultation/consultation_screen.dart';
 import '../mother/pregnancy_screens.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -243,6 +244,35 @@ class ProfileScreen extends ConsumerWidget {
                       subtitle: const Text(
                         'TTD, ANC, ukur bulanan, dan jadwal Posyandu.',
                         style: TextStyle(fontSize: 12, color: AppColors.muted),
+                      ),
+                    ),
+                    const Divider(),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(
+                        Icons.medical_services_outlined,
+                        color: AppColors.primary,
+                      ),
+                      title: const Text(
+                        'Konsultasi Bidan & Nakes',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Daftar bidan dan perawat yang siap mendampingi.',
+                        style: TextStyle(fontSize: 12, color: AppColors.muted),
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.muted,
+                      ),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ConsultationScreen(),
+                        ),
                       ),
                     ),
                     const Divider(),

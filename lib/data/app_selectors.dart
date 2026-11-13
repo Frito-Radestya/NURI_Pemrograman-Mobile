@@ -27,7 +27,7 @@ final pregnancyContextProvider = Provider<bool>(
 );
 
 final rosterProvider = Provider<List<RosterEntry>>(
-  (ref) => ref.watch(appControllerProvider.select((state) => state.roster)),
+  (ref) => ref.watch(appControllerProvider.select((state) => state.myRoster)),
 );
 
 final activeSessionProvider = Provider<PosyanduSession?>(

@@ -67,6 +67,7 @@ extension CadreActions on AppController {
       type: type,
       attendance: AttendanceStatus.waiting,
       avatarIndex: currentState.roster.length % 8,
+      posyanduId: user.posyanduId,
       subjectId: childId,
       guardianName: guardianName ?? '',
       ageMonths: type == RosterType.child && dob != null

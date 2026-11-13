@@ -10,6 +10,7 @@ import '../../domain/nutrition/nutrition_calculator.dart';
 import '../../domain/pregnancy/pregnancy_calculator.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
+import '../consultation/consultation_screen.dart';
 import '../education/education_screen.dart';
 import 'diary_screen.dart';
 import 'food_flow.dart';
@@ -217,6 +218,59 @@ class MotherHomeScreen extends ConsumerWidget {
                     onTap: () => _showPosyanduSheet(context, state),
                   ),
                 ],
+                const SizedBox(height: 12),
+                AppCard(
+                  padding: const EdgeInsets.all(14),
+                  child: InkWell(
+                    onTap: () => _push(context, const ConsultationScreen()),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySoft,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.medical_services_outlined,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Konsultasi Bidan & Nakes',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Bidan desa dan perawat siap mendampingi',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppColors.muted,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
                 SectionHeader(
                   title: 'Untuk Ibu',
@@ -245,8 +299,6 @@ class MotherHomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                _KaderNoteCard(pregnancy: showPregnancy),
                 const SizedBox(height: 14),
                 const NuriDisclaimer(),
               ],
@@ -1600,75 +1652,6 @@ class _ForYouCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _KaderNoteCard extends StatelessWidget {
-  const _KaderNoteCard({required this.pregnancy});
-
-  final bool pregnancy;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const AppAvatar(
-            name: 'Nur Aisyah',
-            size: 40,
-            imageAsset: 'assets/images/kader_avatar.jpg',
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Catatan kader',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      relativeDayLabel(
-                        DateTime.now().subtract(const Duration(days: 2)),
-                      ),
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  pregnancy
-                      ? 'LiLA Ibu stabil dan Hb dalam batas baik. Lanjutkan TTD setiap hari dan jadwalkan ANC berikutnya.'
-                      : 'Rafi tumbuh baik. Lanjutkan protein hewani 2–3 kali sehari dan variasikan sayur.',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    height: 1.48,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Bu Nur Aisyah • Posyandu Melati II',
-                  style: TextStyle(fontSize: 11.5, color: AppColors.muted),
-                ),
-              ],
             ),
           ),
         ],

@@ -422,15 +422,35 @@ class AncScreen extends ConsumerWidget {
 
   static const _schedule = [
     (
-      'ANC 1',
+      'ANC 1 (Trimester 1)',
       'Sebelum 12 minggu',
-      'Konfirmasi kehamilan, cek tekanan darah & Hb',
+      'Pemeriksaan Dokter & Skrining USG 1 (konfirmasi kantung & DJJ)',
     ),
-    ('ANC 2', '12–20 minggu', 'Pemantauan tumbuh janin, imunisasi TT'),
-    ('ANC 3', '20–26 minggu', 'Skrining preeklampsia, USG bila tersedia'),
-    ('ANC 4', '26–32 minggu', 'Cek LiLA, Hb, dan gerakan janin'),
-    ('ANC 5', '32–36 minggu', 'Persiapan persalinan & konseling ASI'),
-    ('ANC 6', '36–40 minggu', 'Pemantauan akhir kehamilan'),
+    (
+      'ANC 2 (Trimester 2)',
+      '12–20 minggu',
+      'Pemeriksaan Bidan/Dokter: pemantauan tumbuh janin & imunisasi TT',
+    ),
+    (
+      'ANC 3 (Trimester 2)',
+      '20–26 minggu',
+      'Pemeriksaan Bidan: skrining preeklampsia, LiLA, Hb',
+    ),
+    (
+      'ANC 4 (Trimester 3)',
+      '26–32 minggu',
+      'Pemeriksaan Bidan: posisi janin, denyut jantung, keluhan',
+    ),
+    (
+      'ANC 5 (Trimester 3)',
+      '32–36 minggu',
+      'Pemeriksaan Dokter & Skrining USG 2 (letak plasenta, ketuban, taksiran BB janin)',
+    ),
+    (
+      'ANC 6 (Trimester 3)',
+      '36–40 minggu',
+      'Pemeriksaan akhir kesiapan persalinan aman & inisiasi menyusu dini',
+    ),
   ];
 
   @override
@@ -545,6 +565,8 @@ class AncScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 14),
+                    const _UsgScheduleCard(),
                     const SizedBox(height: 16),
                     SectionHeader(
                       title: 'Jadwal kunjungan',
@@ -1488,6 +1510,160 @@ class _GiveBirthScreenState extends ConsumerState<GiveBirthScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _UsgScheduleCard extends StatelessWidget {
+  const _UsgScheduleCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.monitor_heart_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Skrining USG Kehamilan',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Standar Kemenkes RI: Minimal 2x oleh Dokter',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const _UsgMilestoneTile(
+            number: '1',
+            trimester: 'Trimester 1 (< 12 minggu)',
+            title: 'Skrining Awal & Deteksi Dini',
+            description: 'Menentukan kepastian HPL, lokasi kehamilan dalam rahim, jumlah janin, dan denyut jantung janin.',
+          ),
+          const SizedBox(height: 10),
+          const _UsgMilestoneTile(
+            number: '2',
+            trimester: 'Trimester 3 (32–36 minggu)',
+            title: 'Skrining Kesiapan Persalinan',
+            description: 'Menilai pertumbuhan janin, perkiraan berat lahir (cegah BBLR/stunting), posisi plasenta, dan kecukupan air ketuban.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UsgMilestoneTile extends StatelessWidget {
+  const _UsgMilestoneTile({
+    required this.number,
+    required this.trimester,
+    required this.title,
+    required this.description,
+  });
+
+  final String number;
+  final String trimester;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSubtle,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              number,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        trimester,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.muted,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
