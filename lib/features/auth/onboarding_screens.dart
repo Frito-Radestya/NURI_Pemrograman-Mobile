@@ -788,7 +788,8 @@ class OnboardingGate extends ConsumerWidget {
     if (state.currentUser == null) {
       return const AuthScreen();
     }
-    if (!state.consentAccepted) {
+    // Kader / Admin adalah pengelola, persetujuan data keluarga hanya untuk Ibu
+    if (role == UserRole.mother && !state.consentAccepted) {
       return const ConsentScreen();
     }
     return RoleSetupScreen(role: role);

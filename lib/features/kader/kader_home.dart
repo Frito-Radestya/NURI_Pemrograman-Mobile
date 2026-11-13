@@ -116,6 +116,7 @@ class KaderHomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _SessionCard(
                 session: session,
+                posyanduName: posyanduName,
                 present: present,
                 target: target,
                 followUpCount: followUps.length,
@@ -244,6 +245,7 @@ class _SyncButton extends StatelessWidget {
 class _SessionCard extends StatelessWidget {
   const _SessionCard({
     required this.session,
+    required this.posyanduName,
     required this.present,
     required this.target,
     required this.followUpCount,
@@ -252,6 +254,7 @@ class _SessionCard extends StatelessWidget {
   });
 
   final PosyanduSession? session;
+  final String posyanduName;
   final int present;
   final int target;
   final int followUpCount;
@@ -262,6 +265,7 @@ class _SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = target == 0 ? 0.0 : present / target;
     final done = session?.isDone ?? false;
+    final hasSession = session != null;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -301,13 +305,17 @@ class _SessionCard extends StatelessWidget {
                       width: 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: done ? AppColors.peach : const Color(0xFF9FE3C8),
+                        color: !hasSession
+                            ? Colors.white70
+                            : (done ? AppColors.peach : const Color(0xFF9FE3C8)),
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      done ? 'Sesi selesai' : 'Sesi berlangsung',
+                      !hasSession
+                          ? 'Belum ada sesi'
+                          : (done ? 'Sesi selesai' : 'Sesi berlangsung'),
                       style: const TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
@@ -320,7 +328,7 @@ class _SessionCard extends StatelessWidget {
               const Spacer(),
               Text(
                 session == null
-                    ? 'Belum ada sesi'
+                    ? ''
                     : formatDateId(session!.date, withYear: false),
                 style: TextStyle(
                   fontSize: 12,
@@ -331,7 +339,8 @@ class _SessionCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            session?.posyanduName ?? 'Posyandu Melati II',
+            session?.posyanduName ??
+                (posyanduName.isEmpty ? 'Posyandu Anda' : posyanduName),
             style: const TextStyle(
               fontFamily: 'Nunito',
               fontSize: 22,
@@ -342,7 +351,7 @@ class _SessionCard extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            session?.note ?? 'Sesi penimbangan bulan ini',
+            session?.note ?? 'Belum ada sesi penimbangan bulan ini',
             style: TextStyle(
               fontSize: 12.5,
               color: Colors.white.withValues(alpha: 0.78),

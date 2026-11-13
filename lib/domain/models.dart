@@ -945,6 +945,7 @@ class RosterEntry {
     required this.type,
     required this.attendance,
     required this.avatarIndex,
+    this.posyanduId,
     this.subjectId,
     this.guardianName = '',
     this.ageMonths,
@@ -967,6 +968,7 @@ class RosterEntry {
   final RosterType type;
   final AttendanceStatus attendance;
   final int avatarIndex;
+  final String? posyanduId;
   final String? subjectId;
   final String guardianName;
   final int? ageMonths;
@@ -1003,12 +1005,14 @@ class RosterEntry {
     int? ageMonths,
     double? lilaCm,
     double? hbGdl,
+    String? posyanduId,
   }) => RosterEntry(
     id: id,
     name: name ?? this.name,
     type: type,
     attendance: attendance ?? this.attendance,
     avatarIndex: avatarIndex,
+    posyanduId: posyanduId ?? this.posyanduId,
     subjectId: subjectId,
     guardianName: guardianName,
     ageMonths: ageMonths ?? this.ageMonths,
@@ -1032,6 +1036,7 @@ class RosterEntry {
     'type': type.storage,
     'attendance': attendance.storage,
     'avatarIndex': avatarIndex,
+    'posyanduId': posyanduId,
     'subjectId': subjectId,
     'guardianName': guardianName,
     'ageMonths': ageMonths,
@@ -1057,6 +1062,7 @@ class RosterEntry {
     type: RosterType.fromStorage(json['type'] as String?),
     attendance: AttendanceStatus.fromStorage(json['attendance'] as String?),
     avatarIndex: parseInt(json['avatarIndex']) ?? 0,
+    posyanduId: json['posyanduId'] as String?,
     subjectId: json['subjectId'] as String?,
     guardianName: json['guardianName'] as String? ?? '',
     ageMonths: parseInt(json['ageMonths']),
@@ -1290,14 +1296,33 @@ class AppState {
         foodLogsFor(subjectId, date).expand((log) => log.items).toList(),
       );
 
-  PosyanduSession? get activeSession {
-    for (final session in sessions) {
-      if (session.status == 'berlangsung') return session;
+  List<RosterEntry> get myRoster {
+    if (currentUser == null) return const [];
+    if (currentUser!.demo) {
+      return roster;
     }
-    return sessions.isEmpty ? null : sessions.first;
+    return roster
+        .where((r) =>
+            (r.posyanduId != null && r.posyanduId == currentUser?.posyanduId) ||
+            r.guardianName.toLowerCase() == currentUser!.name.toLowerCase())
+        .toList();
   }
 
-  int get followUpCount => roster.where((r) => r.needsFollowUp).length;
+  PosyanduSession? get activeSession {
+    final list = currentUser?.demo == true
+        ? sessions
+        : sessions
+            .where((s) =>
+                s.createdByUid == currentUserId ||
+                (posyanduName.isNotEmpty && s.posyanduName == posyanduName))
+            .toList();
+    for (final session in list) {
+      if (session.status == 'berlangsung') return session;
+    }
+    return list.isEmpty ? null : list.first;
+  }
+
+  int get followUpCount => myRoster.where((r) => r.needsFollowUp).length;
 
   AppState copyWith({
     List<AppUser>? users,

@@ -616,7 +616,7 @@ void main() {
         expect(state.currentUser?.authUid, 'fb_kader');
         expect(state.currentUser?.demo, isFalse);
         expect(state.onboardingSeen, isFalse);
-        expect(state.consentAccepted, isFalse);
+        expect(state.consentAccepted, isTrue); // Kader otomatis melewati persetujuan data keluarga
       },
     );
 

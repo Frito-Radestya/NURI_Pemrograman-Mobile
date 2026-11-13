@@ -373,6 +373,78 @@ class _WhoChartCard extends StatelessWidget {
         ),
     ];
 
+    if (childSpots.isEmpty) {
+      return AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: const BoxDecoration(
+                color: AppColors.primarySoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.auto_graph_rounded,
+                color: AppColors.primary,
+                size: 26,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Grafik Pertumbuhan ${child.nickname}',
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Grafik pertumbuhan masih kosong karena panjang atau tinggi badan Si Kecil belum dicatat. Catat pengukuran pertama di bawah untuk melihat kurva pertumbuhan.',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.muted,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceSubtle,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Area Hijau: Rentang Tumbuh Normal (WHO)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final latestCat = child.latestMeasurement?.category;
+
     return AppCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -382,7 +454,7 @@ class _WhoChartCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Grafik panjang/tinggi',
+                  'Grafik Pertumbuhan ${child.nickname}',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
@@ -396,18 +468,59 @@ class _WhoChartCard extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           const Text(
-            'Sumbu Y: panjang/tinggi badan (cm)',
+            'Sumbu tegak: panjang/tinggi (cm) • Sumbu mendatar: umur (bulan)',
             style: TextStyle(fontSize: 12, color: AppColors.muted),
           ),
           const SizedBox(height: 12),
-          const Wrap(
-            spacing: 14,
+          Wrap(
+            spacing: 16,
             runSpacing: 6,
             children: [
-              _LegendDot(color: AppColors.primary, label: 'Median WHO'),
-              _LegendDot(color: AppColors.amber, label: 'Batas ±2 SD'),
-              _LegendDot(color: AppColors.red, label: 'Batas ±3 SD'),
-              _LegendDot(color: AppColors.coral, label: 'Si Kecil'),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: AppColors.mint,
+                      border: Border.all(color: AppColors.primary, width: 1.2),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Rentang Tumbuh Normal',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: const BoxDecoration(
+                      color: AppColors.coral,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Si Kecil (${child.nickname})',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -492,47 +605,20 @@ class _WhoChartCard extends StatelessWidget {
                     fitInsideHorizontally: true,
                     fitInsideVertically: true,
                     getTooltipItems: (spots) {
-                      const referenceLabels = [
-                        '−3 SD',
-                        '−2 SD',
-                        'Median',
-                        '+2 SD',
-                        '+3 SD',
-                      ];
-                      LineBarSpot? childSpot;
-                      for (final spot in spots) {
-                        if (spot.barIndex >= referenceLabels.length) {
-                          childSpot = spot;
-                          break;
-                        }
-                      }
-                      final touchX = childSpot?.x ?? spots.first.x;
-                      final ageDays = touchX * 30.4375;
-                      final table = WhoReference.instance.forSex(child.sex);
-                      final referenceValues = [
-                        table.valueAtZ(ageDays, -3),
-                        table.valueAtZ(ageDays, -2),
-                        table.valueAtZ(ageDays, 0),
-                        table.valueAtZ(ageDays, 2),
-                        table.valueAtZ(ageDays, 3),
-                      ];
-                      return spots.map((spot) {
-                        final isChild = spot.barIndex >= referenceLabels.length;
-                        final label = isChild
-                            ? child.nickname
-                            : referenceLabels[spot.barIndex];
-                        final value = isChild
-                            ? spot.y
-                            : referenceValues[spot.barIndex];
-                        return LineTooltipItem(
-                          '$label  ${value.toStringAsFixed(1)} cm',
-                          TextStyle(
+                      final childSpot = spots.firstWhere(
+                        (s) => s.barIndex == lineBars.length - 1,
+                        orElse: () => spots.first,
+                      );
+                      return [
+                        LineTooltipItem(
+                          '${child.nickname}: ${childSpot.y.toStringAsFixed(1)} cm\n(Usia ${childSpot.x.toInt()} bulan)',
+                          const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isChild ? AppColors.peach : Colors.white,
+                            color: Colors.white,
                           ),
-                        );
-                      }).toList();
+                        ),
+                      ];
                     },
                   ),
                 ),
@@ -540,17 +626,44 @@ class _WhoChartCard extends StatelessWidget {
               ),
             ),
           ),
-          if (childSpots.isEmpty) ...[
-            const SizedBox(height: 8),
-            const Text(
-              'Belum ada titik pengukuran. Grafik menampilkan rentang rujukan WHO.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.muted,
-                height: 1.4,
-              ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: latestCat == GrowthCategory.normal
+                  ? AppColors.mint
+                  : AppColors.peachSoft,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
+            child: Row(
+              children: [
+                Icon(
+                  latestCat == GrowthCategory.normal
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.info_outline_rounded,
+                  size: 18,
+                  color: latestCat == GrowthCategory.normal
+                      ? AppColors.primary
+                      : AppColors.coral,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    latestCat == GrowthCategory.normal
+                        ? '${child.nickname} tumbuh optimal di dalam area hijau sesuai standar umur.'
+                        : '${child.nickname} berada di status ${latestCat?.plainLabel ?? "perlu pantauan"}. Disarankan konsultasi ke bidan/Puskesmas.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: latestCat == GrowthCategory.normal
+                          ? AppColors.primaryDark
+                          : AppColors.coral,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -570,31 +683,6 @@ class _WhoChartCard extends StatelessWidget {
       color: color,
       dashArray: dash ? const [5, 4] : null,
       dotData: const FlDotData(show: false),
-    );
-  }
-}
-
-class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label});
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 5),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
-        ),
-      ],
     );
   }
 }

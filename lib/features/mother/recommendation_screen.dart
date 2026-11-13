@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/app_controller.dart';
 import '../../domain/nutrition/nutrition_calculator.dart';
+import '../../domain/pregnancy/pregnancy_calculator.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
 
@@ -25,8 +26,9 @@ class RecommendationScreen extends ConsumerStatefulWidget {
 
 class _RecommendationScreenState extends ConsumerState<RecommendationScreen> {
   late Set<String> _selected;
+  int _selectedTrimester = 1;
 
-  static const _menus = [
+  static const _menusChild = [
     _MenuIdea(
       id: 'menu_nasi_tim',
       title: 'Nasi tim ikan kembung & sayur',
@@ -101,10 +103,159 @@ class _RecommendationScreenState extends ConsumerState<RecommendationScreen> {
     ),
   ];
 
+  static const _menusT1 = [
+    _MenuIdea(
+      id: 'menu_t1_sup_ayam',
+      title: 'Sup Bening Ayam & Sayur (TM 1)',
+      subtitle:
+          'Hangat, mudah dicerna saat mual, kaya vitamin B6 dan asam folat.',
+      image: 'assets/images/food_soup.jpg',
+      kcal: 360,
+      protein: 22,
+      minutes: 25,
+      tags: ['Anti Mual', 'Asam Folat', 'TM 1'],
+      ingredients: [
+        '70 g daging ayam kampung suwir',
+        '30 g wortel potong dadu',
+        '20 g brokoli hijau',
+        '1 batang daun seledri',
+        'Kuah kaldu jahe hangat',
+      ],
+      steps: [
+        'Rebus ayam bersama jahe geprek untuk mengurangi sensasi mual.',
+        'Masukkan sayuran wortel dan brokoli, masak hingga matang lembut.',
+        'Sajikan dalam porsi kecil namun sering (5–6 kali sehari).',
+      ],
+    ),
+    _MenuIdea(
+      id: 'menu_t1_bubur_ijo',
+      title: 'Bubur Kacang Hijau Kuah Jahe (TM 1)',
+      subtitle:
+          'Kaya asam folat alami untuk mencegah cacat tabung saraf janin.',
+      image: 'assets/images/food_rice.jpg',
+      kcal: 340,
+      protein: 14,
+      minutes: 30,
+      tags: ['Asam Folat', 'Serat Lembut', 'TM 1'],
+      ingredients: [
+        '60 g kacang hijau rendam',
+        '2 ruas jahe memar',
+        '100 ml santan encer',
+        'Sedikit gula aren',
+      ],
+      steps: [
+        'Rebus kacang hijau hingga empuk dan pecah sempurna.',
+        'Masukkan santan encer dan jahe, aduk rata dengan api kecil.',
+        'Nikmati selagi hangat sebagai selingan sarapan atau sore.',
+      ],
+    ),
+  ];
+
+  static const _menusT2 = [
+    _MenuIdea(
+      id: 'menu_t2_nasi_tim_ikan',
+      title: 'Nasi Tim Ikan Kembung & Bayam (TM 2)',
+      subtitle:
+          'Zat besi dan kalsium tinggi untuk pembentukan tulang & organ janin.',
+      image: 'assets/images/food_rice.jpg',
+      kcal: 440,
+      protein: 26,
+      minutes: 25,
+      tags: ['Tinggi Kalsium', 'Zat Besi', 'TM 2'],
+      ingredients: [
+        '100 g nasi pulen lembut',
+        '60 g ikan kembung kukus suwir',
+        '30 g daun bayam hijau',
+        '1 sdt minyak kelapa',
+      ],
+      steps: [
+        'Kukus ikan kembung bersama irisan bawang putih dan kunyit.',
+        'Rebus daun bayam sebentar agar warna dan nutrisinya utuh.',
+        'Campur nasi tim dengan suwiran ikan dan bayam hangat.',
+      ],
+    ),
+    _MenuIdea(
+      id: 'menu_t2_opor_telur',
+      title: 'Opor Telur Ayam & Tempe Bacem (TM 2)',
+      subtitle: 'Kombinasi protein hewani dan nabati dengan tambahan energi +300 kkal.',
+      image: 'assets/images/food_egg.jpg',
+      kcal: 430,
+      protein: 24,
+      minutes: 20,
+      tags: ['+300 kkal', 'Protein Hewani', 'TM 2'],
+      ingredients: [
+        '1 butir telur ayam rebus',
+        '50 g tempe kedelai',
+        '100 ml santan sedang',
+        'Daun salam & serai geprek',
+      ],
+      steps: [
+        'Tumis bumbu opor kuning bersama serai dan daun salam.',
+        'Tuang santan perlahan, masukkan potongan tempe dan telur rebus.',
+        'Masak hingga kuah mengental dan bumbu meresap sempurna.',
+      ],
+    ),
+  ];
+
+  static const _menusT3 = [
+    _MenuIdea(
+      id: 'menu_t3_bola_daging',
+      title: 'Sup Bola Daging Sapi & Brokoli (TM 3)',
+      subtitle:
+          'Zat besi tinggi untuk persiapan persalinan & pematangan paru janin.',
+      image: 'assets/images/food_soup.jpg',
+      kcal: 460,
+      protein: 28,
+      minutes: 30,
+      tags: ['Cegah Anemia', 'Persiapan Lahir', 'TM 3'],
+      ingredients: [
+        '70 g daging sapi giling segar',
+        '40 g kuntum brokoli kukus',
+        '1 butir telur puyuh rebus',
+        'Air kaldu gurih berempah',
+      ],
+      steps: [
+        'Bentuk daging giling menjadi bola-bola lembut.',
+        'Rebus dalam kaldu mendidih hingga bola daging mengapung.',
+        'Masukkan brokoli dan telur puyuh, sajikan hangat berkuah.',
+      ],
+    ),
+    _MenuIdea(
+      id: 'menu_t3_ikan_bakar',
+      title: 'Ikan Bakar Bumbu Kuning & Lalap (TM 3)',
+      subtitle: 'Kaya DHA dan asam lemak omega-3 untuk retina & otak janin.',
+      image: 'assets/images/food_egg.jpg',
+      kcal: 430,
+      protein: 27,
+      minutes: 25,
+      tags: ['DHA & Omega-3', 'Persiapan ASI', 'TM 3'],
+      ingredients: [
+        '80 g ikan laut kembung/tongkol',
+        'Perasan jeruk nipis & kunyit',
+        'Lalapan labu siam kukus & tomat',
+      ],
+      steps: [
+        'Lumuri ikan dengan perasan jeruk nipis dan bumbu kuning.',
+        'Bakar di atas pemanggang atau wajan antilengket hingga harum.',
+        'Sajikan bersama lalapan labu siam kukus yang kaya serat.',
+      ],
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
     _selected = {...ref.read(appControllerProvider).mealPlan};
+    if (widget.pregnancyMode) {
+      final activePreg = ref.read(appControllerProvider).activePregnancy;
+      if (activePreg != null) {
+        final prog = PregnancyCalculator.progress(
+          hpht: activePreg.hpht,
+          hpl: activePreg.hpl,
+        );
+        _selectedTrimester = prog.trimester;
+      }
+    }
   }
 
   void _save() {
@@ -112,8 +263,22 @@ class _RecommendationScreenState extends ConsumerState<RecommendationScreen> {
     showNuriSnack(context, 'Rencana makan disimpan.');
   }
 
+  List<_MenuIdea> get _currentMenus {
+    if (!widget.pregnancyMode) return _menusChild;
+    switch (_selectedTrimester) {
+      case 1:
+        return _menusT1;
+      case 2:
+        return _menusT2;
+      case 3:
+      default:
+        return _menusT3;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final menus = _currentMenus;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -131,15 +296,27 @@ class _RecommendationScreenState extends ConsumerState<RecommendationScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _HeroBanner(pregnancyMode: widget.pregnancyMode),
+                    if (widget.pregnancyMode) ...[
+                      const SizedBox(height: 14),
+                      NuriSegmentedControl<int>(
+                        values: const [1, 2, 3],
+                        selected: _selectedTrimester,
+                        labelFor: (t) => 'Trimester $t',
+                        onChanged: (t) =>
+                            setState(() => _selectedTrimester = t),
+                      ),
+                      const SizedBox(height: 12),
+                      _TrimesterGuideCard(trimester: _selectedTrimester),
+                    ],
                     const SizedBox(height: 20),
                     SectionHeader(
                       title: widget.pregnancyMode
-                          ? 'Menu ibu hamil'
+                          ? 'Menu Trimester $_selectedTrimester'
                           : 'Menu hari ini',
-                      subtitle: 'Pilih menu yang ingin Ibu coba minggu ini.',
+                      subtitle: 'Pilih menu yang ingin dicoba minggu ini.',
                     ),
                     const SizedBox(height: 10),
-                    ..._menus.map(
+                    ...menus.map(
                       (menu) => Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: _MenuCard(
@@ -343,6 +520,94 @@ class _RecommendationScreenState extends ConsumerState<RecommendationScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TrimesterGuideCard extends StatelessWidget {
+  const _TrimesterGuideCard({required this.trimester});
+
+  final int trimester;
+
+  @override
+  Widget build(BuildContext context) {
+    final (title, focus, tip) = switch (trimester) {
+      1 => (
+        'Fokus Trimester 1: Asam Folat & Atasi Mual',
+        'Pembentukan tabung saraf dan organ vital janin (cegah anensefali & spina bifida).',
+        'Makan dalam porsi kecil tapi sering (5–6x sehari), pilih makanan hangat yang tidak berbau tajam, dan perbanyak vitamin B6.',
+      ),
+      2 => (
+        'Fokus Trimester 2: Pertumbuhan Tulang & Organ',
+        'Pertumbuhan pesat janin membutuhkan tambahan energi +300 kkal dan protein hewani tinggi.',
+        'Pastikan lauk ikan kembung, telur, atau daging selalu ada untuk mencegah Berat Badan Lahir Rendah (BBLR).',
+      ),
+      _ => (
+        'Fokus Trimester 3: Otak Janin & Persiapan ASI',
+        'Pematangan otak dan cadangan zat besi janin, serta persiapan laktasi Ibu.',
+        'Penuhi asam lemak DHA (ikan laut), zat besi tinggi cegah anemia saat bersalin, dan serat tinggi untuk cegah sembelit.',
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  color: AppColors.primarySoft,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            focus,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            tip,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: AppColors.muted,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -135,7 +135,7 @@ extension AuthActions on AppController {
                 : _nameFromEmail(email),
             email: email,
             role: role,
-            posyanduId: role == UserRole.cadre ? 'p_melati' : null,
+            posyanduId: role == UserRole.cadre ? 'p_${session.uid}' : null,
             authUid: session.uid,
             demo: false,
           )
@@ -156,7 +156,21 @@ extension AuthActions on AppController {
         currentUserId: user.id,
         landingSeen: true,
         onboardingSeen: isNewUser ? false : currentState.onboardingSeen,
-        consentAccepted: isNewUser ? false : currentState.consentAccepted,
+        consentAccepted: isNewUser
+            ? (role == UserRole.cadre)
+            : currentState.consentAccepted,
+        roster: isNewUser && role == UserRole.cadre
+            ? const []
+            : currentState.roster,
+        sessions: isNewUser && role == UserRole.cadre
+            ? const []
+            : currentState.sessions,
+        posyanduName: isNewUser && role == UserRole.cadre
+            ? ''
+            : currentState.posyanduName,
+        posyanduArea: isNewUser && role == UserRole.cadre
+            ? ''
+            : currentState.posyanduArea,
       ),
     );
     if (databaseService.isAvailable) {
@@ -170,10 +184,14 @@ extension AuthActions on AppController {
     try {
       final exists = await databaseService.userExists(user.id);
       if (!exists) {
-        await databaseService.seedUserDataset(
-          user: user,
-          seedData: currentState,
-        );
+        if (user.demo) {
+          await databaseService.seedUserDataset(
+            user: user,
+            seedData: currentState,
+          );
+        } else {
+          await databaseService.saveUser(user);
+        }
       } else {
         final remote = await databaseService.pullUserDataset(
           user: user,
@@ -288,7 +306,7 @@ extension AuthActions on AppController {
         name: name.trim(),
         email: normalized,
         role: role,
-        posyanduId: role == UserRole.cadre ? 'p_melati' : null,
+        posyanduId: role == UserRole.cadre ? 'p_${session.uid}' : null,
         authUid: session.uid,
         demo: false,
       );
@@ -297,10 +315,17 @@ extension AuthActions on AppController {
           users: _upsertUser(user),
           currentUserId: user.id,
           onboardingSeen: false,
-          consentAccepted: false,
+          consentAccepted: role == UserRole.cadre,
           landingSeen: true,
+          roster: role == UserRole.cadre ? const [] : currentState.roster,
+          sessions: role == UserRole.cadre ? const [] : currentState.sessions,
+          posyanduName: role == UserRole.cadre ? '' : currentState.posyanduName,
+          posyanduArea: role == UserRole.cadre ? '' : currentState.posyanduArea,
         ),
       );
+      if (databaseService.isAvailable) {
+        unawaited(_hydrateOrSeedFirestore(user));
+      }
       return null;
     } on AuthFailure catch (failure) {
       if (failure.code == 'network-request-failed') {
@@ -318,12 +343,13 @@ extension AuthActions on AppController {
     required String email,
     required UserRole role,
   }) {
+    final uid = 'u_${DateTime.now().microsecondsSinceEpoch}';
     final user = AppUser(
-      id: 'u_${DateTime.now().microsecondsSinceEpoch}',
+      id: uid,
       name: name.trim(),
       email: email,
       role: role,
-      posyanduId: role == UserRole.cadre ? 'p_melati' : null,
+      posyanduId: role == UserRole.cadre ? 'p_$uid' : null,
       demo: false,
     );
     commitState(
@@ -331,8 +357,12 @@ extension AuthActions on AppController {
         users: [...currentState.users, user],
         currentUserId: user.id,
         onboardingSeen: false,
-        consentAccepted: false,
+        consentAccepted: role == UserRole.cadre,
         landingSeen: true,
+        roster: role == UserRole.cadre ? const [] : currentState.roster,
+        sessions: role == UserRole.cadre ? const [] : currentState.sessions,
+        posyanduName: role == UserRole.cadre ? '' : currentState.posyanduName,
+        posyanduArea: role == UserRole.cadre ? '' : currentState.posyanduArea,
       ),
     );
     return null;
