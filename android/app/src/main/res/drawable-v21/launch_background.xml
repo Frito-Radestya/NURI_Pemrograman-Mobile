@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@color/nuri_cream" />
-    <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@drawable/splash_logo" />
-    </item>
+    <item android:drawable="@color/nuri_black" />
+    <item
+        android:gravity="center"
+        android:drawable="@drawable/ic_splash_logo" />
 </layer-list>

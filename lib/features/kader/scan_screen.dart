@@ -290,7 +290,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: const Color(0xFF07231E),
+        backgroundColor: AppColors.medicalBlack,
         body: SafeArea(
           child: Column(
             children: [
@@ -368,7 +368,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                               gradient: const LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [Color(0xFF123F36), Color(0xFF0A2C25)],
+                                colors: [Color(0xFF232323), Color(0xFF171717)],
                               ),
                               border: Border.all(
                                 color: Colors.white.withValues(alpha: 0.08),
@@ -396,7 +396,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                                     _line.value * 1.7 - 0.85,
                                   ),
                                   child: Container(
-                                    height: 2,
+                                    height: 2.5,
                                     margin: const EdgeInsets.symmetric(
                                       horizontal: 30,
                                     ),
@@ -404,16 +404,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                                       gradient: LinearGradient(
                                         colors: [
                                           Colors.transparent,
-                                          AppColors.peach.withValues(
-                                            alpha: 0.9,
-                                          ),
+                                          AppColors.vitalYellow,
                                           Colors.transparent,
                                         ],
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppColors.peach.withValues(
-                                            alpha: 0.35,
+                                          color: AppColors.vitalYellow.withValues(
+                                            alpha: 0.45,
                                           ),
                                           blurRadius: 14,
                                         ),
@@ -428,13 +426,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             Positioned.fill(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF07231E)
-                                      .withValues(alpha: 0.55),
+                                  color: AppColors.medicalBlack
+                                      .withValues(alpha: 0.65),
                                   borderRadius: BorderRadius.circular(28),
                                 ),
                                 child: const Center(
                                   child: CircularProgressIndicator(
-                                    color: AppColors.peach,
+                                    color: AppColors.vitalYellow,
                                     strokeWidth: 2.5,
                                   ),
                                 ),

@@ -264,10 +264,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           'Lupa password?',
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.medicalBlack,
                             decoration: TextDecoration.underline,
-                            decorationColor: AppColors.primary,
+                            decorationColor: AppColors.medicalBlack,
                           ),
                         ),
                       ),
@@ -317,10 +317,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'Daftar sekarang',
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.deepYellow,
                           decoration: TextDecoration.underline,
-                          decorationColor: AppColors.primary,
+                          decorationColor: AppColors.deepYellow,
                         ),
                       ),
                     ),
@@ -757,10 +757,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         'Masuk',
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.deepYellow,
                           decoration: TextDecoration.underline,
-                          decorationColor: AppColors.primary,
+                          decorationColor: AppColors.deepYellow,
                         ),
                       ),
                     ),
@@ -888,11 +888,11 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                         duration: const Duration(milliseconds: 180),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: _accepted ? AppColors.mint : AppColors.surface,
+                          color: _accepted ? AppColors.primarySoft : AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: _accepted
-                                ? AppColors.primary
+                                ? AppColors.medicalBlack
                                 : AppColors.line,
                             width: _accepted ? 1.5 : 1,
                           ),
@@ -907,12 +907,12 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                               margin: const EdgeInsets.only(top: 1),
                               decoration: BoxDecoration(
                                 color: _accepted
-                                    ? AppColors.primary
+                                    ? AppColors.vitalYellow
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: _accepted
-                                      ? AppColors.primary
+                                      ? AppColors.medicalBlack
                                       : AppColors.muted,
                                   width: 1.5,
                                 ),
@@ -921,7 +921,7 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                                   ? const Icon(
                                       Icons.check_rounded,
                                       size: 15,
-                                      color: Colors.white,
+                                      color: AppColors.medicalBlack,
                                     )
                                   : null,
                             ),
@@ -1411,10 +1411,10 @@ class _SetupToggleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.mint : AppColors.surface,
+          color: selected ? AppColors.primarySoft : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(
-            color: selected ? AppColors.primary : AppColors.line,
+            color: selected ? AppColors.medicalBlack : AppColors.line,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -1424,13 +1424,13 @@ class _SetupToggleCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: selected ? AppColors.primary : AppColors.surfaceSubtle,
+                color: selected ? AppColors.vitalYellow : AppColors.surfaceSubtle,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
                 size: 21,
-                color: selected ? Colors.white : AppColors.muted,
+                color: selected ? AppColors.medicalBlack : AppColors.muted,
               ),
             ),
             const SizedBox(width: 12),
@@ -1463,10 +1463,10 @@ class _SetupToggleCard extends StatelessWidget {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: selected ? AppColors.primary : Colors.transparent,
+                color: selected ? AppColors.vitalYellow : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: selected ? AppColors.primary : AppColors.line,
+                  color: selected ? AppColors.medicalBlack : AppColors.line,
                   width: 1.5,
                 ),
               ),
@@ -1474,7 +1474,7 @@ class _SetupToggleCard extends StatelessWidget {
                   ? const Icon(
                       Icons.check_rounded,
                       size: 15,
-                      color: Colors.white,
+                      color: AppColors.medicalBlack,
                     )
                   : null,
             ),

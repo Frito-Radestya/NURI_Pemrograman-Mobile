@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/theme/app_theme.dart';
 import 'data/app_controller.dart';
 import 'data/app_repository.dart';
 import 'data/auth_service.dart';
@@ -35,7 +36,7 @@ Future<void> main() async {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
+      systemNavigationBarColor: AppColors.softWhite,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );

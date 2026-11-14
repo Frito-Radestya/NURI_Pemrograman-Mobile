@@ -632,7 +632,7 @@ void main() {
 
       final error = await container
           .read(appControllerProvider.notifier)
-          .login('ibu@nuri.id', 'rahasia123');
+          .login('pengguna.asli@nuri.id', 'rahasia123');
 
       expect(error, 'Email atau password salah.');
       expect(container.read(appControllerProvider).currentUser, isNull);

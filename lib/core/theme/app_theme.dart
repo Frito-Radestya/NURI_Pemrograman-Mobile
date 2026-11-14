@@ -4,31 +4,54 @@ import 'package:flutter/material.dart';
 class AppColors {
   const AppColors._();
 
-  static const Color primary = Color(0xFF0B6B5B);
-  static const Color primaryDark = Color(0xFF074D41);
-  static const Color primaryDeep = Color(0xFF04342C);
-  static const Color primarySoft = Color(0xFFDCEEE7);
-  static const Color mint = Color(0xFFEEF6F2);
-  static const Color mintStrong = Color(0xFFD6EAE1);
-  static const Color cream = Color(0xFFFAF9F6);
-  static const Color background = Color(0xFFF6F8F7);
-  static const Color surface = Colors.white;
-  static const Color surfaceSubtle = Color(0xFFF1F4F2);
-  static const Color text = Color(0xFF132622);
-  static const Color muted = Color(0xFF5B6B66);
-  static const Color line = Color(0xFFE5EAE7);
-  static const Color peach = Color(0xFFFFC6A8);
-  static const Color peachSoft = Color(0xFFFFF2EA);
-  static const Color coral = Color(0xFFD96B48);
-  static const Color amber = Color(0xFFC27B16);
-  static const Color amberSoft = Color(0xFFFEF4E2);
-  static const Color red = Color(0xFFC94040);
-  static const Color redSoft = Color(0xFFFEECEC);
-  static const Color blue = Color(0xFF3B6E9C);
-  static const Color blueSoft = Color(0xFFECF3FA);
-  static const Color purple = Color(0xFF6A589C);
-  static const Color purpleSoft = Color(0xFFF2EFFA);
-  static const Color white = Colors.white;
+  // NURI Design System 2.0 (Black & Yellow Healthcare)
+  static const Color medicalBlack = Color(0xFF171717);
+  static const Color vitalYellow = Color(0xFFFFC800);
+  static const Color pureWhite = Color(0xFFFFFFFF);
+  static const Color softWhite = Color(0xFFF5F5F2);
+  static const Color neutralGray = Color(0xFF777777);
+  static const Color deepYellow = Color(0xFFD99B00);
+  static const Color borderLine = Color(0xFFE5E5E0);
+
+  // Brand Mapping
+  static const Color primary = vitalYellow;
+  static const Color primaryDark = deepYellow;
+  static const Color primaryDeep = medicalBlack;
+  static const Color primarySoft = Color(0xFFFFF7CC); // Soft yellow container
+  static const Color highlight = deepYellow;
+
+  // Backgrounds & Surfaces
+  static const Color background = softWhite;
+  static const Color surface = pureWhite;
+  static const Color surfaceSubtle = Color(0xFFEBEBE6);
+  static const Color cream = softWhite;
+  static const Color line = borderLine;
+
+  // Typography
+  static const Color text = medicalBlack;
+  static const Color muted = neutralGray;
+  static const Color white = pureWhite;
+
+  // Semantic Status Colors (Pembeda status kesehatan: normal, perhatian, bahaya)
+  static const Color green = Color(0xFF1B8755);
+  static const Color greenSoft = Color(0xFFE8F8F0);
+  static const Color mint = greenSoft;
+  static const Color mintStrong = Color(0xFFC8F0DC);
+
+  static const Color amber = Color(0xFFD97706);
+  static const Color amberSoft = Color(0xFFFFFBEB);
+  static const Color peach = Color(0xFFFFD54F);
+  static const Color peachSoft = Color(0xFFFFF8E1);
+  static const Color coral = Color(0xFFE65100);
+
+  static const Color red = Color(0xFFDC2626);
+  static const Color redSoft = Color(0xFFFEF2F2);
+
+  static const Color blue = Color(0xFF2563EB);
+  static const Color blueSoft = Color(0xFFEFF6FF);
+
+  static const Color purple = Color(0xFF7C3AED);
+  static const Color purpleSoft = Color(0xFFF5F3FF);
 }
 
 class AppRadius {
@@ -47,16 +70,16 @@ class AppShadows {
 class AppTheme {
   static ThemeData light() {
     const colorScheme = ColorScheme.light(
-      primary: AppColors.primary,
-      onPrimary: Colors.white,
+      primary: AppColors.vitalYellow,
+      onPrimary: AppColors.medicalBlack,
       primaryContainer: AppColors.primarySoft,
-      onPrimaryContainer: AppColors.primaryDark,
-      secondary: AppColors.coral,
+      onPrimaryContainer: AppColors.medicalBlack,
+      secondary: AppColors.medicalBlack,
       onSecondary: Colors.white,
-      secondaryContainer: AppColors.peachSoft,
-      onSecondaryContainer: AppColors.text,
+      secondaryContainer: AppColors.surfaceSubtle,
+      onSecondaryContainer: AppColors.medicalBlack,
       surface: AppColors.surface,
-      onSurface: AppColors.text,
+      onSurface: AppColors.medicalBlack,
       error: AppColors.red,
       onError: Colors.white,
       outline: AppColors.line,
@@ -231,7 +254,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.input),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.medicalBlack, width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.input),
@@ -244,8 +267,8 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.vitalYellow,
+          foregroundColor: AppColors.medicalBlack,
           minimumSize: const Size(48, 50),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           shape: RoundedRectangleBorder(
@@ -254,17 +277,17 @@ class AppTheme {
           textStyle: const TextStyle(
             fontFamily: 'Inter',
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.text,
+          foregroundColor: AppColors.medicalBlack,
           backgroundColor: AppColors.surface,
           minimumSize: const Size(48, 50),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-          side: const BorderSide(color: AppColors.line),
+          side: const BorderSide(color: AppColors.line, width: 1.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
           ),
@@ -277,7 +300,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: AppColors.medicalBlack,
           textStyle: const TextStyle(
             fontFamily: 'Inter',
             fontSize: 13.5,
@@ -287,7 +310,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surface,
-        selectedColor: AppColors.primary,
+        selectedColor: AppColors.vitalYellow,
         labelStyle: const TextStyle(
           fontFamily: 'Inter',
           fontSize: 12.5,
@@ -297,8 +320,8 @@ class AppTheme {
         secondaryLabelStyle: const TextStyle(
           fontFamily: 'Inter',
           fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          color: AppColors.medicalBlack,
         ),
         side: const BorderSide(color: AppColors.line),
         shape: RoundedRectangleBorder(
@@ -309,29 +332,29 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primarySoft,
+        indicatorColor: AppColors.vitalYellow,
         height: 68,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             fontFamily: 'Inter',
             fontSize: 11.5,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: states.contains(WidgetState.selected)
-                ? AppColors.primary
-                : AppColors.muted,
+                ? AppColors.medicalBlack
+                : AppColors.neutralGray,
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? AppColors.primary
-                : AppColors.muted,
+                ? AppColors.medicalBlack
+                : AppColors.neutralGray,
             size: 23,
           ),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.primaryDeep,
+        backgroundColor: AppColors.medicalBlack,
         contentTextStyle: const TextStyle(
           fontFamily: 'Inter',
           fontSize: 13.5,

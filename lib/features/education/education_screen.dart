@@ -270,7 +270,7 @@ class _FeaturedArticle extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.black.withValues(alpha: 0.05),
-                      const Color(0xFF06231D).withValues(alpha: 0.88),
+                      AppColors.medicalBlack.withValues(alpha: 0.9),
                     ],
                     stops: const [0.25, 1],
                   ),

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="nuri_cream">#FBF6EE</color>
+    <color name="nuri_cream">#171717</color>
+    <color name="nuri_black">#171717</color>
+    <color name="nuri_yellow">#FFC800</color>
+    <color name="nuri_soft_white">#F5F5F2</color>
 </resources>

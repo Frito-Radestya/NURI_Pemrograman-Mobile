@@ -117,7 +117,9 @@ extension AuthActions on AppController {
   bool _canUseDemoFallback(String code) =>
       code == 'user-not-found' ||
       code == 'network-request-failed' ||
-      code == 'operation-not-allowed';
+      code == 'operation-not-allowed' ||
+      code == 'invalid-credential' ||
+      code == 'wrong-password';
 
   String? _applyFirebaseSession(
     AuthSession session, {

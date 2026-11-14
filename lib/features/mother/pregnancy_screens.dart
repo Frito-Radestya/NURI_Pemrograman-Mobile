@@ -68,9 +68,16 @@ class TtdScreen extends ConsumerWidget {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFFE98A6B), Color(0xFFD46A4D)],
+                          colors: [Color(0xFF171717), Color(0xFF262626)],
                         ),
                         borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.14),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,15 +87,15 @@ class TtdScreen extends ConsumerWidget {
                               const Pill(
                                 label: 'TTD harian',
                                 icon: Icons.medication_rounded,
-                                background: Color(0x33FFFFFF),
-                                foreground: Colors.white,
+                                background: AppColors.vitalYellow,
+                                foreground: AppColors.medicalBlack,
                                 fontSize: 11.5,
                                 bold: true,
                               ),
                               const Spacer(),
-                              Icon(
+                              const Icon(
                                 Icons.favorite_rounded,
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: AppColors.vitalYellow,
                                 size: 22,
                               ),
                             ],
@@ -139,7 +146,7 @@ class TtdScreen extends ConsumerWidget {
                                     widthFactor: value,
                                     child: Container(
                                       height: 7,
-                                      color: Colors.white,
+                                      color: AppColors.vitalYellow,
                                     ),
                                   ),
                                 ],
@@ -500,9 +507,16 @@ class AncScreen extends ConsumerWidget {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFF0F7463), Color(0xFF075247)],
+                          colors: [Color(0xFF171717), Color(0xFF262626)],
                         ),
                         borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.14),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,8 +526,8 @@ class AncScreen extends ConsumerWidget {
                               const Pill(
                                 label: 'Antenatal Care',
                                 icon: Icons.event_available_rounded,
-                                background: Color(0x26FFFFFF),
-                                foreground: Colors.white,
+                                background: AppColors.vitalYellow,
+                                foreground: AppColors.medicalBlack,
                                 fontSize: 11.5,
                                 bold: true,
                               ),
@@ -545,7 +559,7 @@ class AncScreen extends ConsumerWidget {
                                     widthFactor: value,
                                     child: Container(
                                       height: 8,
-                                      color: AppColors.peach,
+                                      color: AppColors.vitalYellow,
                                     ),
                                   ),
                                 ],
