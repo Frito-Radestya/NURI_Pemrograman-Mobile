@@ -473,13 +473,13 @@ class _PregnancyHero extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0C6D5C), Color(0xFF06483D)],
+          colors: [Color(0xFF171717), Color(0xFF262626)],
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDeep.withValues(alpha: 0.16),
+            color: Colors.black.withValues(alpha: 0.16),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -492,8 +492,8 @@ class _PregnancyHero extends StatelessWidget {
             children: [
               Pill(
                 label: 'Trimester ${progress.trimester}',
-                background: Colors.white.withValues(alpha: 0.16),
-                foreground: Colors.white,
+                background: AppColors.vitalYellow,
+                foreground: AppColors.medicalBlack,
                 fontSize: 11.5,
                 bold: true,
               ),
@@ -546,7 +546,7 @@ class _PregnancyHero extends StatelessWidget {
                   ),
                   FractionallySizedBox(
                     widthFactor: value.clamp(0.0, 1.0),
-                    child: Container(height: 6, color: AppColors.peach),
+                    child: Container(height: 6, color: AppColors.vitalYellow),
                   ),
                 ],
               ),
@@ -572,7 +572,7 @@ class _PregnancyHero extends StatelessWidget {
                 const Icon(
                   Icons.child_care_rounded,
                   size: 19,
-                  color: AppColors.peach,
+                  color: AppColors.vitalYellow,
                 ),
                 const SizedBox(width: 9),
                 Expanded(

@@ -27,19 +27,19 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
       asset: 'assets/images/hero_family.jpg',
       tag: 'Ibu & Balita',
       caption: 'Tumbuh kembang terpantau, hati lebih tenang.',
-      tint: Color(0xFF0A5C4E),
+      tint: Color(0xFF171717),
     ),
     _LandingSlide(
       asset: 'assets/images/hero_baby.jpg',
       tag: '1000 Hari Pertama',
       caption: 'Setiap sentimeter berarti. Pantau dari hari pertama.',
-      tint: Color(0xFF6B482C),
+      tint: Color(0xFF262626),
     ),
     _LandingSlide(
       asset: 'assets/images/food_plate.jpg',
       tag: 'Gizi Harian',
       caption: 'Catat makan anak dengan porsi yang lebih tepat.',
-      tint: Color(0xFF7D3447),
+      tint: Color(0xFF171717),
     ),
   ];
 
@@ -223,7 +223,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                           TextSpan(text: 'Ibu Sehat,\n'),
                           TextSpan(
                             text: 'Awal Generasi Cemerlang',
-                            style: TextStyle(color: AppColors.primary),
+                            style: TextStyle(color: AppColors.deepYellow),
                           ),
                         ],
                       ),
@@ -279,8 +279,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                   children: [
                     _RoleCard(
                       icon: Icons.favorite_rounded,
-                      accent: AppColors.coral,
-                      tint: AppColors.peachSoft,
+                      accent: AppColors.deepYellow,
+                      tint: AppColors.primarySoft,
                       title: 'Saya Ibu / Keluarga',
                       subtitle:
                           'Pantau kehamilan, tumbuh kembang, dan gizi harian',
@@ -289,8 +289,8 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                     const SizedBox(height: 10),
                     _RoleCard(
                       icon: Icons.groups_rounded,
-                      accent: AppColors.primary,
-                      tint: AppColors.mint,
+                      accent: AppColors.medicalBlack,
+                      tint: AppColors.surfaceSubtle,
                       title: 'Saya Kader Posyandu',
                       subtitle: 'Kelola sesi, sasaran, dan tindak lanjut',
                       onTap: () => _openLogin(UserRole.cadre),

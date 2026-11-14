@@ -343,7 +343,7 @@ class _WhoChartCard extends StatelessWidget {
         AppColors.amber.withValues(alpha: 0.7),
         dash: true,
       ),
-      _referenceLine(reference(0), AppColors.primary, width: 2.2),
+      _referenceLine(reference(0), AppColors.medicalBlack, width: 2.2),
       _referenceLine(
         reference(2),
         AppColors.amber.withValues(alpha: 0.7),
@@ -359,15 +359,15 @@ class _WhoChartCard extends StatelessWidget {
           spots: childSpots,
           isCurved: false,
           barWidth: 2.5,
-          color: AppColors.coral,
+          color: AppColors.deepYellow,
           dotData: FlDotData(
             show: true,
             getDotPainter: (spot, percent, barData, index) =>
                 FlDotCirclePainter(
-                  radius: 4.5,
-                  color: Colors.white,
-                  strokeWidth: 2.5,
-                  strokeColor: AppColors.coral,
+                  radius: 5.0,
+                  color: AppColors.vitalYellow,
+                  strokeWidth: 2.2,
+                  strokeColor: AppColors.medicalBlack,
                 ),
           ),
         ),
@@ -387,7 +387,7 @@ class _WhoChartCard extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.auto_graph_rounded,
-                color: AppColors.primary,
+                color: AppColors.medicalBlack,
                 size: 26,
               ),
             ),
@@ -422,7 +422,7 @@ class _WhoChartCard extends StatelessWidget {
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: AppColors.green.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -432,7 +432,7 @@ class _WhoChartCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primaryDark,
+                      color: AppColors.text,
                     ),
                   ),
                 ],
@@ -483,8 +483,8 @@ class _WhoChartCard extends StatelessWidget {
                     width: 14,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: AppColors.mint,
-                      border: Border.all(color: AppColors.primary, width: 1.2),
+                      color: AppColors.greenSoft,
+                      border: Border.all(color: AppColors.green, width: 1.2),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -505,9 +505,13 @@ class _WhoChartCard extends StatelessWidget {
                   Container(
                     width: 12,
                     height: 12,
-                    decoration: const BoxDecoration(
-                      color: AppColors.coral,
+                    decoration: BoxDecoration(
+                      color: AppColors.vitalYellow,
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.medicalBlack,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 6),

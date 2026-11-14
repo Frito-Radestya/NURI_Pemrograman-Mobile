@@ -65,11 +65,18 @@ class ConsultationScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF0F7463), Color(0xFF075247)],
+                          colors: [Color(0xFF171717), Color(0xFF262626)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,14 +85,14 @@ class ConsultationScreen extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.verified_user_rounded,
-                                color: AppColors.mint,
+                                color: AppColors.vitalYellow,
                                 size: 18,
                               ),
                               SizedBox(width: 8),
                               Text(
                                 'Tenaga Kesehatan Resmi',
                                 style: TextStyle(
-                                  color: AppColors.mint,
+                                  color: AppColors.vitalYellow,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                 ),

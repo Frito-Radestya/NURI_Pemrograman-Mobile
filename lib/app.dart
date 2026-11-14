@@ -80,7 +80,7 @@ class _NuriAppState extends ConsumerState<NuriApp> {
           systemNavigationBarIconBrightness: Brightness.dark,
         ),
         child: ColoredBox(
-          color: const Color(0xFFEAEFEA),
+          color: AppColors.background,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
@@ -114,11 +114,7 @@ class SplashScreen extends StatelessWidget {
       child: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF0C6E5D), Color(0xFF064A3E)],
-            ),
+            color: AppColors.medicalBlack,
           ),
           child: SafeArea(
             child: Stack(
@@ -128,55 +124,59 @@ class SplashScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 76,
-                        height: 76,
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.14),
+                          color: AppColors.vitalYellow,
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.vitalYellow.withValues(alpha: 0.35),
+                              blurRadius: 20,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.spa_rounded,
-                          color: Colors.white,
-                          size: 38,
+                          color: AppColors.medicalBlack,
+                          size: 42,
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
                       const Text(
                         'NURI',
                         style: TextStyle(
                           fontFamily: 'Nunito',
                           color: Colors.white,
-                          fontSize: 34,
+                          fontSize: 36,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 1.5,
+                          letterSpacing: 2.0,
                           height: 1,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
+                      const SizedBox(height: 8),
+                      const Text(
                         'Sahabat Ibu & Balita',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.78),
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
+                          color: AppColors.neutralGray,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 36),
-                      SizedBox(
-                        width: 22,
-                        height: 22,
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white.withValues(alpha: 0.8),
+                          strokeWidth: 2.5,
+                          color: AppColors.vitalYellow,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   left: 24,
                   right: 24,
                   bottom: 24,
@@ -184,7 +184,7 @@ class SplashScreen extends StatelessWidget {
                     'Skrining awal, bukan diagnosis.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.56),
+                      color: AppColors.neutralGray,
                       fontSize: 11.5,
                     ),
                   ),

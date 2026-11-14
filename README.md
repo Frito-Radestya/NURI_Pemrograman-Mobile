@@ -45,6 +45,17 @@ Di Android, data demo disimpan di SQLite (`nuri.db`) dengan migrasi otomatis dar
 - Akun kader baru memulai dari kondisi bersih (0 sasaran & 0 sesi posyandu).
 - Di web preview, Firebase belum diinisialisasi sehingga login/registrasi memakai penyimpanan lokal.
 
+### Design System 2.0 (Black & Yellow Healthcare)
+
+NURI mengusung identitas visual modern **Bold Healthcare**:
+- **Medical Black (`#171717`)**: Warna utama heading, teks kontras, ikon, dan card hero.
+- **Vital Yellow (`#FFC800`)**: Warna identitas utama, CTA button, dan highlight aktif.
+- **Pure White (`#FFFFFF`)**: Card surface dan ruang bersih.
+- **Soft White (`#F5F5F2`)**: Background utama aplikasi.
+- **Neutral Gray (`#777777`)**: Teks sekunder dan caption pendukung.
+- **Deep Yellow (`#D99B00`)**: Variasi aksen, link teks, dan status highlight.
+- **Warna Semantik Kesehatan Tetap Terjaga**: Normal (hijau `#1B8755`), perhatian (amber `#D97706`), dan bahaya/rujukan (merah `#DC2626`).
+
 ---
 
 ## Fitur yang dapat dicoba

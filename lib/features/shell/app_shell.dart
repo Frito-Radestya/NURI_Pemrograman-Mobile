@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../data/app_controller.dart';
 import '../../domain/models.dart';
 import '../../shared/widgets.dart';
@@ -146,7 +147,7 @@ class _AppShellState extends ConsumerState<AppShell> {
           ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5FAF7),
+      backgroundColor: AppColors.background,
       body: IndexedStack(index: _index, children: pages),
       bottomNavigationBar: NuriBottomNav(
         items: items,
