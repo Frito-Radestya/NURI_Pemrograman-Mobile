@@ -616,7 +616,10 @@ void main() {
         expect(state.currentUser?.authUid, 'fb_kader');
         expect(state.currentUser?.demo, isFalse);
         expect(state.onboardingSeen, isFalse);
-        expect(state.consentAccepted, isTrue); // Kader otomatis melewati persetujuan data keluarga
+        expect(
+          state.consentAccepted,
+          isTrue,
+        ); // Kader otomatis melewati persetujuan data keluarga
       },
     );
 
@@ -1051,6 +1054,138 @@ void main() {
       expect(error, isNull);
       expect(db.syncChangesCalls, 0);
     });
+
+    test(
+      'SYNC-03: syncNow mempertahankan pendingWrites bila sinkronisasi gagal',
+      () async {
+        final seed = DemoSeed.build(
+          who: who,
+          today: DateTime(2026, 3, 15),
+        ).copyWith(currentUserId: 'u_kader', pendingWrites: 3);
+        final db = _FakeDatabaseService()..failSync = true;
+        final container = makeContainer(seed, db: db);
+        addTearDown(container.dispose);
+
+        final controller = container.read(appControllerProvider.notifier);
+        final ok = await controller.syncNow();
+
+        expect(ok, isFalse);
+        expect(container.read(appControllerProvider).pendingWrites, 3);
+      },
+    );
+
+    test('SEC-01 & SEC-04 & SEC-05: otorisasi grant keluarga-kader dan pencabutan akses', () {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final db = _FakeDatabaseService();
+
+      // SEC-01: Ibu Siti (u_ibu) hanya melihat Rafi, tidak melihat Maya milik Sinta (u_maya)
+      final ibuState = seed.copyWith(currentUserId: 'u_ibu');
+      expect(ibuState.myChildren.map((c) => c.id), contains('c_rafi'));
+      expect(ibuState.myChildren.map((c) => c.id), isNot(contains('c_maya')));
+
+      // SEC-03 & SEC-04: Kader memiliki grant 'ukur' terhadap Rafi, tapi tanpa 'makan'
+      final kaderState = seed.copyWith(currentUserId: 'u_kader');
+      expect(kaderState.myChildren.map((c) => c.id), contains('c_rafi'));
+      expect(kaderState.foodLogsFor('c_rafi', DateTime(2026, 3, 15)), isEmpty);
+
+      // SEC-05: Ibu mencabut grant g_rafi_kader -> akses kader langsung ditolak & tersinkron ke Firestore
+      final container = makeContainer(
+        seed.copyWith(currentUserId: 'u_ibu'),
+        db: db,
+      );
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+      controller.revokeGrant('g_rafi_kader');
+
+      expect(db.grants['g_rafi_kader']?.status, 'dicabut');
+      expect(db.grants['g_rafi_kader']?.revokedAt, isNotNull);
+
+      final stateForKader = container
+          .read(appControllerProvider)
+          .copyWith(currentUserId: 'u_kader');
+      expect(
+        stateForKader.myChildren.map((c) => c.id),
+        isNot(contains('c_rafi')),
+      );
+      expect(
+        stateForKader.myRoster.map((r) => r.subjectId),
+        isNot(contains('c_rafi')),
+      );
+    });
+
+    test('FLOW-LINK-A: Ibu membuat kode keluarga sekali pakai dan Kader menukarnya', () async {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_maya'); // Ibu Sinta dengan anak c_maya
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+
+      final linkCode = controller.createFamilyLinkCode(
+        subjectId: 'c_maya',
+        subjectName: 'Maya Clarissa',
+        scopes: const ['ukur', 'makan'],
+      );
+      expect(linkCode, isNotNull);
+      expect(linkCode!.code, startsWith('NR-'));
+      expect(db.linkCodes.containsKey(linkCode.code), isTrue);
+
+      // Beralih ke Kader baru untuk menukar kode keluarga
+      controller.loginAsUser('u_kader');
+      final (grant, child, error) = await controller.redeemFamilyLinkCode(
+        linkCode.code,
+      );
+      expect(error, isNull);
+      expect(grant, isNotNull);
+      expect(grant!.scopes, containsAll(['ukur', 'makan']));
+      expect(child?.id, 'c_maya');
+
+      // Karena izin mencakup 'makan', kader kini berhak melihat foodLogsFor('c_maya')
+      expect(
+        container
+            .read(appControllerProvider)
+            .hasActiveGrantForSubject('c_maya', scope: 'makan'),
+        isTrue,
+      );
+
+      // One-time token: penukaran kedua dengan kode yang sama harus ditolak
+      final (grant2, _, error2) = await controller.redeemFamilyLinkCode(
+        linkCode.code,
+      );
+      expect(grant2, isNull);
+      expect(error2, contains('sudah pernah digunakan'));
+    });
+
+    test('FLOW-LINK-B: Kader membuat kode klaim anak dan Ibu mengklaim kepemilikan', () async {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_kader');
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+
+      // Kader membuat kode klaim untuk Kenzo (anak belum punya akun ibu)
+      final claimCode = controller.createChildClaimCode(
+        childId: 'c_kenzo',
+        childName: 'Kenzo Al-Ghifari',
+      );
+      expect(claimCode, isNotNull);
+      expect(claimCode!.code, startsWith('KL-'));
+
+      // Ibu masuk dan menukar kode klaim
+      controller.loginAsUser('u_maya');
+      final (claimedChild, err) = await controller.redeemChildClaimCode(
+        claimCode.code,
+      );
+      expect(err, isNull);
+      expect(claimedChild?.id, 'c_kenzo');
+      expect(claimedChild?.guardianUid, 'u_maya');
+      expect(claimedChild?.linked, isTrue);
+    });
   });
 }
 
@@ -1058,6 +1193,7 @@ class _FakeDatabaseService implements DatabaseService {
   _FakeDatabaseService({this.available = true});
 
   bool available;
+  bool failSync = false;
   final Map<String, AppUser> users = {};
   final Map<String, Child> children = {};
   final Map<String, Pregnancy> pregnancies = {};
@@ -1065,6 +1201,7 @@ class _FakeDatabaseService implements DatabaseService {
   final Map<String, RosterEntry> roster = {};
   final Map<String, PosyanduSession> sessions = {};
   final Map<String, AccessGrant> grants = {};
+  final Map<String, LinkCode> linkCodes = {};
 
   int syncChangesCalls = 0;
   int syncAllCalls = 0;
@@ -1143,12 +1280,13 @@ class _FakeDatabaseService implements DatabaseService {
   }
 
   @override
-  Future<void> syncChanges({
+  Future<bool> syncChanges({
     required AppState previous,
     required AppState next,
     required AppUser user,
   }) async {
     syncChangesCalls++;
+    if (failSync) return false;
     for (final c in next.children) {
       children[c.id] = c;
     }
@@ -1174,11 +1312,19 @@ class _FakeDatabaseService implements DatabaseService {
     for (final s in next.sessions) {
       sessions[s.id] = s;
     }
+    for (final g in next.accessGrants) {
+      grants[g.id] = g;
+    }
+    for (final lc in next.linkCodes) {
+      linkCodes[lc.code] = lc;
+    }
+    return true;
   }
 
   @override
-  Future<void> syncAll({required AppState state, required AppUser user}) async {
+  Future<bool> syncAll({required AppState state, required AppUser user}) async {
     syncAllCalls++;
+    if (failSync) return false;
     for (final c in state.children) {
       children[c.id] = c;
     }
@@ -1194,6 +1340,10 @@ class _FakeDatabaseService implements DatabaseService {
     for (final s in state.sessions) {
       sessions[s.id] = s;
     }
+    for (final g in state.accessGrants) {
+      grants[g.id] = g;
+    }
+    return true;
   }
 
   @override
@@ -1222,6 +1372,11 @@ class _FakeDatabaseService implements DatabaseService {
   @override
   Future<void> saveAccessGrant(AccessGrant grant) async =>
       grants[grant.id] = grant;
+  @override
+  Future<void> saveLinkCode(LinkCode code) async => linkCodes[code.code] = code;
+  @override
+  Future<LinkCode?> getLinkCode(String code) async =>
+      linkCodes[code.trim().toUpperCase()];
 }
 
 class _FakeAuthService implements AuthService {

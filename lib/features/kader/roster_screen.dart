@@ -64,8 +64,9 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appControllerProvider);
-    final entries = _visible(state.roster);
-    final present = state.roster
+    final myRoster = state.myRoster;
+    final entries = _visible(myRoster);
+    final present = myRoster
         .where((r) => r.attendance == AttendanceStatus.present)
         .length;
 
@@ -84,13 +85,13 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
           if (widget.embedded)
             NuriPageHeader(
               title: 'Sasaran Posyandu',
-              subtitle: '${state.roster.length} sasaran • $present hadir',
+              subtitle: '${myRoster.length} sasaran • $present hadir',
               trailing: addButton,
             )
           else
             ScreenHeader(
               title: 'Sasaran Posyandu',
-              subtitle: '${state.roster.length} sasaran • $present hadir',
+              subtitle: '${myRoster.length} sasaran • $present hadir',
               onBack: () => Navigator.of(context).pop(),
               action: addButton,
             ),
@@ -579,6 +580,72 @@ class _RosterDetailSheet extends ConsumerWidget {
               ),
             ],
           ),
+          if (!isPregnant && !entry.linked && entry.subjectId != null) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  final claim = ref
+                      .read(appControllerProvider.notifier)
+                      .createChildClaimCode(
+                        childId: entry.subjectId!,
+                        childName: entry.name,
+                      );
+                  if (claim == null) return;
+                  Navigator.of(context).pop();
+                  showDialog<void>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('Kode Klaim Ibu'),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Berikan kode sekali pakai ini kepada Ibu dari ${entry.name} agar profil dan riwayat tumbuh kembang anak berpindah ke akun Ibu (berlaku 7 hari):',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.muted,
+                              height: 1.45,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceSubtle,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: SelectableText(
+                              claim.code,
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
+                                color: AppColors.primaryDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        FilledButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: const Text('Selesai'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.vpn_key_outlined, size: 18),
+                label: const Text('Buat Kode Klaim untuk Ibu (7 hari)'),
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           const NuriDisclaimer(compact: true),
         ],

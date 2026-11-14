@@ -199,6 +199,8 @@ class AppUser {
     this.avatarAsset,
     this.demo = true,
     this.authUid,
+    this.consentVersion,
+    this.consentAcceptedAt,
   });
 
   final String id;
@@ -214,6 +216,10 @@ class AppUser {
   /// UID ini menjadi jembatan saat Firestore diaktifkan.
   final String? authUid;
 
+  /// Versi dan waktu persetujuan kebijakan privasi (tersinkron ke Firestore).
+  final String? consentVersion;
+  final DateTime? consentAcceptedAt;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -223,6 +229,8 @@ class AppUser {
     'avatarAsset': avatarAsset,
     'demo': demo,
     'authUid': authUid,
+    'consentVersion': consentVersion,
+    'consentAcceptedAt': consentAcceptedAt?.toIso8601String(),
   };
 
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
@@ -234,6 +242,8 @@ class AppUser {
     avatarAsset: json['avatarAsset'] as String?,
     demo: json['demo'] as bool? ?? true,
     authUid: json['authUid'] as String?,
+    consentVersion: json['consentVersion'] as String?,
+    consentAcceptedAt: parseDate(json['consentAcceptedAt']),
   );
 }
 
@@ -1142,51 +1152,187 @@ class AccessGrant {
     required this.scopes,
     required this.createdAt,
     required this.expiresAt,
+    this.granteeUid,
+    this.subjectId,
+    this.posyanduId,
+    this.revokedAt,
     this.status = 'aktif',
   });
 
   final String id;
   final String ownerUid;
+  final String? granteeUid;
   final String granteeName;
+  final String? subjectId;
   final String subjectName;
+  final String? posyanduId;
   final List<String> scopes;
   final DateTime createdAt;
   final DateTime expiresAt;
+  final DateTime? revokedAt;
   final String status;
 
-  AccessGrant copyWith({String? status}) => AccessGrant(
+  bool get isActive =>
+      status == 'aktif' &&
+      revokedAt == null &&
+      !DateTime.now().isAfter(expiresAt);
+
+  AccessGrant copyWith({
+    String? status,
+    DateTime? revokedAt,
+    List<String>? scopes,
+    String? granteeUid,
+    String? subjectId,
+    String? posyanduId,
+  }) => AccessGrant(
     id: id,
     ownerUid: ownerUid,
+    granteeUid: granteeUid ?? this.granteeUid,
     granteeName: granteeName,
+    subjectId: subjectId ?? this.subjectId,
     subjectName: subjectName,
-    scopes: scopes,
+    posyanduId: posyanduId ?? this.posyanduId,
+    scopes: scopes ?? this.scopes,
     createdAt: createdAt,
     expiresAt: expiresAt,
+    revokedAt: revokedAt ?? this.revokedAt,
     status: status ?? this.status,
   );
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'ownerUid': ownerUid,
+    'granteeUid': granteeUid,
     'granteeName': granteeName,
+    'subjectId': subjectId,
     'subjectName': subjectName,
+    'posyanduId': posyanduId,
     'scopes': scopes,
     'createdAt': dateToIso(createdAt),
     'expiresAt': dateToIso(expiresAt),
+    'revokedAt': revokedAt?.toIso8601String(),
     'status': status,
   };
 
   factory AccessGrant.fromJson(Map<String, dynamic> json) => AccessGrant(
     id: json['id'] as String,
     ownerUid: json['ownerUid'] as String? ?? '',
+    granteeUid: json['granteeUid'] as String?,
     granteeName: json['granteeName'] as String? ?? 'Kader',
+    subjectId: json['subjectId'] as String?,
     subjectName: json['subjectName'] as String? ?? '',
+    posyanduId: json['posyanduId'] as String?,
     scopes: _stringList(json['scopes']),
     createdAt: parseDate(json['createdAt']) ?? DateTime.now(),
     expiresAt:
         parseDate(json['expiresAt']) ??
         DateTime.now().add(const Duration(days: 365)),
+    revokedAt: parseDate(json['revokedAt']),
     status: json['status'] as String? ?? 'aktif',
+  );
+}
+
+/// Kode undangan sekali pakai untuk menghubungkan akun Ibu dan Kader Posyandu
+/// (Flow A: `type == 'keluarga'`, Flow B: `type == 'klaim'`).
+class LinkCode {
+  const LinkCode({
+    required this.code,
+    required this.type,
+    required this.issuerUid,
+    required this.issuerName,
+    required this.subjectId,
+    required this.subjectName,
+    required this.scopes,
+    required this.createdAt,
+    required this.expiresAt,
+    this.posyanduId,
+    this.usedAt,
+    this.usedByUid,
+  });
+
+  final String code;
+  final String type; // 'keluarga' atau 'klaim'
+  final String issuerUid;
+  final String issuerName;
+  final String subjectId;
+  final String subjectName;
+  final String? posyanduId;
+  final List<String> scopes;
+  final DateTime createdAt;
+  final DateTime expiresAt;
+  final DateTime? usedAt;
+  final String? usedByUid;
+
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
+  bool get isUsed => usedAt != null;
+  bool get isValid => !isExpired && !isUsed;
+
+  static const _alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+  /// Menghasilkan kode acak kriptografis (contoh: `NR-7K9P-2X4M`).
+  static String generateSecureCode({String prefix = 'NR'}) {
+    math.Random rng;
+    try {
+      rng = math.Random.secure();
+    } catch (_) {
+      rng = math.Random();
+    }
+    String part(int len) => List.generate(
+      len,
+      (_) => _alphabet[rng.nextInt(_alphabet.length)],
+    ).join();
+    return '$prefix-${part(4)}-${part(4)}';
+  }
+
+  LinkCode copyWith({DateTime? usedAt, String? usedByUid}) => LinkCode(
+    code: code,
+    type: type,
+    issuerUid: issuerUid,
+    issuerName: issuerName,
+    subjectId: subjectId,
+    subjectName: subjectName,
+    posyanduId: posyanduId,
+    scopes: scopes,
+    createdAt: createdAt,
+    expiresAt: expiresAt,
+    usedAt: usedAt ?? this.usedAt,
+    usedByUid: usedByUid ?? this.usedByUid,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'code': code,
+    'type': type,
+    'issuerUid': issuerUid,
+    'issuerName': issuerName,
+    'subjectId': subjectId,
+    'subjectName': subjectName,
+    'posyanduId': posyanduId,
+    'scopes': scopes,
+    'createdAt': createdAt.toIso8601String(),
+    'expiresAt': expiresAt.toIso8601String(),
+    'usedAt': usedAt?.toIso8601String(),
+    'usedByUid': usedByUid,
+  };
+
+  factory LinkCode.fromJson(Map<String, dynamic> json) => LinkCode(
+    code: json['code'] as String? ?? '',
+    type: json['type'] as String? ?? 'keluarga',
+    issuerUid: json['issuerUid'] as String? ?? '',
+    issuerName: json['issuerName'] as String? ?? '',
+    subjectId: json['subjectId'] as String? ?? '',
+    subjectName: json['subjectName'] as String? ?? '',
+    posyanduId: json['posyanduId'] as String?,
+    scopes: _stringList(json['scopes']),
+    createdAt:
+        DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+        DateTime.now(),
+    expiresAt:
+        DateTime.tryParse(json['expiresAt']?.toString() ?? '') ??
+        DateTime.now().add(const Duration(hours: 24)),
+    usedAt: json['usedAt'] == null
+        ? null
+        : DateTime.tryParse(json['usedAt'].toString()),
+    usedByUid: json['usedByUid'] as String?,
   );
 }
 
@@ -1200,6 +1346,7 @@ class AppState {
     required this.sessions,
     required this.contents,
     required this.accessGrants,
+    this.linkCodes = const [],
     this.currentUserId,
     this.selectedChildId,
     this.onboardingSeen = false,
@@ -1226,6 +1373,7 @@ class AppState {
   final List<PosyanduSession> sessions;
   final List<ContentArticle> contents;
   final List<AccessGrant> accessGrants;
+  final List<LinkCode> linkCodes;
   final String? selectedChildId;
   final bool onboardingSeen;
   final bool consentAccepted;
@@ -1251,13 +1399,40 @@ class AppState {
   bool get isLoggedIn => currentUser != null;
   bool get isCadre => currentUser?.role == UserRole.cadre;
 
+  /// Memeriksa apakah kader saat ini memiliki izin aktif terhadap subjek
+  /// (anak/kehamilan). Jika ada grant yang tercatat dan statusnya sudah dicabut,
+  /// akses kader langsung ditolak.
+  bool hasActiveGrantForSubject(String subjectId, {String? scope}) {
+    final user = currentUser;
+    if (user == null) return false;
+    if (user.role == UserRole.mother) return true;
+    final matching = accessGrants.where((g) => g.subjectId == subjectId);
+    if (matching.isEmpty) {
+      // Belum ada record grant eksplisit: hanya izinkan jika subjek adalah
+      // sasaran tanpa akun ibu (linked == false) untuk cakupan ukur dasar.
+      if (scope != null && scope != 'ukur') return false;
+      final child = children.where((c) => c.id == subjectId).firstOrNull;
+      if (child != null && child.linked) return false;
+      return true;
+    }
+    return matching.any(
+      (g) =>
+          g.isActive &&
+          (g.granteeUid == null ||
+              g.granteeUid == user.id ||
+              g.posyanduId == user.posyanduId) &&
+          (scope == null || g.scopes.contains(scope)),
+    );
+  }
+
   List<Child> get myChildren => children
       .where(
         (c) =>
             !c.archived &&
             (c.guardianUid == currentUserId ||
                 (currentUser?.role == UserRole.cadre &&
-                    c.posyanduId == currentUser?.posyanduId)),
+                    c.posyanduId == currentUser?.posyanduId &&
+                    hasActiveGrantForSubject(c.id, scope: 'ukur'))),
       )
       .toList();
 
@@ -1281,15 +1456,20 @@ class AppState {
     return list.first;
   }
 
-  List<FoodLog> foodLogsFor(String subjectId, DateTime date) =>
-      foodLogs
-          .where(
-            (log) =>
-                log.subjectId == subjectId &&
-                dateToIso(log.date) == dateToIso(date),
-          )
-          .toList()
-        ..sort((a, b) => a.meal.index.compareTo(b.meal.index));
+  List<FoodLog> foodLogsFor(String subjectId, DateTime date) {
+    if (currentUser?.role == UserRole.cadre &&
+        !hasActiveGrantForSubject(subjectId, scope: 'makan')) {
+      return const [];
+    }
+    return foodLogs
+        .where(
+          (log) =>
+              log.subjectId == subjectId &&
+              dateToIso(log.date) == dateToIso(date),
+        )
+        .toList()
+      ..sort((a, b) => a.meal.index.compareTo(b.meal.index));
+  }
 
   NutritionTotals totalsFor(String subjectId, DateTime date) =>
       NutritionTotals.fromItems(
@@ -1298,24 +1478,38 @@ class AppState {
 
   List<RosterEntry> get myRoster {
     if (currentUser == null) return const [];
-    if (currentUser!.demo) {
-      return roster;
-    }
-    return roster
-        .where((r) =>
-            (r.posyanduId != null && r.posyanduId == currentUser?.posyanduId) ||
-            r.guardianName.toLowerCase() == currentUser!.name.toLowerCase())
-        .toList();
+    final base = currentUser!.demo
+        ? roster
+        : roster
+              .where(
+                (r) =>
+                    (r.posyanduId != null &&
+                        r.posyanduId == currentUser?.posyanduId) ||
+                    r.guardianName.toLowerCase() ==
+                        currentUser!.name.toLowerCase(),
+              )
+              .toList();
+    return base.where((r) {
+      if (r.subjectId == null) return true;
+      // Jika ada grant yang sudah dicabut untuk subjectId ini, sembunyikan dari akses kader
+      final matching = accessGrants.where((g) => g.subjectId == r.subjectId);
+      if (matching.isNotEmpty) {
+        return matching.any((g) => g.isActive);
+      }
+      return true;
+    }).toList();
   }
 
   PosyanduSession? get activeSession {
     final list = currentUser?.demo == true
         ? sessions
         : sessions
-            .where((s) =>
-                s.createdByUid == currentUserId ||
-                (posyanduName.isNotEmpty && s.posyanduName == posyanduName))
-            .toList();
+              .where(
+                (s) =>
+                    s.createdByUid == currentUserId ||
+                    (posyanduName.isNotEmpty && s.posyanduName == posyanduName),
+              )
+              .toList();
     for (final session in list) {
       if (session.status == 'berlangsung') return session;
     }
@@ -1334,6 +1528,7 @@ class AppState {
     List<PosyanduSession>? sessions,
     List<ContentArticle>? contents,
     List<AccessGrant>? accessGrants,
+    List<LinkCode>? linkCodes,
     Object? selectedChildId = _unset,
     bool? onboardingSeen,
     bool? consentAccepted,
@@ -1360,6 +1555,7 @@ class AppState {
     sessions: sessions ?? this.sessions,
     contents: contents ?? this.contents,
     accessGrants: accessGrants ?? this.accessGrants,
+    linkCodes: linkCodes ?? this.linkCodes,
     selectedChildId: identical(selectedChildId, _unset)
         ? this.selectedChildId
         : selectedChildId as String?,
@@ -1392,6 +1588,7 @@ class AppState {
     'sessions': sessions.map((e) => e.toJson()).toList(),
     'contents': contents.map((e) => e.toJson()).toList(),
     'accessGrants': accessGrants.map((e) => e.toJson()).toList(),
+    'linkCodes': linkCodes.map((e) => e.toJson()).toList(),
     'selectedChildId': selectedChildId,
     'onboardingSeen': onboardingSeen,
     'consentAccepted': consentAccepted,
@@ -1443,6 +1640,10 @@ class AppState {
     accessGrants: (json['accessGrants'] as List? ?? const [])
         .whereType<Map>()
         .map((e) => AccessGrant.fromJson(Map<String, dynamic>.from(e)))
+        .toList(),
+    linkCodes: (json['linkCodes'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => LinkCode.fromJson(Map<String, dynamic>.from(e)))
         .toList(),
     selectedChildId: json['selectedChildId'] as String?,
     onboardingSeen: json['onboardingSeen'] as bool? ?? false,

@@ -138,7 +138,8 @@ class ProfileScreen extends ConsumerWidget {
                 child: _FamilyCodeCard(
                   child: child,
                   pregnancy: pregnancy,
-                  onShow: () => _showFamilyCode(context, child, pregnancy),
+                  onShow: () => _showFamilyCode(context, ref, child, pregnancy),
+                  onClaim: () => _claimChildFromPosyandu(context, ref),
                 ),
               ),
             ] else ...[
@@ -157,7 +158,7 @@ class ProfileScreen extends ConsumerWidget {
                 child: _PosyanduCard(
                   name: state.posyanduName,
                   area: state.posyanduArea,
-                  target: state.roster.length,
+                  target: state.myRoster.length,
                   onQr: () => _showPosyanduCode(context, state),
                 ),
               ),
@@ -167,9 +168,18 @@ class ProfileScreen extends ConsumerWidget {
                 child: _SyncCard(
                   pending: state.pendingWrites,
                   lastSyncAt: state.lastSyncAt,
-                  onSync: () {
-                    ref.read(appControllerProvider.notifier).syncNow();
-                    showNuriSnack(context, 'Semua data tersinkron.');
+                  onSync: () async {
+                    final ok = await ref
+                        .read(appControllerProvider.notifier)
+                        .syncNow();
+                    if (!context.mounted) return;
+                    showNuriSnack(
+                      context,
+                      ok
+                          ? 'Semua data tersinkron.'
+                          : 'Sinkronisasi gagal. Periksa koneksi internet.',
+                      error: !ok,
+                    );
                   },
                 ),
               ),
@@ -486,84 +496,88 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _showFamilyCode(
     BuildContext context,
+    WidgetRef ref,
     Child? child,
     Pregnancy? pregnancy,
   ) async {
-    final subject =
-        child?.nickname ?? (pregnancy != null ? 'Kehamilan' : 'Keluarga');
-    final code = child != null
-        ? 'NURI-${child.nickname.split(' ').first.toUpperCase()}-2026'
-        : 'NURI-HAMIL-2026';
+    final subjectId = child?.id ?? pregnancy?.id;
+    final subjectName =
+        child?.nickname ?? (pregnancy != null ? 'Kehamilan' : null);
+    if (subjectId == null || subjectName == null) {
+      showNuriSnack(
+        context,
+        'Tambahkan profil anak atau kehamilan terlebih dahulu untuk membuat Kode Keluarga.',
+        error: true,
+      );
+      return;
+    }
     await showNuriSheet<void>(
       context: context,
-      builder: (sheetContext) => SingleChildScrollView(
+      builder: (_) => _FamilyCodeGeneratorSheet(
+        subjectId: subjectId,
+        subjectName: subjectName,
+      ),
+    );
+  }
+
+  Future<void> _claimChildFromPosyandu(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final controller = TextEditingController();
+    final code = await showNuriSheet<String>(
+      context: context,
+      builder: (sheetContext) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Kode Keluarga',
+              'Klaim Data Anak Posyandu',
               style: Theme.of(sheetContext).textTheme.titleLarge,
             ),
             const SizedBox(height: 4),
-            Text(
-              'Untuk $subject • berlaku 24 jam',
-              style: const TextStyle(fontSize: 12.5, color: AppColors.muted),
+            const Text(
+              'Masukkan kode klaim sekali pakai (contoh: KL-XXXX-XXXX) yang diberikan Kader Posyandu untuk memindahkan riwayat tumbuh kembang anak ke akun Ibu.',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: AppColors.muted,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 14),
+            NuriTextField(
+              label: 'Kode Klaim',
+              controller: controller,
+              hint: 'KL-XXXX-XXXX',
+              prefixIcon: Icons.vpn_key_outlined,
+              textCapitalization: TextCapitalization.characters,
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.line),
-              ),
-              child: QrImageView(
-                data: code,
-                version: QrVersions.auto,
-                size: 190,
-                backgroundColor: Colors.white,
-                eyeStyle: const QrEyeStyle(
-                  eyeShape: QrEyeShape.square,
-                  color: AppColors.primaryDark,
-                ),
-                dataModuleStyle: const QrDataModuleStyle(
-                  dataModuleShape: QrDataModuleShape.square,
-                  color: AppColors.primaryDark,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceSubtle,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: SelectableText(
-                code,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: AppColors.primaryDark,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            const InfoBanner(
-              title: 'Cakupan akses',
-              body: 'Ukur (wajib). Catatan makan hanya dibuka bila ibu mengizinkan secara terpisah.',
-              icon: Icons.verified_user_outlined,
-            ),
-            const SizedBox(height: 14),
             NuriButton(
-              label: 'Tutup',
-              onPressed: () => Navigator.of(sheetContext).pop(),
+              label: 'Verifikasi & Klaim',
+              icon: Icons.verified_outlined,
+              onPressed: () =>
+                  Navigator.of(sheetContext).pop(controller.text.trim()),
             ),
           ],
         ),
       ),
+    );
+    controller.dispose();
+    if (!context.mounted || code == null || code.isEmpty) return;
+    final (claimed, error) = await ref
+        .read(appControllerProvider.notifier)
+        .redeemChildClaimCode(code);
+    if (!context.mounted) return;
+    if (error != null) {
+      showNuriSnack(context, error, error: true);
+      return;
+    }
+    showNuriSnack(
+      context,
+      'Profil ${claimed?.nickname ?? "anak"} beserta riwayat pengukurannya berhasil terhubung ke akun Ibu!',
     );
   }
 
@@ -1112,11 +1126,13 @@ class _FamilyCodeCard extends StatelessWidget {
     required this.child,
     required this.pregnancy,
     required this.onShow,
+    required this.onClaim,
   });
 
   final Child? child;
   final Pregnancy? pregnancy;
   final VoidCallback onShow;
+  final VoidCallback onClaim;
 
   @override
   Widget build(BuildContext context) {
@@ -1124,49 +1140,285 @@ class _FamilyCodeCard extends StatelessWidget {
         child?.nickname ?? (pregnancy != null ? 'Kehamilan' : 'Keluarga');
     return AppCard(
       padding: const EdgeInsets.all(15),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceSubtle,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.qr_code_2_rounded,
-              size: 22,
-              color: AppColors.primaryDark,
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.qr_code_2_rounded,
+                  size: 22,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Koneksi Keluarga & Posyandu',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Buat QR izin akses untuk $subject (sekali pakai, 24 jam)',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton(
+                onPressed: onShow,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 38),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  textStyle: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                child: const Text('Buat QR'),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Divider(height: 1),
+          ),
+          InkWell(
+            onTap: onClaim,
+            borderRadius: BorderRadius.circular(10),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.vpn_key_outlined,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Punya kode klaim anak dari Kader Posyandu? Masukkan di sini',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+        ],
+      ),
+    );
+  }
+}
+
+class _FamilyCodeGeneratorSheet extends ConsumerStatefulWidget {
+  const _FamilyCodeGeneratorSheet({
+    required this.subjectId,
+    required this.subjectName,
+  });
+
+  final String subjectId;
+  final String subjectName;
+
+  @override
+  ConsumerState<_FamilyCodeGeneratorSheet> createState() =>
+      _FamilyCodeGeneratorSheetState();
+}
+
+class _FamilyCodeGeneratorSheetState
+    extends ConsumerState<_FamilyCodeGeneratorSheet> {
+  bool _allowFoodDiary = false;
+  LinkCode? _generated;
+
+  void _generate() {
+    final scopes = <String>['ukur', if (_allowFoodDiary) 'makan'];
+    final code = ref
+        .read(appControllerProvider.notifier)
+        .createFamilyLinkCode(
+          subjectId: widget.subjectId,
+          subjectName: widget.subjectName,
+          scopes: scopes,
+        );
+    setState(() => _generated = code);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _generate());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final link = _generated;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Kode Keluarga',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 2),
                 Text(
-                  'Bagikan QR untuk $subject • akses ukur',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
+                  'Hubungkan dengan Posyandu',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Untuk ${widget.subjectName} • Token sekali pakai (24 jam)',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.muted,
+                  ),
                 ),
               ],
             ),
           ),
-          OutlinedButton(
-            onPressed: onShow,
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(0, 38),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              textStyle: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
+          const SizedBox(height: 16),
+          const Text(
+            'Atur izin akses kader:',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSubtle,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Data pertumbuhan (Wajib)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'Melihat grafik dan mencatat hasil pengukuran Posyandu',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.line),
+            ),
+            value: _allowFoodDiary,
+            onChanged: (val) {
+              setState(() => _allowFoodDiary = val);
+              _generate();
+            },
+            title: const Text(
+              'Catatan makan (Opsional)',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            subtitle: const Text(
+              'Izinkan kader melihat diary asupan makan harian',
+              style: TextStyle(fontSize: 11.5, color: AppColors.muted),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (link != null) ...[
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.line),
+                ),
+                child: QrImageView(
+                  data: link.code,
+                  version: QrVersions.auto,
+                  size: 185,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: AppColors.primaryDark,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
               ),
             ),
-            child: const Text('Tampilkan'),
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SelectableText(
+                  link.code,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          NuriButton(
+            label: 'Tutup',
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ],
       ),

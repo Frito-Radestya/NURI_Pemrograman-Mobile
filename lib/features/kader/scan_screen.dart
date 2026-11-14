@@ -52,7 +52,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   }
 
   Future<void> _manualCode() async {
-    final controller = TextEditingController(text: 'NURI-KENZO-2026');
+    final controller = TextEditingController();
     final code = await showNuriSheet<String>(
       context: context,
       builder: (sheetContext) => Padding(
@@ -67,7 +67,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
             ),
             const SizedBox(height: 3),
             const Text(
-              'Kode 8–12 karakter dari layar ibu. Untuk demo, coba NURI-KENZO-2026.',
+              'Masukkan token sekali pakai (contoh: NR-XXXX-XXXX) yang ditampilkan pada layar Profil Ibu.',
               style: TextStyle(
                 fontSize: 12.5,
                 color: AppColors.muted,
@@ -80,14 +80,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
               autofocus: true,
               textCapitalization: TextCapitalization.characters,
               decoration: const InputDecoration(
-                hintText: 'NURI-XXXX-2026',
+                hintText: 'NR-XXXX-XXXX',
                 prefixIcon: Icon(Icons.key_rounded, size: 20),
               ),
             ),
             const SizedBox(height: 14),
             NuriButton(
-              label: 'Cari kode',
-              icon: Icons.search_rounded,
+              label: 'Verifikasi Kode',
+              icon: Icons.verified_outlined,
               onPressed: () =>
                   Navigator.of(sheetContext).pop(controller.text.trim()),
             ),
@@ -97,32 +97,45 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     );
     controller.dispose();
     if (!mounted || code == null || code.isEmpty) return;
+
+    final (grant, linkedChild, error) = await ref
+        .read(appControllerProvider.notifier)
+        .redeemFamilyLinkCode(code);
+    if (!mounted) return;
+    if (grant != null) {
+      await _showFound(
+        childId: grant.subjectId ?? 'c_rafi',
+        rosterId: 'r_${grant.subjectId}',
+        name: grant.subjectName,
+        meta: linkedChild != null
+            ? '${linkedChild.ageLabel(DateTime.now())} • ${linkedChild.sex.label}'
+            : 'Terhubung dengan izin ibu',
+        scopes: grant.scopes,
+      );
+      return;
+    }
+
+    // Fallback untuk akun demo pengembang bila mencoba kode cepat
+    final isDemo = ref.read(appControllerProvider).currentUser?.demo == true;
     final upper = code.toUpperCase();
-    if (upper.contains('KENZO')) {
+    if (isDemo && upper.contains('KENZO')) {
       await _showFound(
         childId: 'c_kenzo',
         rosterId: 'r_kenzo',
         name: 'Kenzo Al-Ghifari',
         meta: '14 bulan • Laki-laki',
       );
-    } else if (upper.contains('RAFI')) {
+    } else if (isDemo && upper.contains('RAFI')) {
       await _showFound(
         childId: 'c_rafi',
         rosterId: 'r_rafi',
         name: 'Rafi Ahmad',
         meta: '18 bulan • Laki-laki',
       );
-    } else if (upper.contains('MAYA')) {
-      await _showFound(
-        childId: 'c_maya',
-        rosterId: 'r_maya',
-        name: 'Maya Clarissa',
-        meta: '22 bulan • Perempuan',
-      );
     } else {
       showNuriSnack(
         context,
-        'Kode tidak ditemukan atau sudah kedaluwarsa.',
+        error ?? 'Kode tidak ditemukan atau sudah kedaluwarsa.',
         error: true,
       );
     }
@@ -133,6 +146,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     required String rosterId,
     required String name,
     required String meta,
+    List<String> scopes = const ['ukur'],
   }) async {
     final state = ref.read(appControllerProvider);
     RosterEntry? entry;
@@ -236,9 +250,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
               ),
             ),
             const SizedBox(height: 12),
-            const InfoBanner(
-              title: 'Cakupan akses: ukur',
-              body: 'Kader dapat menambah pengukuran. Catatan makan hanya terbuka bila ibu memberi izin terpisah.',
+            InfoBanner(
+              title: 'Cakupan akses: ${scopes.join(", ")}',
+              body: scopes.contains('makan')
+                  ? 'Ibu memberikan izin pencatatan pengukuran dan pembacaan diary makan anak.'
+                  : 'Kader dapat menambah pengukuran. Catatan makan belum diizinkan oleh Ibu.',
               icon: Icons.verified_user_outlined,
             ),
             const SizedBox(height: 14),

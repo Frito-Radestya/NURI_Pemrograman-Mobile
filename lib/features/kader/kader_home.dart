@@ -100,11 +100,15 @@ class KaderHomeScreen extends ConsumerWidget {
                   ),
                   _SyncButton(
                     pending: pendingWrites,
-                    onTap: () {
-                      ref.read(appControllerProvider.notifier).syncNow();
+                    onTap: () async {
+                      final ok = await ref
+                          .read(appControllerProvider.notifier)
+                          .syncNow();
+                      if (!context.mounted) return;
                       showNuriSnack(
                         context,
-                        'Semua data tersinkron. Siap bekerja offline.',
+                        ok ? 'Semua data tersinkron. Siap bekerja offline.' : 'Sinkronisasi gagal. Perubahan tetap tersimpan lokal.',
+                        error: !ok,
                       );
                     },
                   ),
@@ -307,7 +311,9 @@ class _SessionCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: !hasSession
                             ? Colors.white70
-                            : (done ? AppColors.peach : const Color(0xFF9FE3C8)),
+                            : (done
+                                  ? AppColors.peach
+                                  : const Color(0xFF9FE3C8)),
                         shape: BoxShape.circle,
                       ),
                     ),

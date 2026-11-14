@@ -19,21 +19,24 @@ abstract class DatabaseService {
     required AppState seedData,
   });
 
-  /// Mengambil dokumen pengguna dari Firestore dan menggabungkannya ke [currentState].
+  /// Mengambil dokumen pengguna dari Firestore sesuai ruang lingkup aksesnya
+  /// dan menggabungkannya ke [currentState].
   Future<AppState?> pullUserDataset({
     required AppUser user,
     required AppState currentState,
   });
 
   /// Menyinkronkan perubahan parsial (tambah, ubah, hapus) ke Firestore.
-  Future<void> syncChanges({
+  /// Mengembalikan `true` jika berhasil, `false` jika gagal.
+  Future<bool> syncChanges({
     required AppState previous,
     required AppState next,
     required AppUser user,
   });
 
   /// Menyinkronkan seluruh state lokal pengguna ke Firestore.
-  Future<void> syncAll({required AppState state, required AppUser user});
+  /// Mengembalikan `true` jika berhasil, `false` jika gagal.
+  Future<bool> syncAll({required AppState state, required AppUser user});
 
   /// Memasukkan seluruh dataset demo bawaan (semua akun dan entitas) ke Firestore.
   Future<void> seedAllDemoData({required AppState seedData});
@@ -50,6 +53,8 @@ abstract class DatabaseService {
   Future<void> deleteRosterEntry(String id);
   Future<void> saveSession(PosyanduSession session);
   Future<void> saveAccessGrant(AccessGrant grant);
+  Future<void> saveLinkCode(LinkCode code);
+  Future<LinkCode?> getLinkCode(String code);
 }
 
 /// Implementasi Cloud Firestore dengan offline persistence bawaan SDK.
@@ -103,7 +108,8 @@ class FirestoreService implements DatabaseService {
         if (user.role == UserRole.cadre) {
           return c.posyanduId == user.posyanduId;
         }
-        return c.guardianUid == user.id || c.guardianUid == 'u_ibu';
+        return c.guardianUid == user.id ||
+            (user.demo && c.guardianUid == 'u_ibu');
       });
       for (final child in myChildren) {
         batch.set(
@@ -116,7 +122,7 @@ class FirestoreService implements DatabaseService {
       // 3. Data kehamilan (untuk ibu)
       if (user.role == UserRole.mother) {
         final myPregnancies = seedData.pregnancies.where(
-          (p) => p.ownerUid == user.id || p.ownerUid == 'u_ibu',
+          (p) => p.ownerUid == user.id || (user.demo && p.ownerUid == 'u_ibu'),
         );
         for (final p in myPregnancies) {
           batch.set(
@@ -127,8 +133,16 @@ class FirestoreService implements DatabaseService {
         }
       }
 
-      // 4. Catatan makan
-      for (final log in seedData.foodLogs) {
+      // 4. Catatan makan milik subjek pengguna
+      final subjectIds = {
+        ...myChildren.map((c) => c.id),
+        ...seedData.pregnancies
+            .where((p) => p.ownerUid == user.id)
+            .map((p) => p.id),
+      };
+      for (final log in seedData.foodLogs.where(
+        (l) => subjectIds.contains(l.subjectId),
+      )) {
         batch.set(
           _db.collection('food_logs').doc(log.id),
           log.toJson(),
@@ -154,7 +168,18 @@ class FirestoreService implements DatabaseService {
         }
       }
 
-      // 6. Konten artikel edukasi
+      // 6. Grant akses pengguna
+      for (final grant in seedData.accessGrants.where(
+        (g) => g.ownerUid == user.id || g.granteeUid == user.id,
+      )) {
+        batch.set(
+          _db.collection('access_grants').doc(grant.id),
+          grant.toJson(),
+          SetOptions(merge: true),
+        );
+      }
+
+      // 7. Konten artikel edukasi
       for (final article in seedData.contents) {
         batch.set(
           _db.collection('contents').doc(article.id),
@@ -177,48 +202,109 @@ class FirestoreService implements DatabaseService {
   }) async {
     if (!isAvailable) return null;
     try {
-      // Baca anak
-      final childrenSnap = await _db.collection('children').get();
+      // 1. Baca grant akses sesuai ruang lingkup pengguna
+      final grantsQuery = user.role == UserRole.mother
+          ? _db
+                .collection('access_grants')
+                .where('ownerUid', isEqualTo: user.id)
+          : _db
+                .collection('access_grants')
+                .where('posyanduId', isEqualTo: user.posyanduId);
+      final grantsSnap = await grantsQuery.get();
+      final remoteGrants = grantsSnap.docs
+          .map((doc) => AccessGrant.fromJson(doc.data()))
+          .toList();
+
+      // 2. Baca anak berdasarkan ruang lingkup (guardianUid untuk Ibu, posyanduId untuk Kader)
+      final childrenQuery = user.role == UserRole.mother
+          ? _db.collection('children').where('guardianUid', isEqualTo: user.id)
+          : _db
+                .collection('children')
+                .where('posyanduId', isEqualTo: user.posyanduId);
+      final childrenSnap = await childrenQuery.get();
       final remoteChildren = childrenSnap.docs
           .map((doc) => Child.fromJson(doc.data()))
           .toList();
 
-      // Baca kehamilan
-      final pregSnap = await _db.collection('pregnancies').get();
-      final remotePregnancies = pregSnap.docs
-          .map((doc) => Pregnancy.fromJson(doc.data()))
-          .toList();
+      // 3. Baca kehamilan milik ibu
+      final remotePregnancies = <Pregnancy>[];
+      if (user.role == UserRole.mother) {
+        final pregSnap = await _db
+            .collection('pregnancies')
+            .where('ownerUid', isEqualTo: user.id)
+            .get();
+        remotePregnancies.addAll(
+          pregSnap.docs.map((doc) => Pregnancy.fromJson(doc.data())),
+        );
+      }
 
-      // Baca catatan makan
-      final logsSnap = await _db.collection('food_logs').get();
-      final remoteLogs = logsSnap.docs
-          .map((doc) => FoodLog.fromJson(doc.data()))
-          .toList();
+      // 4. Baca catatan makan hanya untuk subjek yang berhak diakses
+      final allowedSubjectIds = <String>{
+        ...remoteChildren.map((c) => c.id),
+        ...remotePregnancies.map((p) => p.id),
+      };
+      final remoteLogs = <FoodLog>[];
+      if (allowedSubjectIds.isNotEmpty) {
+        final batchIds = allowedSubjectIds.take(10).toList();
+        final logsSnap = await _db
+            .collection('food_logs')
+            .where('subjectId', whereIn: batchIds)
+            .get();
+        remoteLogs.addAll(
+          logsSnap.docs.map((doc) => FoodLog.fromJson(doc.data())),
+        );
+      }
 
-      // Baca roster
-      final rosterSnap = await _db.collection('roster').get();
-      final remoteRoster = rosterSnap.docs
-          .map((doc) => RosterEntry.fromJson(doc.data()))
-          .toList();
+      // 5. Baca roster dan sesi khusus ruang lingkup Posyandu kader
+      final remoteRoster = <RosterEntry>[];
+      final remoteSessions = <PosyanduSession>[];
+      if (user.role == UserRole.cadre && user.posyanduId != null) {
+        final rosterSnap = await _db
+            .collection('roster')
+            .where('posyanduId', isEqualTo: user.posyanduId)
+            .get();
+        remoteRoster.addAll(
+          rosterSnap.docs.map((doc) => RosterEntry.fromJson(doc.data())),
+        );
 
-      // Baca sesi
-      final sessionSnap = await _db.collection('sessions').get();
-      final remoteSessions = sessionSnap.docs
-          .map((doc) => PosyanduSession.fromJson(doc.data()))
-          .toList();
+        final sessionSnap = await _db
+            .collection('sessions')
+            .where('createdByUid', isEqualTo: user.id)
+            .get();
+        remoteSessions.addAll(
+          sessionSnap.docs.map((doc) => PosyanduSession.fromJson(doc.data())),
+        );
+      }
+
+      // Gabungkan dengan entitas lokal yang tidak bertabrakan
+      List<T> mergeById<T>(
+        List<T> local,
+        List<T> remote,
+        String Function(T) idOf,
+      ) {
+        if (remote.isEmpty) return local;
+        final map = {for (final item in local) idOf(item): item};
+        for (final item in remote) {
+          map[idOf(item)] = item;
+        }
+        return map.values.toList();
+      }
 
       return currentState.copyWith(
-        children: remoteChildren.isNotEmpty
-            ? remoteChildren
-            : currentState.children,
-        pregnancies: remotePregnancies.isNotEmpty
-            ? remotePregnancies
-            : currentState.pregnancies,
-        foodLogs: remoteLogs.isNotEmpty ? remoteLogs : currentState.foodLogs,
-        roster: remoteRoster.isNotEmpty ? remoteRoster : currentState.roster,
-        sessions: remoteSessions.isNotEmpty
-            ? remoteSessions
-            : currentState.sessions,
+        children: mergeById(currentState.children, remoteChildren, (c) => c.id),
+        pregnancies: mergeById(
+          currentState.pregnancies,
+          remotePregnancies,
+          (p) => p.id,
+        ),
+        foodLogs: mergeById(currentState.foodLogs, remoteLogs, (l) => l.id),
+        roster: mergeById(currentState.roster, remoteRoster, (r) => r.id),
+        sessions: mergeById(currentState.sessions, remoteSessions, (s) => s.id),
+        accessGrants: mergeById(
+          currentState.accessGrants,
+          remoteGrants,
+          (g) => g.id,
+        ),
         lastSyncAt: DateTime.now(),
         pendingWrites: 0,
       );
@@ -229,15 +315,29 @@ class FirestoreService implements DatabaseService {
   }
 
   @override
-  Future<void> syncChanges({
+  Future<bool> syncChanges({
     required AppState previous,
     required AppState next,
     required AppUser user,
   }) async {
-    if (!isAvailable) return;
+    if (!isAvailable) return false;
     try {
       final batch = _db.batch();
       var hasOps = false;
+
+      // 0. Users diff (termasuk persetujuan privasi & nama)
+      final prevUsers = {for (final u in previous.users) u.id: u};
+      final nextUsers = {for (final u in next.users) u.id: u};
+      for (final entry in nextUsers.entries) {
+        if (entry.key == user.id && prevUsers[entry.key] != entry.value) {
+          batch.set(
+            _db.collection('users').doc(entry.key),
+            entry.value.toJson(),
+            SetOptions(merge: true),
+          );
+          hasOps = true;
+        }
+      }
 
       // 1. Children diff
       final prevChildren = {for (final c in previous.children) c.id: c};
@@ -333,28 +433,64 @@ class FirestoreService implements DatabaseService {
         }
       }
 
+      // 6. Access grants diff (termasuk pencabutan akses)
+      final prevGrants = {for (final g in previous.accessGrants) g.id: g};
+      final nextGrants = {for (final g in next.accessGrants) g.id: g};
+      for (final entry in nextGrants.entries) {
+        if (prevGrants[entry.key] != entry.value) {
+          batch.set(
+            _db.collection('access_grants').doc(entry.key),
+            entry.value.toJson(),
+            SetOptions(merge: true),
+          );
+          hasOps = true;
+        }
+      }
+
+      // 7. Link codes diff (pembuatan & penukaran kode)
+      final prevCodes = {for (final c in previous.linkCodes) c.code: c};
+      final nextCodes = {for (final c in next.linkCodes) c.code: c};
+      for (final entry in nextCodes.entries) {
+        if (prevCodes[entry.key] != entry.value) {
+          batch.set(
+            _db.collection('link_codes').doc(entry.key),
+            entry.value.toJson(),
+            SetOptions(merge: true),
+          );
+          hasOps = true;
+        }
+      }
+
       if (hasOps) {
         await batch.commit();
       }
+      return true;
     } catch (e) {
       debugPrint('Firestore syncChanges gagal: $e');
+      return false;
     }
   }
 
   @override
-  Future<void> syncAll({required AppState state, required AppUser user}) async {
-    if (!isAvailable) return;
+  Future<bool> syncAll({required AppState state, required AppUser user}) async {
+    if (!isAvailable) return false;
     try {
       final batch = _db.batch();
 
-      for (final child in state.children) {
+      batch.set(
+        _db.collection('users').doc(user.id),
+        user.toJson(),
+        SetOptions(merge: true),
+      );
+
+      for (final child in state.myChildren) {
         batch.set(
           _db.collection('children').doc(child.id),
           child.toJson(),
           SetOptions(merge: true),
         );
       }
-      for (final p in state.pregnancies) {
+      for (final p in state.pregnancies.where((p) => p.ownerUid == user.id)) {
         batch.set(
           _db.collection('pregnancies').doc(p.id),
           p.toJson(),
@@ -368,25 +504,36 @@ class FirestoreService implements DatabaseService {
           SetOptions(merge: true),
         );
       }
-      for (final r in state.roster) {
+      for (final r in state.myRoster) {
         batch.set(
           _db.collection('roster').doc(r.id),
           r.toJson(),
           SetOptions(merge: true),
         );
       }
-      for (final s in state.sessions) {
+      for (final s in state.sessions.where((s) => s.createdByUid == user.id)) {
         batch.set(
           _db.collection('sessions').doc(s.id),
           s.toJson(),
           SetOptions(merge: true),
         );
       }
+      for (final g in state.accessGrants.where(
+        (g) => g.ownerUid == user.id || g.granteeUid == user.id,
+      )) {
+        batch.set(
+          _db.collection('access_grants').doc(g.id),
+          g.toJson(),
+          SetOptions(merge: true),
+        );
+      }
 
       await batch.commit();
       debugPrint('Firestore syncAll berhasil');
+      return true;
     } catch (e) {
       debugPrint('Firestore syncAll gagal: $e');
+      return false;
     }
   }
 
@@ -454,9 +601,6 @@ class FirestoreService implements DatabaseService {
       }
 
       await batch.commit();
-      debugPrint(
-        'Firestore seedAllDemoData berhasil: seluruh data demo telah masuk ke Firestore.',
-      );
     } catch (e) {
       debugPrint('Firestore seedAllDemoData gagal: $e');
     }
@@ -591,6 +735,35 @@ class FirestoreService implements DatabaseService {
           .set(grant.toJson(), SetOptions(merge: true));
     } catch (e) {
       debugPrint('saveAccessGrant gagal: $e');
+    }
+  }
+
+  @override
+  Future<void> saveLinkCode(LinkCode code) async {
+    if (!isAvailable) return;
+    try {
+      await _db
+          .collection('link_codes')
+          .doc(code.code)
+          .set(code.toJson(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('saveLinkCode gagal: $e');
+    }
+  }
+
+  @override
+  Future<LinkCode?> getLinkCode(String code) async {
+    if (!isAvailable) return null;
+    try {
+      final doc = await _db
+          .collection('link_codes')
+          .doc(code.trim().toUpperCase())
+          .get();
+      if (!doc.exists || doc.data() == null) return null;
+      return LinkCode.fromJson(doc.data()!);
+    } catch (e) {
+      debugPrint('getLinkCode gagal: $e');
+      return null;
     }
   }
 }

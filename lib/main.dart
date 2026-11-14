@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -69,13 +67,6 @@ Future<void> main() async {
   final initial = restored ?? DemoSeed.build(who: who);
   if (restored == null) {
     await repository.save(initial);
-  }
-
-  // Masukkan dataset demo (seluruh akun & data) ke Firestore di latar belakang
-  if (!kIsWeb) {
-    unawaited(
-      FirestoreService().seedAllDemoData(seedData: DemoSeed.build(who: who)),
-    );
   }
 
   runApp(
