@@ -25,7 +25,7 @@ class _NuriAppState extends ConsumerState<NuriApp> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1150), () {
+    _timer = Timer(const Duration(milliseconds: 500), () {
       if (mounted) setState(() => _showSplash = false);
     });
   }
@@ -43,7 +43,14 @@ class _NuriAppState extends ConsumerState<NuriApp> {
 
     Widget home;
     if (_showSplash) {
-      home = const SplashScreen();
+      home = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          _timer?.cancel();
+          if (mounted) setState(() => _showSplash = false);
+        },
+        child: const SplashScreen(),
+      );
     } else if (!loggedIn) {
       home = state.landingSeen ? const AuthScreen() : const LandingScreen();
     } else if (!state.onboardingSeen) {

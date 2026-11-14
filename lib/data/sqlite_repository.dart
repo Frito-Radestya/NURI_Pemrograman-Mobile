@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -62,8 +63,18 @@ class SqliteRepository implements AppRepository {
       onCreate: _createSchema,
       onUpgrade: _upgradeSchema,
     );
+
+    // Pastikan seluruh tabel skema ada bahkan bila upgrade tidak terpicu
+    await _createSchema(db, schemaVersion);
+
     final repository = SqliteRepository._(db);
-    var state = await repository._readState();
+    AppState? state;
+    try {
+      state = await repository._readState();
+    } catch (e) {
+      debugPrint('Gagal membaca SQLite state: $e');
+      state = null;
+    }
 
     // Migrasi sekali jalan dari penyimpanan SharedPreferences lama.
     if (state == null && legacyPrefs != null) {
@@ -258,32 +269,44 @@ class SqliteRepository implements AppRepository {
   }
 
   Future<AppState?> _readState() async {
-    final metaRows = await _db.query('meta');
-    if (metaRows.isEmpty) return null;
-    final meta = <String, String>{
-      for (final row in metaRows) row['key'] as String: row['value'] as String,
-    };
-    return AppState.fromJson({
-      'users': await _readList('users'),
-      'pregnancies': await _readList('pregnancies'),
-      'children': await _readList('children'),
-      'foodLogs': await _readList('food_logs'),
-      'roster': await _readList('roster'),
-      'sessions': await _readList('sessions'),
-      'contents': await _readList('contents'),
-      'accessGrants': await _readList('access_grants'),
-      'linkCodes': await _readList('link_codes'),
-      for (final key in _metaKeys) key: _decode(meta[key]),
-    });
+    try {
+      final metaRows = await _db.query('meta');
+      if (metaRows.isEmpty) return null;
+      final meta = <String, String>{
+        for (final row in metaRows)
+          row['key'] as String: row['value'] as String,
+      };
+      return AppState.fromJson({
+        'users': await _readList('users'),
+        'pregnancies': await _readList('pregnancies'),
+        'children': await _readList('children'),
+        'foodLogs': await _readList('food_logs'),
+        'roster': await _readList('roster'),
+        'sessions': await _readList('sessions'),
+        'contents': await _readList('contents'),
+        'accessGrants': await _readList('access_grants'),
+        'linkCodes': await _readList('link_codes'),
+        for (final key in _metaKeys) key: _decode(meta[key]),
+      });
+    } catch (e) {
+      debugPrint('Gagal membaca SQLite _readState: $e');
+      return null;
+    }
   }
 
   Future<List<Map<String, dynamic>>> _readList(String table) async {
-    final rows = await _db.query(table);
-    return rows
-        .map(
-          (row) => jsonDecode(row['payload'] as String) as Map<String, dynamic>,
-        )
-        .toList();
+    try {
+      final rows = await _db.query(table);
+      return rows
+          .map(
+            (row) =>
+                jsonDecode(row['payload'] as String) as Map<String, dynamic>,
+          )
+          .toList();
+    } catch (e) {
+      debugPrint('Gagal membaca tabel SQLite $table: $e');
+      return const [];
+    }
   }
 
   Object? _decode(String? raw) {

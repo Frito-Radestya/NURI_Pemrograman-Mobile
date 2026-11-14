@@ -25,7 +25,7 @@ Future<void> main() async {
   // aplikasi tetap berjalan dengan penyimpanan lokal agar demo tidak macet.
   if (!kIsWeb) {
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp().timeout(const Duration(seconds: 4));
     } catch (error) {
       debugPrint('Firebase gagal diinisialisasi: $error');
     }
@@ -40,33 +40,48 @@ Future<void> main() async {
     ),
   );
 
+  // Muat data aset dan preferences secara paralel untuk mempercepat startup
+  final results = await Future.wait([
+    rootBundle.loadString('assets/data/who_hfa_boys.json'),
+    rootBundle.loadString('assets/data/who_hfa_girls.json'),
+    rootBundle.loadString('assets/data/tkpi_v1.json'),
+    SharedPreferences.getInstance(),
+  ]);
+
+  final boysJson = results[0] as String;
+  final girlsJson = results[1] as String;
+  final tkpiJson = results[2] as String;
+  final prefs = results[3] as SharedPreferences;
+
   final who = WhoReference(
-    boys: WhoLmsTable.fromJsonString(
-      await rootBundle.loadString('assets/data/who_hfa_boys.json'),
-    ),
-    girls: WhoLmsTable.fromJsonString(
-      await rootBundle.loadString('assets/data/who_hfa_girls.json'),
-    ),
+    boys: WhoLmsTable.fromJsonString(boysJson),
+    girls: WhoLmsTable.fromJsonString(girlsJson),
   );
   WhoReference.setInstance(who);
-  FoodCatalog.setInstance(
-    FoodCatalog.fromJsonString(
-      await rootBundle.loadString('assets/data/tkpi_v1.json'),
-    ),
-  );
+  FoodCatalog.setInstance(FoodCatalog.fromJsonString(tkpiJson));
 
-  final prefs = await SharedPreferences.getInstance();
-  final AppRepository repository;
+  AppRepository repository;
   if (kIsWeb) {
     // sqflite tidak tersedia di web; preview web tetap memakai localStorage.
     repository = LocalRepository(prefs);
   } else {
-    repository = await SqliteRepository.open(legacyPrefs: prefs);
+    try {
+      repository = await SqliteRepository.open(legacyPrefs: prefs);
+    } catch (error) {
+      debugPrint(
+        'Gagal membuka SqliteRepository, fallback ke LocalRepository: $error',
+      );
+      repository = LocalRepository(prefs);
+    }
   }
   final restored = repository.load();
   final initial = restored ?? DemoSeed.build(who: who);
   if (restored == null) {
-    await repository.save(initial);
+    try {
+      await repository.save(initial);
+    } catch (e) {
+      debugPrint('Gagal menyimpan state awal ke repository: $e');
+    }
   }
 
   runApp(

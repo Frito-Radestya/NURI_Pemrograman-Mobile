@@ -1079,13 +1079,20 @@ class _RoleSetupScreenState extends ConsumerState<RoleSetupScreen> {
   Sex _childSex = Sex.male;
   final _birthWeight = TextEditingController();
   final _birthLength = TextEditingController();
-  late final _posyanduName = TextEditingController(
-    text: ref.read(appControllerProvider).posyanduName,
-  );
-  late final _posyanduArea = TextEditingController(
-    text: ref.read(appControllerProvider).posyanduArea,
-  );
+  late final TextEditingController _posyanduName;
+  late final TextEditingController _posyanduArea;
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _posyanduName = TextEditingController(
+      text: ref.read(appControllerProvider).posyanduName,
+    );
+    _posyanduArea = TextEditingController(
+      text: ref.read(appControllerProvider).posyanduArea,
+    );
+  }
 
   @override
   void dispose() {
