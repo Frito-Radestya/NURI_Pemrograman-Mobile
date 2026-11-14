@@ -276,13 +276,13 @@ class _SessionCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF171717), Color(0xFF262626)],
+          colors: [Color(0xFF145C45), Color(0xFF0E4332)],
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.16),
+            color: const Color(0xFF145C45).withValues(alpha: 0.22),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -313,7 +313,7 @@ class _SessionCard extends StatelessWidget {
                             ? Colors.white70
                             : (done
                                   ? AppColors.peach
-                                  : AppColors.vitalYellow),
+                                  : AppColors.leafGreen),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -408,7 +408,7 @@ class _SessionCard extends StatelessWidget {
               value: progress,
               minHeight: 7,
               backgroundColor: Colors.white.withValues(alpha: 0.18),
-              valueColor: const AlwaysStoppedAnimation(AppColors.vitalYellow),
+              valueColor: const AlwaysStoppedAnimation(AppColors.leafGreen),
             ),
           ),
           const SizedBox(height: 14),
@@ -425,8 +425,8 @@ class _SessionCard extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: done ? null : onMeasure,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.vitalYellow,
-                foregroundColor: AppColors.medicalBlack,
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.deepForest,
                 disabledBackgroundColor: Colors.white.withValues(alpha: 0.4),
                 minimumSize: const Size(0, 46),
                 textStyle: const TextStyle(

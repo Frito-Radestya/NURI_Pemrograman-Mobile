@@ -290,7 +290,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: AppColors.medicalBlack,
+        backgroundColor: AppColors.deepForest,
         body: SafeArea(
           child: Column(
             children: [
@@ -404,13 +404,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                                       gradient: LinearGradient(
                                         colors: [
                                           Colors.transparent,
-                                          AppColors.vitalYellow,
+                                          AppColors.leafGreen,
                                           Colors.transparent,
                                         ],
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppColors.vitalYellow.withValues(
+                                          color: AppColors.leafGreen.withValues(
                                             alpha: 0.45,
                                           ),
                                           blurRadius: 14,
@@ -426,13 +426,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             Positioned.fill(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: AppColors.medicalBlack
+                                  color: AppColors.deepForest
                                       .withValues(alpha: 0.65),
                                   borderRadius: BorderRadius.circular(28),
                                 ),
                                 child: const Center(
                                   child: CircularProgressIndicator(
-                                    color: AppColors.vitalYellow,
+                                    color: AppColors.leafGreen,
                                     strokeWidth: 2.5,
                                   ),
                                 ),

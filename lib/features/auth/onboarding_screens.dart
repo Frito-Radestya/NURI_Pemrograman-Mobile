@@ -265,9 +265,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.medicalBlack,
+                            color: AppColors.deepForest,
                             decoration: TextDecoration.underline,
-                            decorationColor: AppColors.medicalBlack,
+                            decorationColor: AppColors.deepForest,
                           ),
                         ),
                       ),
@@ -318,9 +318,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.deepYellow,
+                          color: AppColors.freshGreen,
                           decoration: TextDecoration.underline,
-                          decorationColor: AppColors.deepYellow,
+                          decorationColor: AppColors.freshGreen,
                         ),
                       ),
                     ),
@@ -758,9 +758,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.deepYellow,
+                          color: AppColors.freshGreen,
                           decoration: TextDecoration.underline,
-                          decorationColor: AppColors.deepYellow,
+                          decorationColor: AppColors.freshGreen,
                         ),
                       ),
                     ),
@@ -888,11 +888,11 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                         duration: const Duration(milliseconds: 180),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: _accepted ? AppColors.primarySoft : AppColors.surface,
+                          color: _accepted ? AppColors.softMint : AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: _accepted
-                                ? AppColors.medicalBlack
+                                ? AppColors.deepForest
                                 : AppColors.line,
                             width: _accepted ? 1.5 : 1,
                           ),
@@ -907,12 +907,12 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                               margin: const EdgeInsets.only(top: 1),
                               decoration: BoxDecoration(
                                 color: _accepted
-                                    ? AppColors.vitalYellow
+                                    ? AppColors.deepForest
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: _accepted
-                                      ? AppColors.medicalBlack
+                                      ? AppColors.deepForest
                                       : AppColors.muted,
                                   width: 1.5,
                                 ),
@@ -921,7 +921,7 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                                   ? const Icon(
                                       Icons.check_rounded,
                                       size: 15,
-                                      color: AppColors.medicalBlack,
+                                      color: Colors.white,
                                     )
                                   : null,
                             ),
@@ -1411,10 +1411,10 @@ class _SetupToggleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primarySoft : AppColors.surface,
+          color: selected ? AppColors.softMint : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(
-            color: selected ? AppColors.medicalBlack : AppColors.line,
+            color: selected ? AppColors.deepForest : AppColors.line,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -1424,13 +1424,13 @@ class _SetupToggleCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: selected ? AppColors.vitalYellow : AppColors.surfaceSubtle,
+                color: selected ? AppColors.deepForest : AppColors.surfaceSubtle,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
                 size: 21,
-                color: selected ? AppColors.medicalBlack : AppColors.muted,
+                color: selected ? Colors.white : AppColors.muted,
               ),
             ),
             const SizedBox(width: 12),
@@ -1463,10 +1463,10 @@ class _SetupToggleCard extends StatelessWidget {
               width: 22,
               height: 22,
               decoration: BoxDecoration(
-                color: selected ? AppColors.vitalYellow : Colors.transparent,
+                color: selected ? AppColors.deepForest : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: selected ? AppColors.medicalBlack : AppColors.line,
+                  color: selected ? AppColors.deepForest : AppColors.line,
                   width: 1.5,
                 ),
               ),
@@ -1474,7 +1474,7 @@ class _SetupToggleCard extends StatelessWidget {
                   ? const Icon(
                       Icons.check_rounded,
                       size: 15,
-                      color: AppColors.medicalBlack,
+                      color: Colors.white,
                     )
                   : null,
             ),

@@ -114,7 +114,7 @@ class SplashScreen extends StatelessWidget {
       child: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
-            color: AppColors.medicalBlack,
+            color: AppColors.deepForest,
           ),
           child: SafeArea(
             child: Stack(
@@ -127,11 +127,11 @@ class SplashScreen extends StatelessWidget {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: AppColors.vitalYellow,
+                          color: AppColors.softMint,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.vitalYellow.withValues(alpha: 0.35),
+                              color: Colors.black.withValues(alpha: 0.16),
                               blurRadius: 20,
                               offset: const Offset(0, 6),
                             ),
@@ -139,7 +139,7 @@ class SplashScreen extends StatelessWidget {
                         ),
                         child: const Icon(
                           Icons.spa_rounded,
-                          color: AppColors.medicalBlack,
+                          color: AppColors.deepForest,
                           size: 42,
                         ),
                       ),
@@ -159,7 +159,7 @@ class SplashScreen extends StatelessWidget {
                       const Text(
                         'Sahabat Ibu & Balita',
                         style: TextStyle(
-                          color: AppColors.neutralGray,
+                          color: AppColors.softMint,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -170,7 +170,7 @@ class SplashScreen extends StatelessWidget {
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: AppColors.vitalYellow,
+                          color: AppColors.leafGreen,
                         ),
                       ),
                     ],
@@ -184,7 +184,7 @@ class SplashScreen extends StatelessWidget {
                     'Skrining awal, bukan diagnosis.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: AppColors.neutralGray,
+                      color: Colors.white70,
                       fontSize: 11.5,
                     ),
                   ),
