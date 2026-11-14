@@ -964,8 +964,11 @@ class DemoSeed {
         AccessGrant(
           id: 'g_rafi_kader',
           ownerUid: 'u_ibu',
+          granteeUid: 'u_kader',
           granteeName: 'Kader Bu Nur',
+          subjectId: 'c_rafi',
           subjectName: 'Rafi Ahmad',
+          posyanduId: 'p_melati',
           scopes: const ['ukur'],
           createdAt: now.subtract(const Duration(days: 20)),
           expiresAt: now.add(const Duration(days: 345)),
@@ -973,8 +976,11 @@ class DemoSeed {
         AccessGrant(
           id: 'g_hamil_kader',
           ownerUid: 'u_ibu',
+          granteeUid: 'u_kader',
           granteeName: 'Posyandu Melati II',
+          subjectId: 'p_siti',
           subjectName: 'Kehamilan Siti Rahma',
+          posyanduId: 'p_melati',
           scopes: const ['ukur'],
           createdAt: now.subtract(const Duration(days: 40)),
           expiresAt: now.add(const Duration(days: 325)),

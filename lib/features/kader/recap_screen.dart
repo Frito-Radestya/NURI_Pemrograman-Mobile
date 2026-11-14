@@ -18,7 +18,7 @@ class RecapScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appControllerProvider);
     final session = state.activeSession;
-    final roster = state.roster;
+    final roster = state.myRoster;
     final children = roster.where((r) => r.type == RosterType.child).toList();
     final categorized = children.where((r) => r.category != null).toList();
     final normal = categorized

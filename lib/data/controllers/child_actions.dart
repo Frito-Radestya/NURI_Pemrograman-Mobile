@@ -68,21 +68,27 @@ extension ChildActions on AppController {
     required double heightCm,
     required DateTime date,
     MeasurementMethod? method,
+    bool allowImplausible = true,
   }) {
     final child = currentState.children.firstWhereOrNull(
       (c) => c.id == childId,
     );
     if (child == null) return null;
     final ageMonths = child.ageMonthsAt(date);
-    final eval = GrowthCalculator(reference: WhoReference.instance).evaluate(
-      heightCm: heightCm,
-      weightKg: weightKg,
-      sex: child.sex,
-      dob: child.dob,
-      measureDate: date,
-      method: method ?? GrowthCalculator.defaultMethodForAge(ageMonths),
-      allowImplausible: true,
-    );
+    final GrowthEvaluation eval;
+    try {
+      eval = GrowthCalculator(reference: WhoReference.instance).evaluate(
+        heightCm: heightCm,
+        weightKg: weightKg,
+        sex: child.sex,
+        dob: child.dob,
+        measureDate: date,
+        method: method ?? GrowthCalculator.defaultMethodForAge(ageMonths),
+        allowImplausible: allowImplausible,
+      );
+    } on GrowthValidationException {
+      return null;
+    }
     final source = currentState.isCadre ? 'kader' : 'mandiri';
     final sessionId = currentState.isCadre
         ? currentState.activeSession?.id

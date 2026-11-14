@@ -23,7 +23,7 @@ class _FollowUpScreenState extends ConsumerState<FollowUpScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appControllerProvider);
-    final all = state.roster.where((r) => r.needsFollowUp).toList()
+    final all = state.myRoster.where((r) => r.needsFollowUp).toList()
       ..sort((a, b) {
         if (a.priority != b.priority) return a.priority ? -1 : 1;
         return a.name.compareTo(b.name);

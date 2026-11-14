@@ -18,7 +18,7 @@ class SqliteRepository implements AppRepository {
   SqliteRepository._(this._db);
 
   static const String databaseName = 'nuri.db';
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
 
   static const List<String> _collectionTables = [
     'users',
@@ -29,6 +29,7 @@ class SqliteRepository implements AppRepository {
     'sessions',
     'contents',
     'access_grants',
+    'link_codes',
   ];
 
   static const List<String> _metaKeys = [
@@ -59,6 +60,7 @@ class SqliteRepository implements AppRepository {
       path,
       version: schemaVersion,
       onCreate: _createSchema,
+      onUpgrade: _upgradeSchema,
     );
     final repository = SqliteRepository._(db);
     var state = await repository._readState();
@@ -84,12 +86,20 @@ class SqliteRepository implements AppRepository {
   static Future<void> _createSchema(Database db, int version) async {
     for (final table in _collectionTables) {
       await db.execute(
-        'CREATE TABLE $table (id TEXT PRIMARY KEY, payload TEXT NOT NULL)',
+        'CREATE TABLE IF NOT EXISTS $table (id TEXT PRIMARY KEY, payload TEXT NOT NULL)',
       );
     }
     await db.execute(
-      'CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
+      'CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
     );
+  }
+
+  static Future<void> _upgradeSchema(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    await _createSchema(db, newVersion);
   }
 
   @override
@@ -162,6 +172,14 @@ class SqliteRepository implements AppRepository {
         previous?.accessGrants,
         (grant) => grant.toJson(),
         (grant) => grant.id,
+      );
+      await _syncTable(
+        txn,
+        'link_codes',
+        state.linkCodes,
+        previous?.linkCodes,
+        (code) => code.toJson(),
+        (code) => code.code,
       );
 
       final meta = _metaValues(state);
@@ -254,6 +272,7 @@ class SqliteRepository implements AppRepository {
       'sessions': await _readList('sessions'),
       'contents': await _readList('contents'),
       'accessGrants': await _readList('access_grants'),
+      'linkCodes': await _readList('link_codes'),
       for (final key in _metaKeys) key: _decode(meta[key]),
     });
   }

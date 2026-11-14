@@ -418,8 +418,34 @@ extension AuthActions on AppController {
   }
 
   void acceptConsent() {
+    final user = currentState.currentUser;
+    final now = DateTime.now();
+    final updatedUsers = user == null
+        ? currentState.users
+        : currentState.users
+              .map(
+                (u) => u.id == user.id
+                    ? AppUser(
+                        id: u.id,
+                        name: u.name,
+                        email: u.email,
+                        role: u.role,
+                        posyanduId: u.posyanduId,
+                        avatarAsset: u.avatarAsset,
+                        demo: u.demo,
+                        authUid: u.authUid,
+                        consentVersion: '2026-11',
+                        consentAcceptedAt: now,
+                      )
+                    : u,
+              )
+              .toList();
     commitState(
-      currentState.copyWith(consentAccepted: true, consentVersion: '2026-11'),
+      currentState.copyWith(
+        users: updatedUsers,
+        consentAccepted: true,
+        consentVersion: '2026-11',
+      ),
     );
   }
 
@@ -495,15 +521,308 @@ extension AuthActions on AppController {
   }
 
   void revokeGrant(String id) {
+    final now = DateTime.now();
     commitState(
       currentState.copyWith(
         accessGrants: currentState.accessGrants
             .map(
-              (grant) =>
-                  grant.id == id ? grant.copyWith(status: 'dicabut') : grant,
+              (grant) => grant.id == id
+                  ? grant.copyWith(status: 'dicabut', revokedAt: now)
+                  : grant,
             )
             .toList(),
       ),
     );
+  }
+
+  /// Flow A (Ibu → Kader): Membuat kode keluarga acak sekali pakai yang berlaku
+  /// selama 24 jam untuk anak/kehamilan yang dipilih beserta cakupan izin.
+  LinkCode? createFamilyLinkCode({
+    required String subjectId,
+    required String subjectName,
+    List<String> scopes = const ['ukur'],
+  }) {
+    final user = currentState.currentUser;
+    if (user == null || user.role != UserRole.mother) return null;
+    final now = DateTime.now();
+    final linkCode = LinkCode(
+      code: LinkCode.generateSecureCode(prefix: 'NR'),
+      type: 'keluarga',
+      issuerUid: user.id,
+      issuerName: user.name,
+      subjectId: subjectId,
+      subjectName: subjectName,
+      scopes: scopes.isEmpty ? const ['ukur'] : scopes,
+      createdAt: now,
+      expiresAt: now.add(const Duration(hours: 24)),
+    );
+    commitState(
+      currentState.copyWith(linkCodes: [...currentState.linkCodes, linkCode]),
+    );
+    if (databaseService.isAvailable) {
+      unawaited(databaseService.saveLinkCode(linkCode));
+    }
+    return linkCode;
+  }
+
+  /// Flow B (Kader → Ibu): Membuat kode klaim sekali pakai (berlaku 7 hari)
+  /// untuk anak yang sudah dicatat kader tetapi belum terhubung ke akun ibu.
+  LinkCode? createChildClaimCode({
+    required String childId,
+    required String childName,
+  }) {
+    final user = currentState.currentUser;
+    if (user == null || user.role != UserRole.cadre) return null;
+    final now = DateTime.now();
+    final linkCode = LinkCode(
+      code: LinkCode.generateSecureCode(prefix: 'KL'),
+      type: 'klaim',
+      issuerUid: user.id,
+      issuerName: user.name,
+      subjectId: childId,
+      subjectName: childName,
+      posyanduId: user.posyanduId,
+      scopes: const ['ukur'],
+      createdAt: now,
+      expiresAt: now.add(const Duration(days: 7)),
+    );
+    commitState(
+      currentState.copyWith(linkCodes: [...currentState.linkCodes, linkCode]),
+    );
+    if (databaseService.isAvailable) {
+      unawaited(databaseService.saveLinkCode(linkCode));
+    }
+    return linkCode;
+  }
+
+  /// Flow A (Kader menukar kode keluarga Ibu):
+  /// Memverifikasi token sekali pakai, masa berlaku, membuat [AccessGrant] aktif,
+  /// dan menghubungkan anak ke roster Posyandu kader.
+  Future<(AccessGrant?, Child?, String?)> redeemFamilyLinkCode(
+    String rawCode,
+  ) async {
+    final cadre = currentState.currentUser;
+    if (cadre == null || cadre.role != UserRole.cadre) {
+      return (
+        null,
+        null,
+        'Hanya akun Kader Posyandu yang dapat memindai kode keluarga.',
+      );
+    }
+    final cleanCode = rawCode.trim().toUpperCase();
+    if (cleanCode.isEmpty) {
+      return (null, null, 'Masukkan kode keluarga terlebih dahulu.');
+    }
+
+    LinkCode? found;
+    for (final c in currentState.linkCodes) {
+      if (c.code.toUpperCase() == cleanCode) {
+        found = c;
+        break;
+      }
+    }
+    if (found == null && databaseService.isAvailable) {
+      found = await databaseService.getLinkCode(cleanCode);
+    }
+    if (found == null) {
+      return (
+        null,
+        null,
+        'Kode keluarga tidak ditemukan. Pastikan kode benar.',
+      );
+    }
+    if (found.type != 'keluarga') {
+      return (
+        null,
+        null,
+        'Kode ini adalah kode klaim ibu, bukan kode keluarga untuk kader.',
+      );
+    }
+    if (found.isUsed) {
+      return (
+        null,
+        null,
+        'Kode ini sudah pernah digunakan dan tidak berlaku lagi.',
+      );
+    }
+    if (found.isExpired) {
+      return (
+        null,
+        null,
+        'Kode sudah kedaluwarsa (melebihi 24 jam). Minta Ibu membuat kode baru.',
+      );
+    }
+
+    final codeRecord = found;
+    final now = DateTime.now();
+    final usedCode = codeRecord.copyWith(usedAt: now, usedByUid: cadre.id);
+
+    final grant = AccessGrant(
+      id: 'g_${codeRecord.subjectId}_${cadre.id}_${now.millisecondsSinceEpoch}',
+      ownerUid: codeRecord.issuerUid,
+      granteeUid: cadre.id,
+      granteeName: '${cadre.name} • ${currentState.posyanduName}',
+      subjectId: codeRecord.subjectId,
+      subjectName: codeRecord.subjectName,
+      posyanduId: cadre.posyanduId,
+      scopes: codeRecord.scopes,
+      createdAt: now,
+      expiresAt: now.add(const Duration(days: 365)),
+      status: 'aktif',
+    );
+
+    Child? linkedChild;
+    final updatedChildren = currentState.children.map((c) {
+      if (c.id == codeRecord.subjectId) {
+        linkedChild = c.copyWith(
+          posyanduId: cadre.posyanduId ?? c.posyanduId,
+          linked: true,
+        );
+        return linkedChild!;
+      }
+      return c;
+    }).toList();
+
+    final hasRoster = currentState.roster.any(
+      (r) => r.subjectId == codeRecord.subjectId,
+    );
+    final updatedRoster = hasRoster
+        ? currentState.roster.map((r) {
+            if (r.subjectId == codeRecord.subjectId) {
+              return r.copyWith(posyanduId: cadre.posyanduId);
+            }
+            return r;
+          }).toList()
+        : [
+            ...currentState.roster,
+            RosterEntry(
+              id: 'r_${codeRecord.subjectId}',
+              name: codeRecord.subjectName,
+              type: RosterType.child,
+              attendance: AttendanceStatus.waiting,
+              avatarIndex: currentState.roster.length % 8,
+              posyanduId: cadre.posyanduId,
+              subjectId: codeRecord.subjectId,
+              guardianName: codeRecord.issuerName,
+              ageMonths: linkedChild?.ageMonthsAt(now),
+              sex: linkedChild?.sex,
+              category: linkedChild?.latestMeasurement?.category,
+              linked: true,
+            ),
+          ];
+
+    final updatedCodes = [
+      ...currentState.linkCodes.where((c) => c.code.toUpperCase() != cleanCode),
+      usedCode,
+    ];
+
+    commitState(
+      currentState.copyWith(
+        children: updatedChildren,
+        roster: updatedRoster,
+        accessGrants: [
+          ...currentState.accessGrants.where(
+            (g) =>
+                !(g.subjectId == grant.subjectId && g.granteeUid == cadre.id),
+          ),
+          grant,
+        ],
+        linkCodes: updatedCodes,
+      ),
+    );
+    return (grant, linkedChild, null);
+  }
+
+  /// Flow B (Ibu menukar kode klaim dari Kader):
+  /// Memindahkan kepemilikan profil anak yang dibuat kader ke akun Ibu, beserta
+  /// seluruh riwayat pengukurannya.
+  Future<(Child?, String?)> redeemChildClaimCode(String rawCode) async {
+    final mother = currentState.currentUser;
+    if (mother == null || mother.role != UserRole.mother) {
+      return (
+        null,
+        'Hanya akun Ibu / Keluarga yang dapat mengklaim profil anak.',
+      );
+    }
+    final cleanCode = rawCode.trim().toUpperCase();
+    if (cleanCode.isEmpty) {
+      return (null, 'Masukkan kode klaim terlebih dahulu.');
+    }
+
+    LinkCode? found;
+    for (final c in currentState.linkCodes) {
+      if (c.code.toUpperCase() == cleanCode) {
+        found = c;
+        break;
+      }
+    }
+    if (found == null && databaseService.isAvailable) {
+      found = await databaseService.getLinkCode(cleanCode);
+    }
+    if (found == null) {
+      return (
+        null,
+        'Kode klaim tidak ditemukan. Periksa kembali kode dari kader.',
+      );
+    }
+    if (found.type != 'klaim') {
+      return (null, 'Kode ini bukan kode klaim anak Posyandu.');
+    }
+    if (found.isUsed) {
+      return (null, 'Kode klaim ini sudah pernah digunakan.');
+    }
+    if (found.isExpired) {
+      return (null, 'Kode klaim sudah kedaluwarsa (melebihi 7 hari).');
+    }
+
+    final codeRecord = found;
+    final now = DateTime.now();
+    final usedCode = codeRecord.copyWith(usedAt: now, usedByUid: mother.id);
+
+    Child? claimedChild;
+    final updatedChildren = currentState.children.map((c) {
+      if (c.id == codeRecord.subjectId) {
+        claimedChild = c.copyWith(
+          guardianUid: mother.id,
+          guardianName: mother.name,
+          linked: true,
+        );
+        return claimedChild!;
+      }
+      return c;
+    }).toList();
+
+    if (claimedChild == null) {
+      return (null, 'Data anak untuk kode klaim ini tidak ditemukan.');
+    }
+
+    final grant = AccessGrant(
+      id: 'g_${claimedChild!.id}_${codeRecord.issuerUid}',
+      ownerUid: mother.id,
+      granteeUid: codeRecord.issuerUid,
+      granteeName: codeRecord.issuerName,
+      subjectId: claimedChild!.id,
+      subjectName: claimedChild!.nickname,
+      posyanduId: codeRecord.posyanduId ?? claimedChild!.posyanduId,
+      scopes: const ['ukur'],
+      createdAt: now,
+      expiresAt: now.add(const Duration(days: 365)),
+      status: 'aktif',
+    );
+
+    final updatedCodes = [
+      ...currentState.linkCodes.where((c) => c.code.toUpperCase() != cleanCode),
+      usedCode,
+    ];
+
+    commitState(
+      currentState.copyWith(
+        children: updatedChildren,
+        selectedChildId: claimedChild!.id,
+        accessGrants: [...currentState.accessGrants, grant],
+        linkCodes: updatedCodes,
+      ),
+    );
+    return (claimedChild, null);
   }
 }

@@ -101,7 +101,7 @@ assets/
   data/                         WHO HFA (LMS harian) + subset TKPI 2017
   fonts/ images/                Nunito, Inter, foto demo
 test/
-  domain_test.dart              53 uji domain, auth, firestore CRUD, dan konsistensi data demo
+  domain_test.dart              57 uji domain, auth, firestore CRUD, otorisasi grant, dan family linking
   widget_test.dart              smoke test landing page
 ```
 
@@ -163,7 +163,7 @@ Nama, usia, dan nominal mengikuti skenario PRD/screenshot. Data ini fiktif dan h
 
 ```bash
 flutter analyze   # harus: No issues found!
-flutter test      # 54 test lulus
+flutter test      # 58 test lulus
 ```
 
 Cakupan test:
@@ -177,7 +177,7 @@ Cakupan test:
 - Label ramah keluarga untuk kategori pertumbuhan.
 - Aksi controller: login kader, pengukuran kader (hadir + antrean sinkron), dan pengukuran ibu (langsung tersinkron).
 - Auth: pemetaan akun demo ke Firebase UID, pengguna Firebase baru, pesan error, fallback demo, registrasi, dan reset password.
-- Firestore CRUD & Sync: seeding dataset per akun demo, penambahan/penghapusan anak, pengukuran baru, catatan makan, sasaran roster, dan sinkronisasi dua arah `syncNow`.
+- Firestore CRUD, Keamanan & Family–Cadre Linking: seeding dataset per akun demo, query terbatas per pemilik/Posyandu, kode keluarga sekali pakai (`NR-XXXX-XXXX`), kode klaim anak Posyandu (`KL-XXXX-XXXX`), penegakan cakupan grant (`ukur` vs `makan`), pencabutan grant seketika (`revokeGrant`), dan penanganan kegagalan sinkronisasi (`SYNC-03`).
 - Smoke test landing page setelah splash.
 
 ---
