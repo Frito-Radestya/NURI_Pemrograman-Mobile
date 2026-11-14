@@ -68,12 +68,12 @@ class TtdScreen extends ConsumerWidget {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFF171717), Color(0xFF262626)],
+                          colors: [Color(0xFF145C45), Color(0xFF0E4332)],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.14),
+                            color: const Color(0xFF145C45).withValues(alpha: 0.2),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -87,15 +87,15 @@ class TtdScreen extends ConsumerWidget {
                               const Pill(
                                 label: 'TTD harian',
                                 icon: Icons.medication_rounded,
-                                background: AppColors.vitalYellow,
-                                foreground: AppColors.medicalBlack,
+                                background: AppColors.softMint,
+                                foreground: AppColors.deepForest,
                                 fontSize: 11.5,
                                 bold: true,
                               ),
                               const Spacer(),
                               const Icon(
                                 Icons.favorite_rounded,
-                                color: AppColors.vitalYellow,
+                                color: AppColors.leafGreen,
                                 size: 22,
                               ),
                             ],
@@ -146,7 +146,7 @@ class TtdScreen extends ConsumerWidget {
                                     widthFactor: value,
                                     child: Container(
                                       height: 7,
-                                      color: AppColors.vitalYellow,
+                                      color: AppColors.leafGreen,
                                     ),
                                   ),
                                 ],
@@ -507,12 +507,12 @@ class AncScreen extends ConsumerWidget {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Color(0xFF171717), Color(0xFF262626)],
+                          colors: [Color(0xFF145C45), Color(0xFF0E4332)],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.14),
+                            color: const Color(0xFF145C45).withValues(alpha: 0.2),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
@@ -526,8 +526,8 @@ class AncScreen extends ConsumerWidget {
                               const Pill(
                                 label: 'Antenatal Care',
                                 icon: Icons.event_available_rounded,
-                                background: AppColors.vitalYellow,
-                                foreground: AppColors.medicalBlack,
+                                background: AppColors.softMint,
+                                foreground: AppColors.deepForest,
                                 fontSize: 11.5,
                                 bold: true,
                               ),
@@ -559,7 +559,7 @@ class AncScreen extends ConsumerWidget {
                                     widthFactor: value,
                                     child: Container(
                                       height: 8,
-                                      color: AppColors.vitalYellow,
+                                      color: AppColors.leafGreen,
                                     ),
                                   ),
                                 ],

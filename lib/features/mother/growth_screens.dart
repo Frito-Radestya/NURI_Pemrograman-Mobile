@@ -343,7 +343,7 @@ class _WhoChartCard extends StatelessWidget {
         AppColors.amber.withValues(alpha: 0.7),
         dash: true,
       ),
-      _referenceLine(reference(0), AppColors.medicalBlack, width: 2.2),
+      _referenceLine(reference(0), AppColors.deepForest, width: 2.2),
       _referenceLine(
         reference(2),
         AppColors.amber.withValues(alpha: 0.7),
@@ -359,15 +359,15 @@ class _WhoChartCard extends StatelessWidget {
           spots: childSpots,
           isCurved: false,
           barWidth: 2.5,
-          color: AppColors.deepYellow,
+          color: AppColors.freshGreen,
           dotData: FlDotData(
             show: true,
             getDotPainter: (spot, percent, barData, index) =>
                 FlDotCirclePainter(
                   radius: 5.0,
-                  color: AppColors.vitalYellow,
+                  color: AppColors.leafGreen,
                   strokeWidth: 2.2,
-                  strokeColor: AppColors.medicalBlack,
+                  strokeColor: AppColors.deepForest,
                 ),
           ),
         ),
@@ -387,7 +387,7 @@ class _WhoChartCard extends StatelessWidget {
               ),
               child: const Icon(
                 Icons.auto_graph_rounded,
-                color: AppColors.medicalBlack,
+                color: AppColors.deepForest,
                 size: 26,
               ),
             ),
@@ -506,10 +506,10 @@ class _WhoChartCard extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: AppColors.vitalYellow,
+                      color: AppColors.freshGreen,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppColors.medicalBlack,
+                        color: AppColors.deepForest,
                         width: 1.5,
                       ),
                     ),

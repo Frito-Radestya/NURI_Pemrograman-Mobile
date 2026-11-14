@@ -14,7 +14,7 @@ class NuriLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = onDark ? Colors.white : AppColors.medicalBlack;
+    final textColor = onDark ? Colors.white : AppColors.darkGreen;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -22,11 +22,11 @@ class NuriLogo extends StatelessWidget {
           width: compact ? 34 : 38,
           height: compact ? 34 : 38,
           decoration: BoxDecoration(
-            color: AppColors.vitalYellow,
+            color: AppColors.deepForest,
             borderRadius: BorderRadius.circular(compact ? 11 : 12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
+                color: AppColors.deepForest.withValues(alpha: 0.2),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -34,7 +34,7 @@ class NuriLogo extends StatelessWidget {
           ),
           child: Icon(
             Icons.spa_rounded,
-            color: AppColors.medicalBlack,
+            color: Colors.white,
             size: compact ? 19 : 21,
           ),
         ),
@@ -63,7 +63,7 @@ class NuriLogo extends StatelessWidget {
                   fontSize: 11,
                   color: onDark
                       ? Colors.white.withValues(alpha: 0.72)
-                      : AppColors.neutralGray,
+                      : AppColors.secondaryText,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -729,11 +729,13 @@ class NuriBottomNav extends StatelessWidget {
                               width: 48,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: AppColors.vitalYellow,
+                                color: AppColors.deepForest,
                                 borderRadius: BorderRadius.circular(18),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.14),
+                                    color: AppColors.deepForest.withValues(
+                                      alpha: 0.24,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   ),
@@ -741,7 +743,7 @@ class NuriBottomNav extends StatelessWidget {
                               ),
                               child: Icon(
                                 item.activeIcon ?? item.icon,
-                                color: AppColors.medicalBlack,
+                                color: Colors.white,
                                 size: 21,
                               ),
                             ),
@@ -751,7 +753,7 @@ class NuriBottomNav extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.medicalBlack,
+                                color: AppColors.deepForest,
                               ),
                             ),
                           ],
@@ -770,7 +772,7 @@ class NuriBottomNav extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: selected
-                                    ? AppColors.medicalBlack
+                                    ? AppColors.softMint
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -779,8 +781,8 @@ class NuriBottomNav extends StatelessWidget {
                                     ? (item.activeIcon ?? item.icon)
                                     : item.icon,
                                 color: selected
-                                    ? AppColors.vitalYellow
-                                    : AppColors.neutralGray,
+                                    ? AppColors.deepForest
+                                    : AppColors.secondaryText,
                                 size: 22,
                               ),
                             ),
@@ -795,8 +797,8 @@ class NuriBottomNav extends StatelessWidget {
                                     ? FontWeight.w700
                                     : FontWeight.w500,
                                 color: selected
-                                    ? AppColors.medicalBlack
-                                    : AppColors.neutralGray,
+                                    ? AppColors.deepForest
+                                    : AppColors.secondaryText,
                               ),
                             ),
                           ],

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="nuri_cream">#171717</color>
-    <color name="nuri_black">#171717</color>
-    <color name="nuri_yellow">#FFC800</color>
-    <color name="nuri_soft_white">#F5F5F2</color>
+    <color name="nuri_cream">#F4FAF4</color>
+    <color name="nuri_black">#145C45</color>
+    <color name="nuri_deep_forest">#145C45</color>
+    <color name="nuri_fresh_green">#239B70</color>
+    <color name="nuri_soft_mint">#D9F0DF</color>
+    <color name="nuri_natural_white">#F4FAF4</color>
 </resources>
