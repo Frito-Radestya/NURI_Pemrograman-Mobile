@@ -4,11 +4,11 @@
 
 NURI adalah aplikasi Flutter Android (juga dapat dipreview di web) dengan tiga peran:
 
-| Peran | Akun demo | Fokus |
-| --- | --- | --- |
-| Ibu hamil | `ibu@nuri.id` (Siti Rahma) | Kehamilan, TTD, ANC, diary makan, edukasi |
-| Ibu balita | `ibu@nuri.id` / `sinta@nuri.id` | Pertumbuhan anak, z-score TB/U, MPASI, diary, rekomendasi |
-| Kader Posyandu | `kader@nuri.id` (Nur Aisyah) | Roster sesi, pengukuran, rujukan, rekap, scan QR |
+| Peran | Fokus |
+| --- | --- |
+| Ibu hamil | Kehamilan, TTD, 6 jadwal ANC, skrining USG Kemenkes, gizi per trimester, konsultasi nakes |
+| Ibu balita | Tumbuh kembang anak, grafik ramah awam (rentang normal WHO), diary makan TKPI, kode QR Posyandu |
+| Kader Posyandu | Roster sasaran posyandu, sesi ukur offline, rekap CSV, scan QR keluarga, tindak lanjut stunting |
 
 > **Catatan medis:** NURI adalah alat skrining awal, bukan diagnosis. Semua hasil pertumbuhan dan gizi perlu dikonsultasikan dengan bidan atau dokter. Disclaimer ini ditampilkan pada layar yang relevan.
 
@@ -37,33 +37,13 @@ Di Android, data demo disimpan di SQLite (`nuri.db`) dengan migrasi otomatis dar
 - Proyek Firebase: `nuri-5cddb`
 - Android package: `id.nuri.nuri`
 - Konfigurasi Android: `android/app/google-services.json`
-- SDK Flutter: `firebase_core`, `firebase_auth`, dan `cloud_firestore`
+- SDK Flutter: `firebase_core`, `firebase_auth`, `cloud_firestore`, dan `google_sign_in`
 - Firebase diinisialisasi di `main.dart`; bila konfigurasi gagal, aplikasi tetap berjalan dengan penyimpanan lokal.
 - Database: Cloud Firestore dengan offline persistence; aturan keamanan tersedia di `firestore.rules`.
-- Seeding & CRUD: Dataset demo disalin per akun demo saat pertama kali login; setiap aksi CRUD (anak, pengukuran, kehamilan, makanan, roster, sesi) disinkronkan ke Firestore.
-- Tombol **Sinkronkan** di beranda kader dan profil mengirim seluruh perubahan lokal dan menarik dokumen terbaru dari Firestore.
-- Aktifkan **Authentication → Sign-in method → Email/Password** di Firebase Console.
-- Login, registrasi, logout, dan reset password memakai Firebase Authentication.
-- Akun Firebase dipetakan ke `AppUser.authUid`; akun demo lama tetap memakai id lokal (`u_ibu`, `u_kader`) agar data yang sudah ada tidak hilang.
+- Autentikasi: Email/Password dan Google Sign-In aktif.
+- Kredensial akun pengujian awal khusus developer didokumentasikan di `DEV_ACCOUNTS.md` (tidak diekspos di UI publik).
+- Akun kader baru memulai dari kondisi bersih (0 sasaran & 0 sesi posyandu).
 - Di web preview, Firebase belum diinisialisasi sehingga login/registrasi memakai penyimpanan lokal.
-
-> **Status verifikasi:** Firebase Core berhasil terhubung, tetapi saat build ini diuji provider **Email/Password masih nonaktif** di Firebase Console. Aktifkan provider tersebut agar login dan registrasi Firebase berhasil. Selama nonaktif, akun demo tetap bisa masuk lewat fallback lokal.
-
-Untuk membuat akun demo di Firebase Console, tambahkan user berikut dengan password `nuri123`:
-
-- `ibu@nuri.id`
-- `sinta@nuri.id`
-- `kader@nuri.id`
-
-Tanpa akun Firebase tersebut, tombol **Demo Ibu** / **Demo Kader** tetap dapat dipakai. Form login juga memiliki fallback demo saat akun demo belum ada, provider email/password belum aktif, atau perangkat offline. Fallback ini tidak berlaku untuk password salah.
-
-### Akun demo
-
-- `ibu@nuri.id` — Siti Rahma, ibu hamil + ibu dari Rafi (18 bulan).
-- `sinta@nuri.id` — Sinta, ibu dari Maya Clarissa (22 bulan).
-- `kader@nuri.id` — Nur Aisyah, kader Posyandu Melati II.
-
-Password akun demo di Firebase adalah `nuri123` bila user demo sudah dibuat di Firebase Console. Tombol **Demo Ibu** / **Demo Kader** di halaman login tetap bekerja tanpa password dan memakai data lokal. Pendaftaran akun baru di Android membuat akun Firebase Authentication; di web preview, pendaftaran masih lokal karena Firebase belum dikonfigurasi untuk web.
 
 ---
 
@@ -71,24 +51,22 @@ Password akun demo di Firebase adalah `nuri123` bila user demo sudah dibuat di F
 
 ### Ibu
 
-- **Beranda** — ringkasan status anak/kehamilan, akses cepat ke pencatatan dan edukasi.
-- **Pertumbuhan** — kurva TB/U dengan pita −3 SD, −2 SD, median, +2 SD, +3 SD; z-score dihitung dari tabel WHO HFA harian; input pengukuran dengan validasi; riwayat pengukuran dan catatan koreksi posisi.
-- **Makan** — kamera (deteksi simulasi), pencarian manual TKPI, atur porsi gram, simpan ke diary; ringkasan energi/protein/lemak/karbohidrat terhadap AKG.
-- **Diary** — rekap asupan harian, item per waktu makan, status gizi.
-- **Rekomendasi** — menu MPASI/ibu hamil dengan estimasi gizi dan bahan.
-- **Kehamilan** — checklist TTD, jadwal ANC, catatan pemeriksaan, dan alur "sudah melahirkan" yang membuat profil bayi.
-- **Edukasi** — artikel bersumber Kemenkes dengan pencarian, filter, dan penanda sudah dibaca.
-- **Profil** — ganti peran, kelola anak/kehamilan, kode QR keluarga & Posyandu, kontrol akses data untuk kader, pengingat, dan reset data.
+- **Beranda** — ringkasan status anak/kehamilan, akses cepat pencatatan, edukasi, dan pintasan konsultasi nakes.
+- **Pertumbuhan** — grafik pertumbuhan ramah keluarga (area hijau rentang tumbuh normal WHO tanpa istilah teknis statistik membingungkan); titik pengukuran anak; kartu penjelasan informatif saat data masih kosong; kalkulasi z-score akurat dari WHO LMS harian.
+- **Makan & Diary** — pencarian manual 58 bahan pangan TKPI 2017, porsi gram, simpan diary harian, ringkasan energi/protein/lemak/karbohidrat terhadap AKG 2019.
+- **Rekomendasi Menu Trimester** — menu gizi spesifik untuk Trimester 1 (anti mual & asam folat), Trimester 2 (+300 kkal & kalsium), dan Trimester 3 (DHA & zat besi), serta panduan MPASI anak.
+- **Kehamilan & Skrining USG** — checklist TTD harian, 6 jadwal kunjungan ANC sesuai standar Kemenkes, kartu edukasi skrining USG dokter (Trimester 1 konfirmasi janin/HPL & Trimester 3 taksiran berat lahir cegah stunting), dan konversi kelahiran ("sudah melahirkan") menjadi profil anak.
+- **Konsultasi Bidan & Nakes** — daftar nakes resmi wilayah (bidan desa, perawat gizi), status siap konsultasi, tombol langsung chat WhatsApp dan telepon, serta panduan rujukan Puskesmas.
+- **Profil & Privasi** — ubah nama, tambah anak/kehamilan, tampilkan Kode QR Keluarga untuk kader Posyandu, kelola/cabut akses kader, pengingat lokal, dan tombol **Reset akun** dengan konfirmasi dialog.
 
 ### Kader
 
-- **Dashboard** — statistik sesi (hadir, menunggu, tidak hadir), distribusi status gizi, dan daftar tindak lanjut.
-- **Roster** — 52 sasaran demo (38 balita + 14 ibu hamil); cari, filter status, dan buka detail.
-- **Tambah sasaran** — anak tanpa akun atau ibu hamil; validasi usia 0–59 bulan, BB/PB lahir, LiLA, dan Hb.
-- **Pengukuran** — input TB/PB, berat, posisi ukur, tanggal; hasil z-score dan kategori langsung.
-- **Rekap** — ringkasan sesi dan pratinjau CSV siap salin ke e-PPGBM.
-- **Tindak lanjut** — daftar kasus stunting/berisiko, ubah status, catat tindakan.
-- **Scan QR** — hasil scan disimulasikan; kode manual juga dapat dimasukkan.
+- **Dashboard Posyandu** — sesi penimbangan aktif, sasaran hadir/belum/tindak lanjut, distribusi gizi (normal, pendek, sangat pendek). Akun kader baru dimulai dari 0 sasaran bersih.
+- **Roster Sasaran** — tambah sasaran baru (anak tanpa akun atau ibu hamil), cari dan filter status.
+- **Alur Ukur Cepat** — input TB/PB, berat, posisi ukur (terkoreksi otomatis sesuai umur <24 bln atau ≥24 bln); hasil z-score dan kategori tampil instan.
+- **Rekap & Tindak Lanjut** — ringkasan sesi siap salin ke format e-PPGBM dan daftar tindak lanjut prioritas.
+- **Penghubung Data Keluarga** — kader dapat memindai QR Kode Keluarga ibu untuk menghubungkan data anak ke roster Posyandu.
+- **Scan QR** — hasil scan kamera dan kode manual keluarga.
 
 ---
 
