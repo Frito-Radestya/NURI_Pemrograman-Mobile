@@ -223,7 +223,7 @@ class _LandingScreenState extends ConsumerState<LandingScreen> {
                           TextSpan(text: 'Ibu Sehat,\n'),
                           TextSpan(
                             text: 'Awal Generasi Cemerlang',
-                            style: TextStyle(color: AppColors.freshGreen),
+                            style: TextStyle(color: AppColors.primary),
                           ),
                         ],
                       ),

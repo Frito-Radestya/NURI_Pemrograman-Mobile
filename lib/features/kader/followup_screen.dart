@@ -41,31 +41,127 @@ class _FollowUpScreenState extends ConsumerState<FollowUpScreen> {
         .where((r) => r.followUpStatus == FollowUpStatus.referred)
         .length;
 
-    const offlinePill = Pill(
-      label: 'Offline siap',
-      icon: Icons.cloud_off_rounded,
-      background: AppColors.mint,
-      foreground: AppColors.primaryDark,
-      fontSize: 11.5,
-    );
-
-    final content = SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          if (widget.embedded)
-            NuriPageHeader(
-              title: 'Tindak lanjut',
-              subtitle: '${all.length} sasaran perlu perhatian',
-              trailing: offlinePill,
-            )
-          else
-            ScreenHeader(
-              title: 'Tindak lanjut',
-              subtitle: '${all.length} sasaran perlu perhatian',
-              onBack: () => Navigator.of(context).pop(),
-              action: offlinePill,
-            ),
+    final content = Column(
+      children: [
+        CurvedHeader(
+          borderRadius: 32,
+          padding: EdgeInsets.fromLTRB(
+            20,
+            widget.embedded ? MediaQuery.paddingOf(context).top + 8 : 12,
+            20,
+            20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      if (!widget.embedded && Navigator.of(context).canPop())
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.follow_the_signs_rounded,
+                              size: 13,
+                              color: AppColors.secondaryFixed,
+                            ),
+                            SizedBox(width: 5),
+                            Text(
+                              'Intervensi 2T & Risiko',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.cloud_done_rounded,
+                          size: 13,
+                          color: AppColors.secondaryFixed,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Offline Siap',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Tindak Lanjut Sasaran',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              Text(
+                '${all.length} sasaran perlu pendampingan atau rujukan faskes',
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -135,7 +231,7 @@ class _FollowUpScreenState extends ConsumerState<FollowUpScreen> {
                     icon: Icons.task_alt_rounded,
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
                     itemCount: visible.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 9),
                     itemBuilder: (context, index) => _FollowUpCard(
@@ -145,8 +241,7 @@ class _FollowUpScreenState extends ConsumerState<FollowUpScreen> {
                   ),
           ),
         ],
-      ),
-    );
+      );
 
     if (widget.embedded) return content;
     return Scaffold(backgroundColor: AppColors.background, body: content);

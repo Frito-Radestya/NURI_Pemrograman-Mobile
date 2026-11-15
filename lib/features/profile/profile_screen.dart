@@ -38,33 +38,90 @@ class ProfileScreen extends ConsumerWidget {
         .where((g) => g.ownerUid == user.id)
         .toList();
 
-    return SafeArea(
-      bottom: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            NuriPageHeader(
-              title: 'Profil',
-              subtitle: 'Akun, keluarga, dan pengaturan privasi.',
-              trailing: Pill(
-                label: user.role.label,
-                icon: isCadre ? Icons.groups_rounded : Icons.favorite_rounded,
-                background: AppColors.softMint,
-                foreground: AppColors.deepForest,
-                fontSize: 11.5,
-                bold: true,
-              ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 96),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CurvedHeader(
+            borderRadius: 32,
+            padding: EdgeInsets.fromLTRB(
+              20,
+              MediaQuery.paddingOf(context).top + 8,
+              20,
+              24,
             ),
-            const SizedBox(height: 12),
-            Padding(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isCadre
+                                ? Icons.badge_rounded
+                                : Icons.favorite_rounded,
+                            size: 13,
+                            color: AppColors.secondaryFixed,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            user.role.label,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Profil & Pengaturan',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const Text(
+                  'Kelola akun, data keluarga, & privasi data',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Transform.translate(
+            offset: const Offset(0, -12),
+            child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _ProfileCard(
                 user: user,
                 onEdit: () => _editName(context, ref, user),
               ),
             ),
+          ),
             if (!isCadre) ...[
               const SizedBox(height: 22),
               Padding(
@@ -398,8 +455,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Future<void> _editName(

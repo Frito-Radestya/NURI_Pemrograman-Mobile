@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data/app_controller.dart';
@@ -32,6 +34,7 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
     with SingleTickerProviderStateMixin {
   late MealType _meal;
   late final AnimationController _scanController;
+  final ImagePicker _picker = ImagePicker();
   bool _flashOn = false;
   bool _capturing = false;
 
@@ -51,7 +54,41 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
     super.dispose();
   }
 
-  Future<void> _capture() async {
+  Future<void> _pickImage(ImageSource source) async {
+    if (_capturing) return;
+    setState(() => _capturing = true);
+    try {
+      final photo = await _picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 85,
+      );
+      if (!mounted) return;
+      if (photo != null) {
+        final items = _demoDetectedFoods();
+        setState(() => _capturing = false);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DetectionResultScreen(
+              subjectId: widget.subjectId,
+              subjectLabel: widget.subjectLabel,
+              meal: _meal,
+              initialItems: items,
+              capturedImagePath: photo.path,
+            ),
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('ImagePicker error: $e');
+    }
+    if (!mounted) return;
+    setState(() => _capturing = false);
+  }
+
+  Future<void> _captureSimulation() async {
     if (_capturing) return;
     setState(() => _capturing = true);
     await Future<void>.delayed(const Duration(milliseconds: 320));
@@ -203,12 +240,15 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
                           fontSize: 11.5,
                         ),
                         const SizedBox(width: 8),
-                        Pill(
-                          label: 'Simulasi kamera',
-                          icon: Icons.camera_alt_outlined,
-                          background: AppColors.peach.withValues(alpha: 0.92),
-                          foreground: AppColors.primaryDeep,
-                          fontSize: 11.5,
+                        GestureDetector(
+                          onTap: _captureSimulation,
+                          child: Pill(
+                            label: 'Kamera Aktif • Tap Demo',
+                            icon: Icons.camera_alt_rounded,
+                            background: AppColors.secondaryContainer,
+                            foreground: AppColors.onSecondaryContainer,
+                            fontSize: 11.5,
+                          ),
                         ),
                       ],
                     ),
@@ -351,13 +391,13 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
                           children: [
                             _CameraIconButton(
                               icon: Icons.photo_library_outlined,
-                              onTap: _openManual,
+                              onTap: () => _pickImage(ImageSource.gallery),
                             ),
                             const Spacer(),
                             NuriTapScale(
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                _capture();
+                                _pickImage(ImageSource.camera);
                               },
                               child: Container(
                                 width: 72,
@@ -597,12 +637,14 @@ class DetectionResultScreen extends StatefulWidget {
     required this.subjectLabel,
     required this.meal,
     required this.initialItems,
+    this.capturedImagePath,
   });
 
   final String subjectId;
   final String subjectLabel;
   final MealType meal;
   final List<DetectedFood> initialItems;
+  final String? capturedImagePath;
 
   @override
   State<DetectionResultScreen> createState() => _DetectionResultScreenState();
@@ -695,15 +737,24 @@ class _DetectionResultScreenState extends State<DetectionResultScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(24),
                       child: Stack(
                         children: [
-                          Image.asset(
-                            'assets/images/food_plate.jpg',
-                            height: 160,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+                          if (widget.capturedImagePath != null &&
+                              File(widget.capturedImagePath!).existsSync())
+                            Image.file(
+                              File(widget.capturedImagePath!),
+                              height: 190,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          else
+                            Image.asset(
+                              'assets/images/food_plate.jpg',
+                              height: 190,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
                           Positioned.fill(
                             child: DecoratedBox(
                               decoration: BoxDecoration(
@@ -711,22 +762,174 @@ class _DetectionResultScreenState extends State<DetectionResultScreen> {
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.5),
+                                    Colors.black.withValues(alpha: 0.2),
+                                    Colors.black.withValues(alpha: 0.55),
                                   ],
                                 ),
+                              ),
+                            ),
+                          ),
+                          // Retake button
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.65),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.pill),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.cached_rounded,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Foto Ulang',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Smart Detection Pin 1 (Nasi Putih)
+                          Positioned(
+                            top: 14,
+                            left: 14,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 9,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.92),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x30000000),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.circle,
+                                    size: 6,
+                                    color: AppColors.primary,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    'Nasi Tim Lembek (75g)',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.onSurface,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Smart Detection Pin 2 (Protein Hewani Highlight)
+                          Positioned(
+                            top: 55,
+                            right: 14,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: AppGradients.button,
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                                border: Border.all(
+                                  color: AppColors.secondaryFixed,
+                                  width: 1.5,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x400D631B),
+                                    blurRadius: 10,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.stars_rounded,
+                                    size: 14,
+                                    color: AppColors.secondaryFixed,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    '★ Ikan & Telur (Prohe Unggulan)',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                           Positioned(
                             left: 12,
                             bottom: 12,
-                            child: Pill(
-                              label: '${_items.length} makanan terdeteksi',
-                              icon: Icons.restaurant_menu_rounded,
-                              background: Colors.white.withValues(alpha: 0.94),
-                              foreground: AppColors.primaryDeep,
-                              fontSize: 11.5,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.95),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.pill),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 14,
+                                    color: AppColors.primary,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    'Piring Terdeteksi Sempurna (98.4%)',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

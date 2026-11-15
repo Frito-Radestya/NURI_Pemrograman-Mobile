@@ -296,8 +296,9 @@ class NuriSegmentedControl<T> extends StatelessWidget {
     required this.selected,
     required this.labelFor,
     required this.onChanged,
-    this.background = AppColors.surfaceSubtle,
-    this.padding = const EdgeInsets.all(4),
+    this.background = AppColors.surfaceContainerLowest,
+    this.padding = const EdgeInsets.all(5),
+    this.icons,
   });
 
   final List<T> values;
@@ -306,6 +307,7 @@ class NuriSegmentedControl<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
   final Color background;
   final EdgeInsetsGeometry padding;
+  final Map<T, IconData>? icons;
 
   @override
   Widget build(BuildContext context) {
@@ -315,8 +317,15 @@ class NuriSegmentedControl<T> extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: AppColors.line),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A002204),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -333,13 +342,13 @@ class NuriSegmentedControl<T> extends StatelessWidget {
                 width: slotWidth,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.deepForest,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
+                    gradient: AppGradients.button,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    boxShadow: const [
                       BoxShadow(
-                        color: AppColors.deepForest.withValues(alpha: 0.2),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                        color: Color(0x330D631B),
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
@@ -348,6 +357,7 @@ class NuriSegmentedControl<T> extends StatelessWidget {
               Row(
                 children: values.map((value) {
                   final active = value == selected;
+                  final icon = icons?[value];
                   return Expanded(
                     child: GestureDetector(
                       onTap: () {
@@ -359,21 +369,41 @@ class NuriSegmentedControl<T> extends StatelessWidget {
                       behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
+                          horizontal: 8,
                           vertical: 10,
                         ),
-                        child: Text(
-                          labelFor(value),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: active
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: active ? Colors.white : AppColors.secondaryText,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (icon != null) ...[
+                              Icon(
+                                icon,
+                                size: 17,
+                                color: active
+                                    ? Colors.white
+                                    : AppColors.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            Flexible(
+                              child: Text(
+                                labelFor(value),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: active
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: active
+                                      ? Colors.white
+                                      : AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -412,11 +442,11 @@ class NuriButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final spinnerColor = switch (variant) {
       NuriButtonVariant.filled => Colors.white,
-      NuriButtonVariant.secondary => Colors.white,
-      NuriButtonVariant.outlined || NuriButtonVariant.text => AppColors.deepForest,
+      NuriButtonVariant.secondary => AppColors.primary,
+      NuriButtonVariant.outlined || NuriButtonVariant.text => AppColors.primary,
       NuriButtonVariant.danger => AppColors.red,
     };
-    final child = Row(
+    final content = Row(
       mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -443,6 +473,44 @@ class NuriButton extends StatelessWidget {
       ],
     );
 
+    if (variant == NuriButtonVariant.filled) {
+      final btn = Container(
+        height: height,
+        width: expand ? double.infinity : null,
+        decoration: BoxDecoration(
+          gradient: onPressed == null || loading ? null : AppGradients.button,
+          color: onPressed == null || loading
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : null,
+          borderRadius: BorderRadius.circular(AppRadius.button),
+          boxShadow: onPressed == null || loading ? null : AppShadows.glow,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: loading ? null : onPressed,
+            borderRadius: BorderRadius.circular(AppRadius.button),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: DefaultTextStyle(
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+                child: IconTheme(
+                  data: const IconThemeData(color: Colors.white, size: 19),
+                  child: content,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return NuriTapScale(onTap: loading ? null : onPressed, child: btn);
+    }
+
     final style = ButtonStyle(
       minimumSize: WidgetStatePropertyAll(
         Size(expand ? double.infinity : 48, height),
@@ -450,44 +518,43 @@ class NuriButton extends StatelessWidget {
       padding: const WidgetStatePropertyAll(
         EdgeInsets.symmetric(horizontal: 18),
       ),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.button),
+        ),
+      ),
     );
 
     return switch (variant) {
-      NuriButtonVariant.filled => FilledButton(
-        onPressed: loading ? null : onPressed,
-        style: style.copyWith(
-          backgroundColor: const WidgetStatePropertyAll(AppColors.deepForest),
-          foregroundColor: const WidgetStatePropertyAll(Colors.white),
-        ),
-        child: child,
-      ),
+      NuriButtonVariant.filled => const SizedBox.shrink(),
       NuriButtonVariant.secondary => FilledButton(
         onPressed: loading ? null : onPressed,
         style: style.copyWith(
-          backgroundColor: const WidgetStatePropertyAll(AppColors.freshGreen),
-          foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          backgroundColor:
+              const WidgetStatePropertyAll(AppColors.surfaceContainerLow),
+          foregroundColor: const WidgetStatePropertyAll(AppColors.primary),
         ),
-        child: child,
+        child: content,
       ),
       NuriButtonVariant.outlined => OutlinedButton(
         onPressed: loading ? null : onPressed,
         style: style.copyWith(
-          foregroundColor: const WidgetStatePropertyAll(AppColors.deepForest),
+          foregroundColor: const WidgetStatePropertyAll(AppColors.primary),
           side: const WidgetStatePropertyAll(
             BorderSide(color: AppColors.line, width: 1.2),
           ),
         ),
-        child: child,
+        child: content,
       ),
       NuriButtonVariant.text => TextButton(
         onPressed: loading ? null : onPressed,
         style: style.copyWith(
-          foregroundColor: const WidgetStatePropertyAll(AppColors.deepForest),
+          foregroundColor: const WidgetStatePropertyAll(AppColors.primary),
           minimumSize: WidgetStatePropertyAll(
             Size(expand ? double.infinity : 0, height),
           ),
         ),
-        child: child,
+        child: content,
       ),
       NuriButtonVariant.danger => FilledButton(
         onPressed: loading ? null : onPressed,
@@ -495,7 +562,7 @@ class NuriButton extends StatelessWidget {
           backgroundColor: const WidgetStatePropertyAll(AppColors.redSoft),
           foregroundColor: const WidgetStatePropertyAll(AppColors.red),
         ),
-        child: child,
+        child: content,
       ),
     };
   }

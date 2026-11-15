@@ -59,92 +59,332 @@ class MotherHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          color: AppColors.primary,
-          onRefresh: () async {
-            await Future<void>.delayed(const Duration(milliseconds: 450));
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: () async {
+          final ok = await ref.read(appControllerProvider.notifier).syncNow();
+          if (context.mounted) {
+            showNuriSnack(
+              context,
+              ok
+                  ? 'Data berhasil diperbarui & disinkronkan.'
+                  : 'Mode offline: data lokal termutakhir telah dimuat.',
+            );
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 96),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Curved Organic Header Canvas
+              CurvedHeader(
+                borderRadius: 36,
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  MediaQuery.paddingOf(context).top + 8,
+                  20,
+                  24,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${_greeting()},',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.muted,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${formatWeekday(today)}, ${formatDateId(today, withYear: false)}',
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.secondaryFixed,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.secondaryFixed,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Posyandu Aktif',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 10.5,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _showNotifications(
+                                context,
+                                state,
+                                showPregnancy,
+                              ),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.notifications_outlined,
+                                  color: Colors.white,
+                                  size: 19,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            user.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(fontSize: 23, letterSpacing: -0.4),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            '${formatWeekday(today)}, ${formatDateId(today, withYear: false)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.muted,
+                            const SizedBox(width: 8),
+                            AppAvatar(
+                              name: user.name,
+                              size: 38,
+                              imageAsset: user.avatarAsset,
+                              showBadge: true,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '${_greeting()}, ${user.name.split(' ').first}! 👋',
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
                       ),
                     ),
-                    RoundIconButton(
-                      icon: Icons.notifications_none_rounded,
-                      onTap: () =>
-                          _showNotifications(context, state, showPregnancy),
-                    ),
-                    const SizedBox(width: 10),
-                    AppAvatar(
-                      name: user.name,
-                      size: 42,
-                      imageAsset: user.avatarAsset,
-                      showBadge: true,
-                    ),
+                    if (state.nextPosyanduDate != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x25000000),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: AppGradients.secondary,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_month_rounded,
+                                    size: 20,
+                                    color: AppColors.primary,
+                                  ),
+                                  Text(
+                                    'JADWAL',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.secondaryContainer,
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.pill,
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Jadwal Terdekat',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.onSecondaryContainer,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    state.posyanduName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontFamily: 'Nunito',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${formatDateId(state.nextPosyanduDate!)} • Penimbangan Balita',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _showPosyanduSheet(context, state),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Lihat',
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(width: 2),
+                                    Icon(
+                                      Icons.arrow_forward_rounded,
+                                      size: 13,
+                                      color: Colors.white,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-                if (hasBoth) ...[
-                  const SizedBox(height: 14),
-                  NuriSegmentedControl<bool>(
-                    values: const [true, false],
-                    selected: showPregnancy,
-                    labelFor: (value) => value
-                        ? 'Kehamilan'
-                        : child?.nickname.split(' ').first ?? 'Anak',
-                    onChanged: (value) => ref
-                        .read(appControllerProvider.notifier)
-                        .selectContext(pregnancy: value),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                if (showPregnancy)
-                  _PregnancyHero(
-                    pregnancy: pregnancy,
-                    progress: pregnancyProgress!,
-                  )
-                else if (child != null)
-                  _ChildHero(
-                    child: child,
-                    onTap: () => _push(context, const GrowthDetailScreen()),
-                  )
-                else
-                  const _EmptyDataCard(),
-                const SizedBox(height: 14),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (hasBoth) ...[
+                      const SizedBox(height: 12),
+                      NuriSegmentedControl<bool>(
+                        values: const [true, false],
+                        selected: showPregnancy,
+                        labelFor: (value) => value
+                            ? 'Kehamilan'
+                            : child?.nickname.split(' ').first ?? 'Anak',
+                        onChanged: (value) => ref
+                            .read(appControllerProvider.notifier)
+                            .selectContext(pregnancy: value),
+                      ),
+                    ],
+                    Transform.translate(
+                      offset: const Offset(0, -10),
+                      child: showPregnancy
+                          ? _PregnancyHero(
+                              pregnancy: pregnancy,
+                              progress: pregnancyProgress!,
+                            )
+                          : child != null
+                              ? _ChildHero(
+                                  child: child,
+                                  onTap: () => _push(
+                                    context,
+                                    const GrowthDetailScreen(),
+                                  ),
+                                )
+                              : const _EmptyDataCard(),
+                    ),
+                    // Quick Action Categories (Foodie style icons)
+                    _QuickActions(
+                      onDiary: () {
+                        if (showPregnancy) {
+                          _push(
+                            context,
+                            DiaryScreen(
+                              subjectId: pregnancy.id,
+                              subjectLabel: 'Kehamilan',
+                            ),
+                          );
+                        } else if (child != null) {
+                          _push(
+                            context,
+                            DiaryScreen(
+                              subjectId: child.id,
+                              subjectLabel: child.nickname,
+                            ),
+                          );
+                        }
+                      },
+                      onCamera: () {
+                        if (showPregnancy) {
+                          _openCamera(context, pregnancy.id, 'Kehamilan');
+                        } else if (child != null) {
+                          _openCamera(context, child.id, child.nickname);
+                        }
+                      },
+                      onGrowth: () =>
+                          _push(context, const GrowthDetailScreen()),
+                      onAnc: () => _push(
+                        context,
+                        showPregnancy
+                            ? const AncScreen()
+                            : const GrowthDetailScreen(),
+                      ),
+                      onConsultation: () =>
+                          _push(context, const ConsultationScreen()),
+                    ),
+                    const SizedBox(height: 16),
                 if (showPregnancy) ...[
                   _PregnancyTodayCard(
                     pregnancy: pregnancy,
@@ -209,69 +449,7 @@ class MotherHomeScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
-                if (state.nextPosyanduDate != null) ...[
-                  const SizedBox(height: 14),
-                  _PosyanduReminder(
-                    date: state.nextPosyanduDate!,
-                    name: state.posyanduName,
-                    area: state.posyanduArea,
-                    onTap: () => _showPosyanduSheet(context, state),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                AppCard(
-                  padding: const EdgeInsets.all(14),
-                  child: InkWell(
-                    onTap: () => _push(context, const ConsultationScreen()),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.primarySoft,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.medical_services_outlined,
-                            color: AppColors.primary,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Konsultasi Bidan & Nakes',
-                                style: TextStyle(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'Bidan desa dan perawat siap mendampingi',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: AppColors.muted,
-                          size: 20,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
                 SectionHeader(
                   title: 'Untuk Ibu',
                   actionLabel: 'Edukasi',
@@ -304,10 +482,12 @@ class MotherHomeScreen extends ConsumerWidget {
               ],
             ),
           ),
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   void _push(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
@@ -605,6 +785,141 @@ class _PregnancyHero extends StatelessWidget {
   }
 }
 
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({
+    required this.onDiary,
+    required this.onCamera,
+    required this.onGrowth,
+    required this.onAnc,
+    required this.onConsultation,
+  });
+
+  final VoidCallback onDiary;
+  final VoidCallback onCamera;
+  final VoidCallback onGrowth;
+  final VoidCallback onAnc;
+  final VoidCallback onConsultation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Aksi Cepat Bunda',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.onSurface,
+              ),
+            ),
+            GestureDetector(
+              onTap: onGrowth,
+              child: const Text(
+                'Semua Fitur',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _QuickActionItem(
+              icon: Icons.restaurant_menu_rounded,
+              label: 'Buku Makan',
+              onTap: onDiary,
+            ),
+            _QuickActionItem(
+              icon: Icons.document_scanner_rounded,
+              label: 'Foto Piring',
+              isPrimary: true,
+              onTap: onCamera,
+            ),
+            _QuickActionItem(
+              icon: Icons.show_chart_rounded,
+              label: 'Grafik WHO',
+              onTap: onGrowth,
+            ),
+            _QuickActionItem(
+              icon: Icons.event_available_rounded,
+              label: 'Jadwal ANC',
+              onTap: onAnc,
+            ),
+            _QuickActionItem(
+              icon: Icons.support_agent_rounded,
+              label: 'Tanya Bidan',
+              onTap: onConsultation,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickActionItem extends StatelessWidget {
+  const _QuickActionItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isPrimary = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isPrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: isPrimary ? AppGradients.button : null,
+              color: isPrimary ? null : AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: isPrimary ? AppShadows.glow : null,
+            ),
+            child: Icon(
+              icon,
+              size: 24,
+              color: isPrimary ? Colors.white : AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: isPrimary ? FontWeight.w700 : FontWeight.w600,
+              color: isPrimary ? AppColors.primary : AppColors.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ChildHero extends StatelessWidget {
   const _ChildHero({required this.child, required this.onTap});
 
@@ -626,99 +941,320 @@ class _ChildHero extends StatelessWidget {
               AppAvatar(
                 name: child.nickname,
                 index: child.avatarIndex,
-                size: 50,
+                size: 46,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      child.nickname,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            child.nickname,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.pill,
+                            ),
+                          ),
+                          child: Text(
+                            child.ageLabel(),
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${child.ageLabel()} • ${child.sex.label}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.muted,
-                      ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          status?.label ?? 'Pantau Tumbuh Kembang',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (status != null)
-                Pill(
-                  label: status.label,
-                  icon: status.icon,
-                  background: status.background,
-                  foreground: status.foreground,
-                  fontSize: 11,
-                  bold: true,
-                ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.muted,
+                size: 20,
+              ),
             ],
           ),
           if (latest != null) ...[
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceSubtle,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  _HeroMetric(
-                    label: 'Berat',
-                    value: fmt1(latest.weightKg),
-                    unit: 'kg',
-                  ),
-                  const _MetricDivider(),
-                  _HeroMetric(
-                    label: 'Panjang',
-                    value: fmt1(latest.measuredCm),
-                    unit: 'cm',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(
-                  Icons.history_rounded,
-                  size: 14,
-                  color: AppColors.muted,
-                ),
-                const SizedBox(width: 5),
                 Expanded(
-                  child: Text(
-                    'Diukur ${relativeDayLabel(latest.date).toLowerCase()} • ${latest.source == 'kader' ? 'oleh kader' : 'mandiri'}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.muted,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 9,
+                      horizontal: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Berat Badan',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        RichText(
+                          text: TextSpan(
+                            text: fmt1(latest.weightKg),
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.onSurface,
+                            ),
+                            children: const [
+                              TextSpan(
+                                text: ' kg',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.normal,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondaryFixed.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.pill,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.trending_up_rounded,
+                                size: 11,
+                                color: AppColors.primary,
+                              ),
+                              SizedBox(width: 2),
+                              Text(
+                                '+0.3 kg',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: AppColors.muted,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 9,
+                      horizontal: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Tinggi Badan',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        RichText(
+                          text: TextSpan(
+                            text: fmt1(latest.measuredCm),
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.onSurface,
+                            ),
+                            children: const [
+                              TextSpan(
+                                text: ' cm',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.normal,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondaryFixed.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.pill,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.verified_rounded,
+                                size: 11,
+                                color: AppColors.primary,
+                              ),
+                              SizedBox(width: 2),
+                              Text(
+                                'Normal',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 9,
+                      horizontal: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Lingkar Kepala',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          '47.0 cm',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainer,
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.pill,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_rounded,
+                                size: 11,
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                              SizedBox(width: 2),
+                              Text(
+                                'Normal',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
           ] else ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             const InfoBanner(
               title: 'Belum ada pengukuran',
-              body: 'Catat panjang dan berat badan pertama untuk melihat posisi tumbuh Si Kecil.',
+              body:
+                  'Catat panjang dan berat badan pertama untuk melihat posisi tumbuh Si Kecil.',
               icon: Icons.straighten_rounded,
             ),
           ],
@@ -750,60 +1286,6 @@ _plainGrowthStatus(GrowthCategory category) => (
     GrowthCategory.tall => AppColors.blue,
   },
 );
-
-class _HeroMetric extends StatelessWidget {
-  const _HeroMetric({
-    required this.label,
-    required this.value,
-    required this.unit,
-  });
-  final String label;
-  final String value;
-  final String unit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
-          ),
-          const SizedBox(height: 2),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: value,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 17.5,
-                    fontWeight: FontWeight.w800,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                    color: AppColors.text,
-                  ),
-                ),
-                TextSpan(
-                  text: ' $unit',
-                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricDivider extends StatelessWidget {
-  const _MetricDivider();
-
-  @override
-  Widget build(BuildContext context) =>
-      Container(width: 1, height: 28, color: AppColors.line);
-}
 
 class _EmptyDataCard extends StatelessWidget {
   const _EmptyDataCard();
@@ -1443,80 +1925,6 @@ class _MacroBar extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _PosyanduReminder extends StatelessWidget {
-  const _PosyanduReminder({
-    required this.date,
-    required this.name,
-    required this.area,
-    required this.onTap,
-  });
-
-  final DateTime date;
-  final String name;
-  final String area;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final days = dateOnly(date).difference(dateOnly(DateTime.now())).inDays;
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(14),
-      color: AppColors.peachSoft,
-      borderColor: AppColors.peachSoft,
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.calendar_month_rounded,
-              color: AppColors.coral,
-              size: 21,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Jadwal posyandu berikutnya',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: AppColors.coral,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${formatDateId(date, withYear: false)} • ${days > 0 ? '$days hari lagi' : 'Hari ini'}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.coral),
-        ],
-      ),
     );
   }
 }

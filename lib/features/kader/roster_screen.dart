@@ -9,6 +9,7 @@ import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
 import '../mother/growth_screens.dart';
 import 'add_target_screen.dart';
+import 'scan_screen.dart';
 
 enum _RosterFilter { all, child, pregnant, followUp }
 
@@ -70,113 +71,387 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
         .where((r) => r.attendance == AttendanceStatus.present)
         .length;
 
-    final addButton = RoundIconButton(
-      icon: Icons.person_add_alt_1_rounded,
-      filled: true,
-      onTap: () =>
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => const AddTargetScreen())),
-    );
+    final balitaCount =
+        myRoster.where((r) => r.type == RosterType.child).length;
+    final bumilCount =
+        myRoster.where((r) => r.type == RosterType.pregnant).length;
+    final alertCount = myRoster.where((r) => r.needsFollowUp).length;
+    final notPresent = myRoster.length - present;
 
-    final content = SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          if (widget.embedded)
-            NuriPageHeader(
-              title: 'Sasaran Posyandu',
-              subtitle: '${myRoster.length} sasaran • $present hadir',
-              trailing: addButton,
-            )
-          else
-            ScreenHeader(
-              title: 'Sasaran Posyandu',
-              subtitle: '${myRoster.length} sasaran • $present hadir',
-              onBack: () => Navigator.of(context).pop(),
-              action: addButton,
-            ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-            child: TextField(
-              controller: _search,
-              onChanged: (_) => setState(() {}),
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Cari nama anak, ibu, atau wali…',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                suffixIcon: _search.text.isEmpty
-                    ? null
-                    : IconButton(
+    final content = Column(
+      children: [
+        // Top Curved Organic Header (Inspired by UI_UX/nuri_roster_sasaran_kader)
+        CurvedHeader(
+          borderRadius: 32,
+          padding: EdgeInsets.fromLTRB(
+            20,
+            widget.embedded ? MediaQuery.paddingOf(context).top + 8 : 12,
+            20,
+            20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      if (!widget.embedded && Navigator.of(context).canPop())
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.shield_outlined,
+                              size: 13,
+                              color: AppColors.secondaryFixed,
+                            ),
+                            SizedBox(width: 5),
+                            Text(
+                              'Mode Kader Aktif',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const AddTargetScreen(),
+                      ),
+                    ),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person_add_rounded,
+                        color: Colors.white,
+                        size: 19,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Roster Sasaran',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              Text(
+                '${state.posyanduName} • $balitaCount Balita & $bumilCount Bumil',
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Bento Stats Bar
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Total Sasaran',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${myRoster.length}',
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Kehadiran',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          RichText(
+                            text: TextSpan(
+                              text: '$present',
+                              style: const TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.secondaryFixed,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: ' / $notPresent blm',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: alertCount > 0
+                            ? AppColors.redSoft.withValues(alpha: 0.9)
+                            : Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Perlu Tindak',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: alertCount > 0 ? FontWeight.w700 : FontWeight.normal,
+                              color: alertCount > 0 ? AppColors.red : Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$alertCount Kasus',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: alertCount > 0 ? AppColors.red : Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Search & Scan Bar
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x15000000),
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 14, right: 6),
+                      child: Icon(
+                        Icons.search_rounded,
+                        color: AppColors.muted,
+                        size: 20,
+                      ),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _search,
+                        onChanged: (_) => setState(() {}),
+                        style: const TextStyle(fontSize: 13.5),
+                        decoration: const InputDecoration(
+                          hintText: 'Cari nama anak, ibu, atau NIK…',
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.muted,
+                          ),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 11),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
+                        ),
+                      ),
+                    ),
+                    if (_search.text.isNotEmpty)
+                      IconButton(
                         onPressed: () {
                           _search.clear();
                           setState(() {});
                         },
                         icon: const Icon(Icons.close_rounded, size: 18),
                       ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                _FilterChip(
-                  label: 'Semua',
-                  count: state.roster.length,
-                  selected: _filter == _RosterFilter.all,
-                  onTap: () => setState(() => _filter = _RosterFilter.all),
-                ),
-                const SizedBox(width: 7),
-                _FilterChip(
-                  label: 'Balita',
-                  count: state.roster
-                      .where((r) => r.type == RosterType.child)
-                      .length,
-                  selected: _filter == _RosterFilter.child,
-                  onTap: () => setState(() => _filter = _RosterFilter.child),
-                ),
-                const SizedBox(width: 7),
-                _FilterChip(
-                  label: 'Ibu Hamil',
-                  count: state.roster
-                      .where((r) => r.type == RosterType.pregnant)
-                      .length,
-                  selected: _filter == _RosterFilter.pregnant,
-                  onTap: () => setState(() => _filter = _RosterFilter.pregnant),
-                ),
-                const SizedBox(width: 7),
-                _FilterChip(
-                  label: 'Tindak lanjut',
-                  count: state.roster.where((r) => r.needsFollowUp).length,
-                  selected: _filter == _RosterFilter.followUp,
-                  onTap: () => setState(() => _filter = _RosterFilter.followUp),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: entries.isEmpty
-                ? const EmptyState(
-                    title: 'Sasaran tidak ditemukan',
-                    body: 'Coba kata kunci lain atau ubah filter.',
-                    icon: Icons.search_off_rounded,
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-                    itemCount: entries.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 9),
-                    itemBuilder: (context, index) => _RosterTile(
-                      entry: entries[index],
-                      onTap: () => _showEntrySheet(context, entries[index]),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ScanScreen(),
+                          ),
+                        ),
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLow,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.qr_code_scanner_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        // Horizontal Filter Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              _FilterChip(
+                label: 'Semua',
+                count: myRoster.length,
+                selected: _filter == _RosterFilter.all,
+                onTap: () => setState(() => _filter = _RosterFilter.all),
+              ),
+              const SizedBox(width: 7),
+              _FilterChip(
+                label: 'Balita',
+                count: balitaCount,
+                selected: _filter == _RosterFilter.child,
+                onTap: () => setState(() => _filter = _RosterFilter.child),
+              ),
+              const SizedBox(width: 7),
+              _FilterChip(
+                label: 'Ibu Hamil',
+                count: bumilCount,
+                selected: _filter == _RosterFilter.pregnant,
+                onTap: () => setState(() => _filter = _RosterFilter.pregnant),
+              ),
+              const SizedBox(width: 7),
+              _FilterChip(
+                label: 'Butuh Tindak',
+                count: alertCount,
+                selected: _filter == _RosterFilter.followUp,
+                isAlert: true,
+                onTap: () => setState(() => _filter = _RosterFilter.followUp),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: entries.isEmpty
+              ? const EmptyState(
+                  title: 'Sasaran tidak ditemukan',
+                  body: 'Coba kata kunci lain atau ubah filter.',
+                  icon: Icons.search_off_rounded,
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
+                  itemCount: entries.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 9),
+                  itemBuilder: (context, index) => _RosterTile(
+                    entry: entries[index],
+                    onTap: () => _showEntrySheet(context, entries[index]),
+                  ),
+                ),
+        ),
+      ],
     );
 
     if (widget.embedded) return content;
@@ -245,34 +520,59 @@ class _FilterChip extends StatelessWidget {
     required this.count,
     required this.selected,
     required this.onTap,
+    this.isAlert = false,
   });
 
   final String label;
   final int count;
   final bool selected;
   final VoidCallback onTap;
+  final bool isAlert;
 
   @override
   Widget build(BuildContext context) {
+    Color bg;
+    Color fg;
+    Gradient? gradient;
+
+    if (selected) {
+      if (isAlert) {
+        bg = AppColors.red;
+        fg = Colors.white;
+      } else {
+        bg = AppColors.primary;
+        fg = Colors.white;
+        gradient = AppGradients.button;
+      }
+    } else {
+      if (isAlert) {
+        bg = AppColors.redSoft;
+        fg = AppColors.red;
+      } else {
+        bg = AppColors.surfaceContainerLow;
+        fg = AppColors.onSurfaceVariant;
+      }
+    }
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(100),
+      borderRadius: BorderRadius.circular(AppRadius.pill),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.line,
-          ),
+          color: gradient == null ? bg : null,
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          boxShadow: selected ? AppShadows.glow : null,
         ),
         child: Text(
-          '$label  $count',
+          '$label ($count)',
           style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : AppColors.text,
+            fontFamily: 'Inter',
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            color: fg,
           ),
         ),
       ),
@@ -289,114 +589,151 @@ class _RosterTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPregnant = entry.type == RosterType.pregnant;
+    final stripeColor = entry.needsFollowUp
+        ? AppColors.red
+        : (entry.attendance == AttendanceStatus.present
+            ? AppColors.primary
+            : AppColors.outlineVariant);
+
     return AppCard(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.zero,
       onTap: onTap,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              AppAvatar(name: entry.name, index: entry.avatarIndex, size: 44),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            entry.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 5,
+              child: Container(color: stripeColor),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      AppAvatar(
+                        name: entry.name,
+                        index: entry.avatarIndex,
+                        size: 44,
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    entry.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontFamily: 'Nunito',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.onSurface,
+                                    ),
+                                  ),
+                                ),
+                                if (entry.priority) ...[
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.priority_high_rounded,
+                                    size: 15,
+                                    color: AppColors.red,
+                                  ),
+                                ],
+                              ],
                             ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isPregnant
+                                  ? '${entry.pregnancyWeeks ?? '—'} minggu • ${entry.guardianName}'
+                                  : '${entry.ageMonths ?? '—'} bulan • Ibu: ${entry.guardianName}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11.5,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      if (isPregnant)
+                        const Pill(
+                          label: 'Bumil',
+                          icon: Icons.pregnant_woman_rounded,
+                          background: AppColors.purpleSoft,
+                          foreground: AppColors.purple,
+                          fontSize: 11,
+                        )
+                      else if (entry.category != null)
+                        GrowthStatusBadge(
+                          category: entry.category!,
+                          compact: true,
+                        )
+                      else
+                        const Pill(label: 'Belum diukur', fontSize: 11),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        entry.attendance == AttendanceStatus.present
+                            ? Icons.check_circle_rounded
+                            : entry.attendance == AttendanceStatus.absent
+                                ? Icons.cancel_rounded
+                                : Icons.schedule_rounded,
+                        size: 15,
+                        color: entry.attendance == AttendanceStatus.present
+                            ? AppColors.primary
+                            : entry.attendance == AttendanceStatus.absent
+                                ? AppColors.red
+                                : AppColors.amber,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        entry.attendance.label,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: entry.attendance == AttendanceStatus.present
+                              ? AppColors.primary
+                              : entry.attendance == AttendanceStatus.absent
+                                  ? AppColors.red
+                                  : AppColors.amber,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          entry.reason ?? entry.guardianName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.muted,
                           ),
                         ),
-                        if (entry.priority) ...[
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.priority_high_rounded,
-                            size: 15,
-                            color: AppColors.red,
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isPregnant
-                          ? '${entry.pregnancyWeeks ?? '—'} minggu • ${entry.guardianName}'
-                          : '${entry.ageMonths ?? '—'} bulan • ${entry.sex?.label ?? 'Balita'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.muted,
                       ),
-                    ),
-                  ],
-                ),
+                      if (entry.pendingSync) const SyncBadge(pending: true),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
-              if (isPregnant)
-                const Pill(
-                  label: 'Bumil',
-                  icon: Icons.pregnant_woman_rounded,
-                  background: AppColors.purpleSoft,
-                  foreground: AppColors.purple,
-                  fontSize: 11,
-                )
-              else if (entry.category != null)
-                GrowthStatusBadge(category: entry.category!, compact: true)
-              else
-                const Pill(label: 'Belum diukur', fontSize: 11),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Icon(
-                entry.attendance == AttendanceStatus.present
-                    ? Icons.check_circle_outline_rounded
-                    : entry.attendance == AttendanceStatus.absent
-                    ? Icons.cancel_outlined
-                    : Icons.schedule_rounded,
-                size: 15,
-                color: entry.attendance == AttendanceStatus.present
-                    ? AppColors.primary
-                    : entry.attendance == AttendanceStatus.absent
-                    ? AppColors.red
-                    : AppColors.amber,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                entry.attendance.label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: entry.attendance == AttendanceStatus.present
-                      ? AppColors.primary
-                      : entry.attendance == AttendanceStatus.absent
-                      ? AppColors.red
-                      : AppColors.amber,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  entry.reason ?? entry.guardianName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-              ),
-              if (entry.pendingSync) const SyncBadge(pending: true),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

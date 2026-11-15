@@ -9,13 +9,8 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    function isUidOrDemoOwner(uid) {
-      return isAuthenticated() && (
-        request.auth.uid == uid ||
-        uid == 'u_ibu' ||
-        uid == 'u_kader' ||
-        uid == 'u_maya'
-      );
+    function isUidOrOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
     }
 
     // 1. Profil pengguna:
@@ -28,8 +23,7 @@ service cloud.firestore {
       );
       allow create: if isAuthenticated() && (
         request.auth.uid == userId ||
-        request.resource.data.authUid == request.auth.uid ||
-        request.resource.data.demo == true
+        request.resource.data.authUid == request.auth.uid
       );
       allow update: if isAuthenticated() && (
         request.auth.uid == userId ||
@@ -45,52 +39,68 @@ service cloud.firestore {
     // - Kader tidak diizinkan menghapus profil anak milik ibu.
     match /children/{childId} {
       allow read: if isAuthenticated() && (
-        isUidOrDemoOwner(resource.data.guardianUid) ||
+        isUidOrOwner(resource.data.guardianUid) ||
         resource.data.posyanduId != null
       );
       allow create: if isAuthenticated() && (
-        isUidOrDemoOwner(request.resource.data.guardianUid) ||
+        isUidOrOwner(request.resource.data.guardianUid) ||
         request.resource.data.guardianUid == null
       );
       allow update: if isAuthenticated() && (
-        isUidOrDemoOwner(resource.data.guardianUid) ||
-        isUidOrDemoOwner(request.resource.data.guardianUid) ||
+        isUidOrOwner(resource.data.guardianUid) ||
+        isUidOrOwner(request.resource.data.guardianUid) ||
         resource.data.posyanduId == request.resource.data.posyanduId
       );
       allow delete: if isAuthenticated() &&
-        isUidOrDemoOwner(resource.data.guardianUid);
+        isUidOrOwner(resource.data.guardianUid);
     }
 
     // 3. Kehamilan: hanya ibu pemilik (ownerUid)
     match /pregnancies/{pregnancyId} {
       allow read, update, delete: if isAuthenticated() &&
-        isUidOrDemoOwner(resource.data.ownerUid);
+        isUidOrOwner(resource.data.ownerUid);
       allow create: if isAuthenticated() &&
-        isUidOrDemoOwner(request.resource.data.ownerUid);
+        isUidOrOwner(request.resource.data.ownerUid);
     }
 
     // 4. Catatan makan harian:
-    // - Hanya dapat dibuat/dihapus oleh pemilik subjek atau pengguna terautentikasi
-    //   dengan validasi subjectId.
+    // - Hanya dapat dibuat/diubah/dihapus oleh pemilik catatan terautentikasi
     match /food_logs/{logId} {
-      allow read, write: if isAuthenticated() &&
-        request.resource.data.subjectId != '';
-      allow read, delete: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.ownerUid == request.auth.uid ||
+        isUidOrOwner(resource.data.subjectId)
+      );
+      allow create, update: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid ||
+        request.resource.data.ownerUid == request.auth.uid ||
+        isUidOrOwner(request.resource.data.subjectId)
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.ownerUid == request.auth.uid ||
+        isUidOrOwner(resource.data.subjectId)
+      );
     }
 
-    // 5. Roster Posyandu & Sesi Penimbangan (ruang lingkup Posyandu)
+    // 5. Roster Posyandu & Sesi Penimbangan (ruang lingkup Posyandu - kader)
     match /roster/{entryId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && currentUserDoc().role == 'cadre';
     }
 
     match /sessions/{sessionId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && currentUserDoc().role == 'cadre';
     }
 
-    // 6. Artikel edukasi: publik dapat membaca, penulisan terbatas
+    // 6. Artikel edukasi: publik dapat membaca, penulisan terbatas pada admin/nakes
     match /contents/{articleId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAuthenticated() && (
+        currentUserDoc().role == 'admin' ||
+        currentUserDoc().role == 'doctor'
+      );
     }
 
     // 7. Izin akses keluarga-kader (AccessGrant):
@@ -99,18 +109,18 @@ service cloud.firestore {
     // - Pencabutan (status == 'dicabut') hanya boleh dilakukan oleh ownerUid (ibu).
     match /access_grants/{grantId} {
       allow read: if isAuthenticated() && (
-        isUidOrDemoOwner(resource.data.ownerUid) ||
-        isUidOrDemoOwner(resource.data.granteeUid) ||
+        isUidOrOwner(resource.data.ownerUid) ||
+        isUidOrOwner(resource.data.granteeUid) ||
         resource.data.posyanduId != null
       );
       allow create: if isAuthenticated() && (
-        isUidOrDemoOwner(request.resource.data.ownerUid) ||
-        isUidOrDemoOwner(request.resource.data.granteeUid)
+        isUidOrOwner(request.resource.data.ownerUid) ||
+        isUidOrOwner(request.resource.data.granteeUid)
       );
       allow update: if isAuthenticated() &&
-        isUidOrDemoOwner(resource.data.ownerUid);
+        isUidOrOwner(resource.data.ownerUid);
       allow delete: if isAuthenticated() &&
-        isUidOrDemoOwner(resource.data.ownerUid);
+        isUidOrOwner(resource.data.ownerUid);
     }
 
     // 8. Kode penghubung sekali pakai (LinkCode):

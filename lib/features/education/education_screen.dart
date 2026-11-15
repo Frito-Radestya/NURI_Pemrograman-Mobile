@@ -52,68 +52,170 @@ class _EducationScreenState extends ConsumerState<EducationScreen> {
         .where((article) => article.id != featured?.id)
         .toList();
 
-    return SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          if (widget.showBack)
-            ScreenHeader(
-              title: 'Edukasi',
-              subtitle: 'Artikel singkat dari sumber terpercaya',
-              onBack: () => Navigator.of(context).pop(),
-            )
-          else
-            const NuriPageHeader(
-              title: 'Edukasi',
-              subtitle: 'Tumbuh kembang, gizi, dan kehamilan.',
-            ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-            child: TextField(
-              controller: _search,
-              onChanged: (_) => setState(() {}),
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Cari artikel, topik, atau kata kunci…',
-                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                suffixIcon: _search.text.isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: () {
-                          _search.clear();
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                      ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
+    return Column(
+      children: [
+        CurvedHeader(
+          borderRadius: 32,
+          padding: EdgeInsets.fromLTRB(
+            20,
+            widget.showBack ? 12 : MediaQuery.paddingOf(context).top + 8,
+            20,
+            20,
           ),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                _CategoryChip(
-                  label: 'Semua',
-                  selected: _category == null,
-                  onTap: () => setState(() => _category = null),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      if (widget.showBack && Navigator.of(context).canPop())
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(
+                              Icons.menu_book_rounded,
+                              size: 13,
+                              color: AppColors.secondaryFixed,
+                            ),
+                            SizedBox(width: 5),
+                            Text(
+                              'Panduan Kemenkes & WHO',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Edukasi Kesehatan',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
                 ),
-                const SizedBox(width: 7),
-                ...categories.map(
-                  (category) => Padding(
-                    padding: const EdgeInsets.only(right: 7),
-                    child: _CategoryChip(
-                      label: category,
-                      selected: _category == category,
-                      onTap: () => setState(() => _category = category),
+              ),
+              const Text(
+                'Tumbuh kembang, gizi MPASI, & kehamilan sehat',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x15000000),
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
                     ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _search,
+                  onChanged: (_) => setState(() {}),
+                  style: const TextStyle(fontSize: 13.5),
+                  decoration: InputDecoration(
+                    hintText: 'Cari artikel, topik, atau kata kunci…',
+                    hintStyle: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.muted,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      size: 20,
+                      color: AppColors.muted,
+                    ),
+                    suffixIcon: _search.text.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              _search.clear();
+                              setState(() {});
+                            },
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                          ),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 11),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    filled: false,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              _CategoryChip(
+                label: 'Semua',
+                selected: _category == null,
+                onTap: () => setState(() => _category = null),
+              ),
+              const SizedBox(width: 7),
+              ...categories.map(
+                (category) => Padding(
+                  padding: const EdgeInsets.only(right: 7),
+                  child: _CategoryChip(
+                    label: category,
+                    selected: _category == category,
+                    onTap: () => setState(() => _category = category),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
           const SizedBox(height: 12),
           Expanded(
             child: filtered.isEmpty
@@ -123,7 +225,7 @@ class _EducationScreenState extends ConsumerState<EducationScreen> {
                     icon: Icons.search_off_rounded,
                   )
                 : ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
                     children: [
                       if (featured != null &&
                           _category == null &&
@@ -169,8 +271,7 @@ class _EducationScreenState extends ConsumerState<EducationScreen> {
                   ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   ContentArticle? _featured(List<ContentArticle> articles, AppState state) {

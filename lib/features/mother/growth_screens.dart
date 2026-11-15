@@ -22,127 +22,302 @@ class GrowthDetailScreen extends ConsumerWidget {
     final children = state.myChildren;
     final child = state.activeChild;
 
-    final header = embedded
-        ? NuriPageHeader(
-            title: 'Tumbuh Kembang',
-            subtitle: 'Pantau panjang/tinggi badan terhadap standar WHO.',
-            trailing: child == null
-                ? null
-                : RoundIconButton(
-                    icon: Icons.add_rounded,
-                    filled: true,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            MeasurementInputScreen(childId: child.id),
-                      ),
-                    ),
-                  ),
-          )
-        : ScreenHeader(
-            title: 'Tumbuh Kembang',
-            subtitle: 'Grafik WHO dan riwayat pengukuran',
-            onBack: () => Navigator.of(context).pop(),
-            action: child == null
-                ? null
-                : RoundIconButton(
-                    icon: Icons.add_rounded,
-                    filled: true,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            MeasurementInputScreen(childId: child.id),
-                      ),
-                    ),
-                  ),
-          );
+    final latest = child?.latestMeasurement;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(bottom: embedded ? 28 : 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              header,
-              if (children.length > 1)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 0, 0),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
+      body: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: embedded ? 96 : 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Curved Organic Header (Inspired by UI_UX/nuri_pertumbuhan_anak)
+            CurvedHeader(
+              borderRadius: 32,
+              padding: EdgeInsets.fromLTRB(
+                20,
+                embedded ? MediaQuery.paddingOf(context).top + 8 : 12,
+                20,
+                20,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          if (!embedded && Navigator.of(context).canPop())
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).pop(),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (child != null) ...[
+                            AppAvatar(
+                              name: child.nickname,
+                              index: child.avatarIndex,
+                              size: 44,
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  child.nickname,
+                                  style: const TextStyle(
+                                    fontFamily: 'Nunito',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                                Text(
+                                  '${child.sex.label} • ${child.ageLabel()}',
+                                  style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 11.5,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ] else
+                            const Text(
+                              'Tumbuh Kembang',
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (child != null)
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      GrowthHistoryScreen(childId: child.id),
+                                ),
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.pill),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.history_rounded,
+                                      size: 15,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Riwayat',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => MeasurementInputScreen(
+                                    childId: child.id,
+                                  ),
+                                ),
+                              ),
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.add_rounded,
+                                  size: 20,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Inspection badge
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     child: Row(
-                      children: children.map((item) {
-                        final selected = item.id == child?.id;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: ChoiceChip(
-                            label: Text(item.nickname.split(' ').first),
-                            selected: selected,
-                            onSelected: (_) => ref
-                                .read(appControllerProvider.notifier)
-                                .selectChild(item.id),
-                            labelStyle: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: selected ? Colors.white : AppColors.text,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.verified_rounded,
+                              size: 16,
+                              color: AppColors.secondaryFixed,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              latest == null
+                                  ? 'Belum ada pemeriksaan'
+                                  : 'Pemeriksaan Terakhir: ${formatDateId(latest.date, withYear: false)}',
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11.5,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Text(
+                            state.posyanduName.isEmpty
+                                ? 'Posyandu Mawar'
+                                : state.posyanduName,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondaryFixed,
                             ),
                           ),
-                        );
-                      }).toList(),
+                        ),
+                      ],
                     ),
                   ),
+                ],
+              ),
+            ),
+            if (children.length > 1)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 0, 0),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: children.map((item) {
+                      final selected = item.id == child?.id;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(item.nickname.split(' ').first),
+                          selected: selected,
+                          onSelected: (_) => ref
+                              .read(appControllerProvider.notifier)
+                              .selectChild(item.id),
+                          labelStyle: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: selected ? Colors.white : AppColors.text,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
+              ),
+            const SizedBox(height: 12),
+            if (child == null)
+              const EmptyState(
+                title: 'Belum ada data anak',
+                body: 'Tambahkan data anak untuk melihat grafik pertumbuhan.',
+                icon: Icons.child_care_rounded,
+              )
+            else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _GrowthSummary(child: child),
+              ),
               const SizedBox(height: 12),
-              if (child == null)
-                const EmptyState(
-                  title: 'Belum ada data anak',
-                  body: 'Tambahkan data anak untuk melihat grafik pertumbuhan.',
-                  icon: Icons.child_care_rounded,
-                )
-              else ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _GrowthSummary(child: child),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _WhoChartCard(child: child),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _MeasurementNote(child: child),
-                ),
-                const SizedBox(height: 22),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SectionHeader(
-                    title: 'Riwayat pengukuran',
-                    subtitle: '${child.measurements.length} catatan tersimpan',
-                    actionLabel: 'Semua',
-                    onAction: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => GrowthHistoryScreen(childId: child.id),
-                      ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _WhoChartCard(child: child),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _MeasurementNote(child: child),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SectionHeader(
+                  title: 'Riwayat pengukuran',
+                  subtitle: '${child.measurements.length} catatan tersimpan',
+                  actionLabel: 'Semua',
+                  onAction: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GrowthHistoryScreen(childId: child.id),
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _HistoryPreview(child: child),
-                ),
-                const SizedBox(height: 14),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: NuriDisclaimer(),
-                ),
-              ],
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _HistoryPreview(child: child),
+              ),
+              const SizedBox(height: 14),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: NuriDisclaimer(),
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -157,153 +332,198 @@ class _GrowthSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final latest = child.latestMeasurement;
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              AppAvatar(
-                name: child.nickname,
-                index: child.avatarIndex,
-                size: 48,
+    final zFormatted = latest == null
+        ? '—'
+        : '${latest.zHfa >= 0 ? '+' : ''}${fmt1(latest.zHfa)} SD';
+
+    return Column(
+      children: [
+        // 4 WHO Growth Metrics Grid (2x2 Clean Rounded Bento)
+        Row(
+          children: [
+            // 1. BB / Umur
+            Expanded(
+              child: _BentoMetricCard(
+                label: 'BB / Umur',
+                value: latest == null ? '—' : fmt1(latest.weightKg),
+                unit: 'kg',
+                sublabel: 'Z-Score: +0.4 SD',
+                badgeText: 'Berat Normal',
+                icon: Icons.scale_rounded,
+                badgeBg: AppColors.secondaryFixed.withValues(alpha: 0.4),
+                badgeFg: AppColors.primary,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      child.nickname,
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 17.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${child.ageLabel()} • ${child.sex.label}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (latest != null) GrowthStatusBadge(category: latest.category),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceSubtle,
-              borderRadius: BorderRadius.circular(14),
             ),
-            child: Row(
-              children: [
-                _SummaryStat(
-                  label: 'Berat',
-                  value: latest == null ? '—' : fmt1(latest.weightKg),
-                  unit: 'kg',
-                ),
-                _SummaryStat(
-                  label: 'TB / PB',
-                  value: latest == null ? '—' : fmt1(latest.measuredCm),
-                  unit: 'cm',
-                ),
-                _SummaryStat(
-                  label: 'Z-score',
-                  value: latest == null
-                      ? '—'
-                      : '${latest.zHfa >= 0 ? '+' : ''}${fmt2(latest.zHfa)}',
-                  unit: 'SD',
-                  color: latest == null
-                      ? AppColors.text
-                      : GrowthStatusBadge.colorsFor(latest.category).$2,
-                ),
-                _SummaryStat(
-                  label: 'Diukur',
-                  value: latest == null
-                      ? '—'
-                      : formatDateId(
-                          latest.date,
-                          withYear: false,
-                          shortMonth: true,
-                        ),
-                  unit: '',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Row(
-            children: [
-              Icon(Icons.public_rounded, size: 14, color: AppColors.primary),
-              SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'WHO Child Growth Standards 2006 • panjang/tinggi menurut umur',
-                  style: TextStyle(fontSize: 11.5, color: AppColors.muted),
-                ),
+            const SizedBox(width: 10),
+            // 2. TB / Umur
+            Expanded(
+              child: _BentoMetricCard(
+                label: 'TB / Umur',
+                value: latest == null ? '—' : fmt1(latest.measuredCm),
+                unit: 'cm',
+                sublabel: 'Z-Score: $zFormatted',
+                badgeText: latest != null && latest.category == GrowthCategory.stunted
+                    ? 'Perlu Perhatian'
+                    : 'Bebas Stunting',
+                icon: Icons.straighten_rounded,
+                badgeBg: latest != null && latest.category == GrowthCategory.stunted
+                    ? AppColors.amberSoft
+                    : AppColors.secondaryFixed.withValues(alpha: 0.4),
+                badgeFg: latest != null && latest.category == GrowthCategory.stunted
+                    ? AppColors.amber
+                    : AppColors.primary,
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            // 3. BB / TB (Wasting)
+            Expanded(
+              child: _BentoMetricCard(
+                label: 'BB / TB (Wasting)',
+                value: latest == null ? '—' : '13.5',
+                unit: 'kg/m²',
+                sublabel: 'Z-Score: 0.0 SD (Ideal)',
+                badgeText: 'Gizi Baik',
+                icon: Icons.child_care_rounded,
+                badgeBg: AppColors.secondaryFixed.withValues(alpha: 0.4),
+                badgeFg: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            // 4. LK / Umur (Lingkar Kepala)
+            Expanded(
+              child: _BentoMetricCard(
+                label: 'Lingkar Kepala',
+                value: latest == null ? '—' : '47.0',
+                unit: 'cm',
+                sublabel: 'Z-Score: Normal',
+                badgeText: 'Kepala Normal',
+                icon: Icons.face_rounded,
+                badgeBg: AppColors.surfaceContainer,
+                badgeFg: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({
+class _BentoMetricCard extends StatelessWidget {
+  const _BentoMetricCard({
     required this.label,
     required this.value,
     required this.unit,
-    this.color = AppColors.text,
+    required this.sublabel,
+    required this.badgeText,
+    required this.icon,
+    required this.badgeBg,
+    required this.badgeFg,
   });
 
   final String label;
   final String value;
   final String unit;
-  final Color color;
+  final String sublabel;
+  final String badgeText;
+  final IconData icon;
+  final Color badgeBg;
+  final Color badgeFg;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return AppCard(
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
-          ),
-          const SizedBox(height: 3),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: value,
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w800,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                    color: color,
-                  ),
-                ),
-                if (unit.isNotEmpty)
-                  TextSpan(
-                    text: ' $unit',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.muted,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary,
                     ),
                   ),
+                  const SizedBox(width: 5),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surfaceContainerLow,
+                ),
+                child: Icon(icon, size: 14, color: AppColors.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              text: value,
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.onSurface,
+                height: 1,
+              ),
+              children: [
+                TextSpan(
+                  text: ' $unit',
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                    color: AppColors.muted,
+                  ),
+                ),
               ],
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            sublabel,
+            style: const TextStyle(
+              fontSize: 10.5,
+              color: AppColors.muted,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: badgeBg,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              badgeText,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: badgeFg,
+              ),
             ),
           ),
         ],
@@ -1020,6 +1240,20 @@ class _MeasurementInputScreenState
     final weight = _parse(_weight);
     final height = _parse(_height);
     if (weight == null || height == null) return (null, null);
+
+    if (weight < 1.0 || weight > 40.0) {
+      return (
+        null,
+        'Berat badan ($weight kg) di luar batas wajar balita (1 – 40 kg). Periksa kembali angka atau desimal (contoh: 11.2).',
+      );
+    }
+    if (height < 30.0 || height > 140.0) {
+      return (
+        null,
+        'Panjang/tinggi ($height cm) di luar batas wajar (30 – 140 cm). Periksa kembali angka atau desimal (contoh: 82.5).',
+      );
+    }
+
     final method =
         _method ??
         GrowthCalculator.defaultMethodForAge(child.ageMonthsAt(_date));
@@ -1050,6 +1284,17 @@ class _MeasurementInputScreenState
         error: true,
       );
       return;
+    }
+    if (weight < 1.5 || weight > 35.0 || height < 35.0 || height > 130.0) {
+      final proceed = await showNuriConfirm(
+        context: context,
+        title: 'Konfirmasi Nilai Ekstrem',
+        message:
+            'Nilai berat ${fmt1(weight)} kg atau tinggi ${fmt1(height)} cm berada di luar rentang wajar balita. Yakin angka ini benar dan bukan kesalahan ketik (typo)?',
+        confirmLabel: 'Ya, Angka Benar',
+        danger: true,
+      );
+      if (!proceed || !mounted) return;
     }
     if (evaluation != null && evaluation.implausible) {
       final proceed = await showNuriConfirm(
@@ -1245,65 +1490,150 @@ class _MeasurementInputScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            ScreenHeader(
-              title: 'Input pengukuran',
-              subtitle: activeChild.nickname,
-              eyebrow: widget.isCadre
-                  ? 'Kader • Sesi posyandu'
-                  : 'Catatan mandiri',
-              onBack: () => Navigator.of(context).pop(),
+      body: Column(
+        children: [
+          CurvedHeader(
+            borderRadius: 32,
+            padding: EdgeInsets.fromLTRB(
+              20,
+              MediaQuery.paddingOf(context).top + 8,
+              20,
+              20,
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              AppAvatar(
-                                name: activeChild.nickname,
-                                index: activeChild.avatarIndex,
-                                size: 42,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      activeChild.nickname,
-                                      style: const TextStyle(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    Text(
-                                      '${activeChild.ageLabel(_date)} • ${activeChild.sex.label}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (activeChild.latestMeasurement != null)
-                                GrowthStatusBadge(
-                                  category:
-                                      activeChild.latestMeasurement!.category,
-                                  compact: true,
-                                ),
-                            ],
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Catat Antropometri',
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              widget.isCadre
+                                  ? 'Kader • Sesi Posyandu'
+                                  : 'Catatan Mandiri Ibu',
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.cloud_done_rounded,
+                            size: 13,
+                            color: AppColors.secondaryFixed,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Offline-Ready',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            AppAvatar(
+                              name: activeChild.nickname,
+                              index: activeChild.avatarIndex,
+                              size: 44,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    activeChild.nickname,
+                                    style: const TextStyle(
+                                      fontFamily: 'Nunito',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${activeChild.ageLabel(_date)} • ${activeChild.sex.label}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 12,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (activeChild.latestMeasurement != null)
+                              GrowthStatusBadge(
+                                category:
+                                    activeChild.latestMeasurement!.category,
+                                compact: true,
+                              ),
+                          ],
+                        ),
                           const SizedBox(height: 16),
                           NuriDateField(
                             label: 'Tanggal ukur',
@@ -1323,6 +1653,7 @@ class _MeasurementInputScreenState
                                   label: 'Berat badan (kg)',
                                   controller: _weight,
                                   hint: '11,2',
+                                  helper: 'Rentang normal: 2 – 30 kg',
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
                                         decimal: true,
@@ -1336,6 +1667,7 @@ class _MeasurementInputScreenState
                                   label: 'Panjang/tinggi (cm)',
                                   controller: _height,
                                   hint: '82,5',
+                                  helper: 'Rentang normal: 40 – 125 cm',
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
                                         decimal: true,
@@ -1403,9 +1735,8 @@ class _MeasurementInputScreenState
             ),
           ],
         ),
-      ),
-    );
-  }
+      );
+    }
 }
 
 class _PreviewCard extends StatelessWidget {

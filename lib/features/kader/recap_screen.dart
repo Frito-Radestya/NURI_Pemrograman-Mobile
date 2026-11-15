@@ -51,47 +51,125 @@ class RecapScreen extends ConsumerWidget {
         ? 'Belum ada sesi aktif'
         : '${session.posyanduName} • ${formatDateId(session.date, withYear: false)}';
 
-    final content = SafeArea(
-      bottom: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (embedded)
-              NuriPageHeader(
-                title: 'Rekap sesi',
-                subtitle: subtitle,
-                trailing: exportButton,
-              )
-            else
-              ScreenHeader(
-                title: 'Rekap sesi',
-                subtitle: subtitle,
-                onBack: () => Navigator.of(context).pop(),
-                action: exportButton,
-              ),
-            const SizedBox(height: 12),
-            if (session == null)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: EmptyState(
-                  title: 'Belum ada sesi',
-                  body:
-                      'Buat sesi Posyandu terlebih dahulu untuk melihat rekap.',
-                  icon: Icons.event_busy_rounded,
+    final content = SingleChildScrollView(
+      padding: EdgeInsets.only(bottom: embedded ? 96 : 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CurvedHeader(
+            borderRadius: 32,
+            padding: EdgeInsets.fromLTRB(
+              20,
+              embedded ? MediaQuery.paddingOf(context).top + 8 : 12,
+              20,
+              20,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        if (!embedded && Navigator.of(context).canPop())
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.insert_chart_rounded,
+                                size: 13,
+                                color: AppColors.secondaryFixed,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                'Laporan Posyandu',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    exportButton,
+                  ],
                 ),
-              )
-            else ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _SessionSummaryCard(
-                  session: session,
-                  present: present,
-                  target: target,
-                  done: done,
+                const SizedBox(height: 10),
+                const Text(
+                  'Rekap Hasil Sesi',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
                 ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (session == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: EmptyState(
+                title: 'Belum ada sesi',
+                body:
+                    'Buat sesi Posyandu terlebih dahulu untuk melihat rekap.',
+                icon: Icons.event_busy_rounded,
               ),
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _SessionSummaryCard(
+                session: session,
+                present: present,
+                target: target,
+                done: done,
+              ),
+            ),
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -240,8 +318,7 @@ class RecapScreen extends ConsumerWidget {
             ],
           ],
         ),
-      ),
-    );
+      );
 
     if (embedded) return content;
     return Scaffold(backgroundColor: AppColors.background, body: content);

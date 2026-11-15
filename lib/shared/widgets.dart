@@ -80,11 +80,11 @@ class AppCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.color = AppColors.surface,
+    this.color = AppColors.surfaceContainerLowest,
     this.borderColor = AppColors.line,
     this.radius = AppRadius.card,
     this.onTap,
-    this.shadow = false,
+    this.shadow = true,
     this.margin,
   });
 
@@ -105,7 +105,7 @@ class AppCard extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: borderColor),
-        boxShadow: shadow ? AppShadows.soft : null,
+        boxShadow: shadow ? AppShadows.card : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -123,6 +123,78 @@ class AppCard extends StatelessWidget {
     );
     if (onTap == null) return card;
     return NuriTapScale(child: card);
+  }
+}
+
+class CurvedHeader extends StatelessWidget {
+  const CurvedHeader({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.fromLTRB(20, 12, 20, 24),
+    this.gradient = AppGradients.headerWide,
+    this.borderRadius = 32,
+    this.showAmbientBlobs = true,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final Gradient gradient;
+  final double borderRadius;
+  final bool showAmbientBlobs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(borderRadius)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x240D631B),
+            blurRadius: 18,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(borderRadius)),
+        child: Stack(
+          children: [
+            if (showAmbientBlobs) ...[
+              Positioned(
+                top: -24,
+                right: -24,
+                child: Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -20,
+                left: -20,
+                child: Container(
+                  width: 110,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.secondaryFixed.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+            ],
+            Padding(
+              padding: padding,
+              child: child,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -699,114 +771,129 @@ class NuriBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final reduce = MediaQuery.disableAnimationsOf(context);
+
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.line)),
+      color: Colors.transparent,
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        bottomPadding > 0 ? bottomPadding : 12,
       ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: List.generate(items.length, (index) {
-              final item = items[index];
-              final selected = index == selectedIndex;
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.98),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: AppColors.line.withValues(alpha: 0.8)),
+          boxShadow: AppShadows.floating,
+        ),
+        child: Row(
+          children: List.generate(items.length, (index) {
+            final item = items[index];
+            final selected = index == selectedIndex;
+
+            if (item.isCenter) {
               return Expanded(
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    onTap(index);
-                  },
-                  splashColor: AppColors.primary.withValues(alpha: 0.08),
-                  highlightColor: Colors.transparent,
-                  child: item.isCenter
-                      ? Column(
+                child: Center(
+                  child: Transform.translate(
+                    offset: const Offset(0, -10),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onTap(index);
+                      },
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppGradients.button,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x4D2E7D32),
+                              blurRadius: 14,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 48,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.deepForest,
-                                borderRadius: BorderRadius.circular(18),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.deepForest.withValues(
-                                      alpha: 0.24,
-                                    ),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                item.activeIcon ?? item.icon,
-                                color: Colors.white,
-                                size: 21,
-                              ),
+                            Icon(
+                              item.activeIcon ?? item.icon,
+                              color: Colors.white,
+                              size: 23,
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 1),
                             Text(
                               item.label,
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 9,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.deepForest,
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            AnimatedContainer(
-                              duration: Duration(
-                                milliseconds: reduce ? 0 : 200,
-                              ),
-                              curve: Curves.easeOutCubic,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: selected
-                                    ? AppColors.softMint
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                selected
-                                    ? (item.activeIcon ?? item.icon)
-                                    : item.icon,
-                                color: selected
-                                    ? AppColors.deepForest
-                                    : AppColors.secondaryText,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              item.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: selected
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: selected
-                                    ? AppColors.deepForest
-                                    : AppColors.secondaryText,
+                                color: Colors.white,
+                                height: 1,
                               ),
                             ),
                           ],
                         ),
+                      ),
+                    ),
+                  ),
                 ),
               );
-            }),
-          ),
+            }
+
+            return Expanded(
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onTap(index);
+                },
+                borderRadius: BorderRadius.circular(32),
+                splashColor: AppColors.primary.withValues(alpha: 0.08),
+                highlightColor: Colors.transparent,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: reduce ? 0 : 200),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            selected ? AppColors.softMint : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        selected ? (item.activeIcon ?? item.icon) : item.icon,
+                        color: selected ? AppColors.primary : AppColors.muted,
+                        size: 21,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10.5,
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                        color: selected ? AppColors.primary : AppColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ),
       ),
     );

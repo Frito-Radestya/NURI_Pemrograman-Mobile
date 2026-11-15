@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+
+<html lang="id"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container-highest": "#d8e3fb", "tertiary-container": "#127f26", "primary-fixed": "#a3f69c", "surface-container-low": "#f0f3ff", "surface-container-high": "#dee8ff", "primary-container": "#2e7d32", "primary": "#0d631b", "on-surface-variant": "#40493d", "primary-fixed-dim": "#88d982", "outline-variant": "#bfcaba", "surface-bright": "#f9f9ff", "surface": "#f9f9ff", "error-container": "#ffdad6", "on-secondary": "#ffffff", "secondary": "#3e6a00", "on-surface": "#111c2d", "secondary-fixed": "#b9f474", "surface-container": "#e7eeff", "on-error-container": "#93000a", "on-primary-container": "#cbffc2", "inverse-surface": "#263143", "on-error": "#ffffff", "on-primary-fixed-variant": "#005312", "on-secondary-container": "#437000", "surface-variant": "#d8e3fb", "on-primary": "#ffffff", "surface-container-lowest": "#ffffff", "inverse-on-surface": "#ecf1ff", "tertiary-fixed-dim": "#78dc77", "background": "#f9f9ff", "tertiary": "#006419", "secondary-container": "#b9f474", "on-tertiary-fixed": "#002204", "tertiary-fixed": "#94f990", "on-tertiary": "#ffffff", "on-primary-fixed": "#002204", "on-secondary-fixed-variant": "#2e4f00", "on-background": "#111c2d", "outline": "#707a6c", "inverse-primary": "#88d982", "error": "#ba1a1a", "secondary-fixed-dim": "#9ed75b", "surface-dim": "#cfdaf2", "on-secondary-fixed": "#0f2000", "on-tertiary-container": "#caffc2", "on-tertiary-fixed-variant": "#005313", "surface-tint": "#1b6d24" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xl": "2rem", "gutter-mobile": "0.75rem", "space-xs": "0.25rem", "space-md": "1rem", "margin": "1.25rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "gutter": "1rem", "margin-mobile": "1rem" }, fontFamily: { "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-xl": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"] }, fontSize: { "headline-xl-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "800" }], "headline-lg-mobile": ["22px", { "lineHeight": "30px", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "700" }], "headline-xl": ["36px", { "lineHeight": "44px", "fontWeight": "800" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "26px", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-margin-mobile flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary leading-tight tracking-tight">NURI</span><span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>Posyandu Mawar III</span></div></div><div class="flex items-center gap-space-xs"><button class="min-h-[44px] px-space-sm flex items-center gap-1 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface" type="button"><span class="material-symbols-outlined text-[18px] text-tertiary-container">cloud_sync</span><span class="font-label-sm text-label-sm bg-tertiary-container text-on-tertiary px-1.5 py-0.5 rounded-full">3</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-1"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-28 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Top Curved Organic Header Canvas -->
+<div class="bg-gradient-to-br from-primary-container via-primary to-secondary text-on-primary px-margin-mobile pt-4 pb-7 rounded-b-[2rem] shadow-md relative overflow-hidden">
+<!-- Ambient Organic Foliage Highlights -->
+<div class="absolute -right-12 -top-10 w-44 h-44 rounded-full bg-secondary-container/20 blur-2xl pointer-events-none"></div>
+<div class="absolute -left-10 bottom-0 w-36 h-36 rounded-full bg-primary-fixed/15 blur-xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col gap-3">
+<!-- Title & Context -->
+<div class="flex items-start justify-between">
+<div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-on-primary/15 text-primary-fixed font-label-sm text-label-sm backdrop-blur-sm">
+<span class="material-symbols-outlined text-[14px]">shield_person</span> Mode Kader Aktif
+          </span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile tracking-tight mt-1 text-on-primary">Roster Sasaran</h1>
+<p class="font-body-sm text-body-sm text-surface-container-high/90">Posyandu Mawar III • 48 Balita &amp; 12 Bumil</p>
+</div>
+<button class="w-10 h-10 rounded-full bg-on-primary/15 hover:bg-on-primary/25 active:scale-95 transition flex items-center justify-center text-on-primary backdrop-blur-md" type="button">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+<!-- Quick Metrics Bento Bar -->
+<div class="grid grid-cols-3 gap-2 mt-1">
+<div class="bg-surface-container-lowest/15 backdrop-blur-md rounded-xl p-2.5 flex flex-col justify-between">
+<span class="font-label-sm text-label-sm text-surface-container-high">Total Terdata</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-md text-headline-md font-bold text-on-primary">60</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed">Sasaran</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest/15 backdrop-blur-md rounded-xl p-2.5 flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-surface-container-high">Kehadiran</span>
+<span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-md text-headline-md font-bold text-secondary-fixed">38</span>
+<span class="font-body-sm text-body-sm text-surface-container-high">/ 22 blm</span>
+</div>
+</div>
+<div class="bg-error-container/85 backdrop-blur-md rounded-xl p-2.5 flex flex-col justify-between text-on-error-container">
+<span class="font-label-sm text-label-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">priority_high</span> Perlu Tindak
+          </span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-md text-headline-md font-bold">5</span>
+<span class="font-label-sm text-label-sm">Kasus</span>
+</div>
+</div>
+</div>
+<!-- Interactive Search & Scan Pill -->
+<div class="relative mt-1">
+<div class="w-full flex items-center bg-surface-container-lowest text-on-surface rounded-full shadow-lg pl-4 pr-1.5 py-1.5">
+<span class="material-symbols-outlined text-[20px] text-outline mr-2">search</span>
+<input class="w-full bg-transparent text-on-surface placeholder:text-outline text-body-md font-body-md outline-none" id="rosterSearch" placeholder="Cari nama anak, ibu, atau NIK..." type="text"/>
+<button aria-label="Filter atau scan barcode" class="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-primary transition active:scale-90 ml-1" type="button">
+<span class="material-symbols-outlined text-[19px]">qr_code_scanner</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Space -->
+<div class="px-margin-mobile flex flex-col gap-4 mt-3">
+<!-- Horizontal Scrollable Filter Chips -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-margin-mobile px-margin-mobile no-scrollbar" id="filterPills">
+<button class="filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-primary-container to-primary text-on-primary font-label-md text-label-md shadow-sm" data-filter="all" type="button">
+        Semua (60)
+      </button>
+<button class="filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition" data-filter="balita" type="button">
+        Balita (48)
+      </button>
+<button class="filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition" data-filter="bumil" type="button">
+        Ibu Hamil (12)
+      </button>
+<button class="filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-error-container text-on-error-container font-label-md text-label-md flex items-center gap-1 hover:brightness-95 transition" data-filter="alert" type="button">
+<span class="material-symbols-outlined text-[14px]">warning</span> Butuh Tindak (5)
+      </button>
+<button class="filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition" data-filter="hadir" type="button">
+        ✅ Hadir Sesi (38)
+      </button>
+<button class="filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition" data-filter="absen" type="button">
+        Belum Hadir (22)
+      </button>
+</div>
+<!-- Live Status Helper Banner -->
+<div class="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-primary-fixed-dim/60 flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Sesi Penimbangan Bulanan: Mei 2025</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Posko Balai Warga RT 03 • Berlangsung</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">LIVE</span>
+</div>
+<!-- Roster Target List -->
+<div class="flex flex-col gap-3.5" id="targetCardList">
+<!-- Card 1: Balita - Hadir & Normal -->
+<div class="target-card bg-surface-container-lowest rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden" data-category="balita hadir normal">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-container"></div>
+<div class="flex items-start gap-3">
+<div class="relative shrink-0">
+<img class="w-13 h-13 w-12 h-12 rounded-full object-cover shadow-inner" data-alt="A portrait of a cheerful 18-month-old Southeast Asian baby boy smiling gently with clear healthy eyes, soft ambient natural daylight, warm pastel background, ultra clean editorial health style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJeqhfdRKdn2Sy5XnYJou2cIG769qMIKIq3eLj3t_hErKU1vD74REeFpeQbw_yVlI-TZDQjGaVr70d7rxeTiTCx2lqVbPCv3p_Q5emmkU9EBJkDg8_QrySfVqS2DcK0xi6wF4_VR9QN-S_6CuoXgpDebMXeSiZq7E0tr6SkaJI481BOYFUG8kkv2q_Q8cJ5YvZCDnshAuEJFAWWVKvO6j5zpfg6AedKMPnQCzVivw"/>
+<span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[12px]">check</span>
+</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Arka Rayyan</h2>
+<span class="shrink-0 px-2 py-0.5 rounded-full bg-on-primary-container/40 text-on-primary-fixed-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">how_to_reg</span> Hadir
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">18 Bulan • Laki-laki</p>
+<p class="font-body-sm text-body-sm text-outline truncate mt-0.5">Ibu Citra Lestari • RT 04 / RW 02</p>
+<!-- Status Pills -->
+<div class="flex flex-wrap gap-1.5 mt-2.5">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed/50 text-on-secondary-fixed font-label-sm text-label-sm">
+                🌿 Gizi Baik (Hijau)
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-tertiary-container">verified_user</span> Akun NURI Aktif
+              </span>
+</div>
+<!-- Quick Metrics Grid -->
+<div class="mt-3 bg-surface-container-low rounded-xl p-2.5 flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Berat Badan</span>
+<p class="font-label-lg text-label-lg text-primary font-bold">11.2 kg <span class="font-label-sm text-label-sm text-tertiary-container">(+0.3 kg)</span></p>
+</div>
+<div class="w-px h-6 bg-surface-container"></div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tinggi Badan</span>
+<p class="font-label-lg text-label-lg text-on-surface font-semibold">82.5 cm</p>
+</div>
+<div class="w-px h-6 bg-surface-container"></div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">LiLA / LK</span>
+<p class="font-label-lg text-label-lg text-on-surface font-semibold">15.0 / 47 cm</p>
+</div>
+</div>
+<!-- Action CTA -->
+<div class="mt-3 flex items-center gap-2">
+<button class="flex-1 min-h-[44px] px-3 rounded-full bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 active:scale-[0.98] transition" type="button">
+<span class="material-symbols-outlined text-[18px]">edit_note</span> Detail &amp; Catat
+              </button>
+<button aria-label="Lihat KMS" class="w-11 h-11 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-primary transition active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">ssid_chart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: Balita - Butuh Tindak Lanjut / Alert (2T) -->
+<div class="target-card bg-surface-container-lowest rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden" data-category="balita alert absen">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-error"></div>
+<div class="flex items-start gap-3">
+<div class="relative shrink-0">
+<img class="w-12 h-12 rounded-full object-cover shadow-inner" data-alt="A portrait of a 22-month-old toddler boy looking thoughtfully at the camera, soft focused cozy room lighting, muted natural tones, authentic pediatric documentary style photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByOc3P_WD1ABGRbO1bk9_NNffCWNgwagLakm4ilmtKQgkmQl6TcECUQFHhWohH3BjNhqfz292bYYzs1J-T93ao3JnD4P1kbrYNpCtLpU83W_pOx3SUpziuJpjRXs6tIFQcciS1gqyQvk7olZANk8xxjCT1M3qeBdwWx78eOap7PxMkEdFXgsFTd4917TATzn5ElUzBvfuDkTF7afjhcmiIrDqXJUm7vq9lUxZ9Lvc"/>
+<span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-error text-on-error flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[12px]">priority_high</span>
+</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Bima Sakti</h2>
+<span class="shrink-0 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm flex items-center gap-0.5">
+                Belum Hadir
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">22 Bulan • Laki-laki</p>
+<p class="font-body-sm text-body-sm text-outline truncate mt-0.5">Ibu Rina Wulandari • RT 02 / RW 02</p>
+<!-- Status Pills Warning -->
+<div class="flex flex-wrap gap-1.5 mt-2.5">
+<span class="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">warning</span> 2T (BB Tidak Naik 2x)
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+                Perlu Sweeping
+              </span>
+</div>
+<!-- Previous Metrics Alert -->
+<div class="mt-3 bg-surface-container-low rounded-xl p-2.5 text-body-sm text-on-surface">
+<div class="flex justify-between items-center text-outline font-label-sm text-label-sm">
+<span>Terakhir: 14 Apr 2025</span>
+<span class="text-error font-bold">Turun 0.1 kg</span>
+</div>
+<p class="mt-1 font-body-sm text-body-sm">BB 10.1 kg • TB 84.0 cm • LiLA 13.8 cm (Kuning)</p>
+<div class="mt-2 pt-2 bg-surface-container-lowest/80 rounded-lg p-2 flex items-center justify-between text-body-sm">
+<span class="text-outline">Akun Ibu: <strong class="text-on-surface">Belum Tertaut</strong></span>
+<button class="text-primary font-label-sm text-label-sm font-bold hover:underline flex items-center gap-0.5" type="button">
+<span class="material-symbols-outlined text-[14px]">key</span> Kode Klaim
+                </button>
+</div>
+</div>
+<!-- Action buttons: Sweeping / WhatsApp -->
+<div class="mt-3 grid grid-cols-2 gap-2">
+<button class="min-h-[44px] px-3 rounded-full bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-primary transition active:scale-95" type="button">
+<span class="material-symbols-outlined text-[17px]">chat</span> Chat Ibu (WA)
+              </button>
+<button class="min-h-[44px] px-3 rounded-full bg-error-container text-on-error-container font-label-md text-label-md flex items-center justify-center gap-1.5 hover:brightness-95 transition active:scale-95" type="button">
+<span class="material-symbols-outlined text-[17px]">home_pin</span> Kunjungan
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Ibu Hamil - Active & Normal -->
+<div class="target-card bg-surface-container-lowest rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden" data-category="bumil hadir normal">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-container"></div>
+<div class="flex items-start gap-3">
+<div class="relative shrink-0">
+<img class="w-12 h-12 rounded-full object-cover shadow-inner" data-alt="Portrait of an expectant Indonesian mother in her late twenties wearing a modest soft pastel mint green hijab, glowing calm expression, gentle natural lighting indoors, high aesthetic maternal health photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBicPVvSwQL-c9hquX0nSR67YNVJei1H1aybe7C1dvlP66Kl58GXhRzd8urWZefGstf0lkfm_LVzgIyzQxZ0T0SdwzrOWVUSZcqNhwZZpdXmeTJFKsdnpvDyqv3oT5OIgF49G4WfhG0Fbfy1YeZ-Y-yLowpHUVGrLKPJroc3zJZogY46hRuZVlEeJPQUpC5QuUha1xxxS2Ekzx3n-MGoCgpNII0jBFamun1ogTKYI0"/>
+<span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-secondary text-on-secondary flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[12px]">pregnant_woman</span>
+</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Ibu Siti Aisyah</h2>
+<span class="shrink-0 px-2 py-0.5 rounded-full bg-on-primary-container/40 text-on-primary-fixed-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">how_to_reg</span> Hadir
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Hamil 28 Minggu • Trimester 3</p>
+<p class="font-body-sm text-body-sm text-outline truncate mt-0.5">Suami: Bpk. Ahmad Fauzi • RT 01 / RW 02</p>
+<!-- Status Pills -->
+<div class="flex flex-wrap gap-1.5 mt-2.5">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed/50 text-on-secondary-fixed font-label-sm text-label-sm">
+                🌸 Risiko Rendah
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-tertiary-container">medication</span> TTD Patuh (26/30)
+              </span>
+</div>
+<!-- Health Vital Specs -->
+<div class="mt-3 bg-surface-container-low rounded-xl p-2.5 grid grid-cols-3 gap-1 text-center">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">BB Ibu</span>
+<p class="font-label-lg text-label-lg text-on-surface font-bold">58.5 kg</p>
+</div>
+<div class="bg-surface-container-high/40 rounded-lg py-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant">LiLA</span>
+<p class="font-label-lg text-label-lg text-primary font-bold">25.5 cm</p>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Kadar Hb</span>
+<p class="font-label-lg text-label-lg text-on-surface font-bold">12.1 g/dL</p>
+</div>
+</div>
+<!-- Action -->
+<div class="mt-3 flex items-center gap-2">
+<button class="flex-1 min-h-[44px] px-3 rounded-full bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 active:scale-[0.98] transition" type="button">
+<span class="material-symbols-outlined text-[18px]">assignment_turned_in</span> Catat ANC / TTD
+              </button>
+<button aria-label="Buku KIA Digital" class="w-11 h-11 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-primary transition active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">menu_book</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: Ibu Hamil - Risiko KEK & Anemia -->
+<div class="target-card bg-surface-container-lowest rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden" data-category="bumil alert absen">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-error"></div>
+<div class="flex items-start gap-3">
+<div class="relative shrink-0">
+<img class="w-12 h-12 rounded-full object-cover shadow-inner" data-alt="Portrait of an Indonesian mother in warm yellow ochre headscarf, looking slightly anxious yet receptive, soft focus clean hospital or clinic consultation room lighting, photorealistic documentary style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAncapctLUB847gqCASGb7ysJjodrt5egtZBTi9wLnjybeYI5x9DFsVprSKUS9Yy27mr-VYjNQV7Qcmb0sjm5heCf9Je-4IMSJFOwCvn5VKVUJotrCX5CXgku8y3Xh79FPf4C271w7BU0BppI3O-OlScCwtdNnLRQ00cs-c1M_pglKiq-o6YQRr-K6xXglm6HXFhTVGug3oiR86H_rno-f7BUp60IkNsc03X5H5Z1M"/>
+<span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-error text-on-error flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[12px]">report_problem</span>
+</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Ibu Nurul Hidayah</h2>
+<span class="shrink-0 px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm">
+                Belum Hadir
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant font-medium">Hamil 16 Minggu • Trimester 2</p>
+<p class="font-body-sm text-body-sm text-outline truncate mt-0.5">Suami: Bpk. Bambang • RT 03 / RW 02</p>
+<!-- Status Pills KEK Warning -->
+<div class="flex flex-wrap gap-1.5 mt-2.5">
+<span class="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">warning</span> Waspada KEK (LiLA 22.0 cm)
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+                Rujukan Aktif PKM
+              </span>
+</div>
+<!-- Notes Callout -->
+<div class="mt-3 bg-error-container/20 rounded-xl p-3">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[18px] text-error shrink-0 mt-0.5">assignment_late</span>
+<div class="flex-1">
+<p class="font-label-sm text-label-sm text-on-surface font-semibold">Tindak Lanjut Diperlukan:</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Pemberian Makanan Tambahan (PMT) Pemulihan Bumil &amp; jadwal USG ulang Puskesmas.</p>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="mt-3 grid grid-cols-2 gap-2">
+<button class="min-h-[44px] px-3 rounded-full bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-primary transition active:scale-95" type="button">
+<span class="material-symbols-outlined text-[17px]">chat</span> Hubungi WA
+              </button>
+<button class="min-h-[44px] px-3 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 transition active:scale-95" type="button">
+<span class="material-symbols-outlined text-[17px]">home</span> Kunjungan
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5: Balita Baru - Belum Tertaut Akun -->
+<div class="target-card bg-surface-container-lowest rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden" data-category="balita hadir normal">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary-container"></div>
+<div class="flex items-start gap-3">
+<div class="relative shrink-0">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-headline-sm shadow-inner">
+              KA
+            </div>
+<span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[12px]">
+<span class="material-symbols-outlined text-[12px]">check</span>
+</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Kenzie Alfarizi</h2>
+<span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary font-label-sm text-label-sm">Baru</span>
+</div>
+<span class="shrink-0 px-2 py-0.5 rounded-full bg-on-primary-container/40 text-on-primary-fixed-variant font-label-sm text-label-sm">
+                Hadir
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">6 Bulan • Laki-laki</p>
+<p class="font-body-sm text-body-sm text-outline truncate mt-0.5">Ibu Dewi Sartika • RT 04 / RW 02</p>
+<!-- Status Pills -->
+<div class="flex flex-wrap gap-1.5 mt-2.5">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed/50 text-on-secondary-fixed font-label-sm text-label-sm">
+                🥣 MPASI Awal
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+                📖 KMS Lengkap
+              </span>
+</div>
+<!-- Kode Klaim Activation Box -->
+<div class="mt-3 bg-surface-container-low rounded-xl p-3 flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-outline">Kode Taut Akun Ibu:</span>
+<p class="font-label-lg text-label-lg font-bold tracking-wider text-primary">KL-9120-KD4</p>
+</div>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container text-primary font-label-sm text-label-sm flex items-center gap-1 shadow-sm active:scale-95 transition" id="copyClaimBtn" type="button">
+<span class="material-symbols-outlined text-[15px]">content_copy</span> Salin
+              </button>
+</div>
+<!-- Action -->
+<div class="mt-3 flex items-center gap-2">
+<button class="flex-1 min-h-[44px] px-3 rounded-full bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 active:scale-[0.98] transition" type="button">
+<span class="material-symbols-outlined text-[18px]">scale</span> Input Pengukuran 6 Bln
+              </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty State (Hidden by default, shown when filtered search finds 0) -->
+<div class="hidden flex-col items-center justify-center py-10 px-4 text-center bg-surface-container-lowest rounded-2xl shadow-sm" id="emptySearchState">
+<div class="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center text-outline mb-3">
+<span class="material-symbols-outlined text-[32px]">manage_search</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Sasaran Tidak Ditemukan</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-xs mt-1">
+        Coba periksa kembali ejaan nama anak, NIK, atau pilih filter "Semua".
+      </p>
+<button class="mt-4 px-4 py-2 rounded-full bg-primary-container text-on-primary font-label-md text-label-md" id="resetFilterBtn" type="button">
+        Tampilkan Semua Sasaran
+      </button>
+</div>
+<!-- Prominent Bottom Floating Action Bar -->
+<div class="sticky bottom-4 z-40 w-full mt-2">
+<button class="w-full min-h-[52px] rounded-full bg-gradient-to-r from-primary-container via-primary to-secondary text-on-primary font-label-lg text-label-lg font-bold shadow-[0_8px_24px_-4px_rgba(46,125,50,0.35)] flex items-center justify-center gap-2 active:scale-[0.98] hover:brightness-105 transition" id="btnTambahSasaran" type="button">
+<span class="material-symbols-outlined text-[22px]">person_add</span>
+        Tambah Sasaran Baru (Balita / Bumil)
+      </button>
+</div>
+<!-- Toast Notification Overlay -->
+<div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 -translate-y-2" id="copyToast">
+<div class="bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-full shadow-lg text-body-sm font-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">check_circle</span>
+<span>Kode klaim berhasil disalin!</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Filter pill and instant search interactions
+  const searchInput = document.getElementById('rosterSearch');
+  const cards = document.querySelectorAll('.target-card');
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const emptyState = document.getElementById('emptySearchState');
+  const resetBtn = document.getElementById('resetFilterBtn');
+  const copyClaimBtn = document.getElementById('copyClaimBtn');
+  const toast = document.getElementById('copyToast');
+
+  let activeFilter = 'all';
+
+  function applyFilters() {
+    const query = searchInput.value.toLowerCase().trim();
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const cardCategory = card.getAttribute('data-category') || '';
+      const cardText = card.innerText.toLowerCase();
+
+      const matchesFilter = (activeFilter === 'all') ||
+        (activeFilter === 'balita' && cardCategory.includes('balita')) ||
+        (activeFilter === 'bumil' && cardCategory.includes('bumil')) ||
+        (activeFilter === 'alert' && cardCategory.includes('alert')) ||
+        (activeFilter === 'hadir' && cardCategory.includes('hadir')) ||
+        (activeFilter === 'absen' && cardCategory.includes('absen'));
+
+      const matchesQuery = !query || cardText.includes(query);
+
+      if (matchesFilter && matchesQuery) {
+        card.style.display = 'block';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    if (visibleCount === 0) {
+      emptyState.classList.remove('hidden');
+      emptyState.classList.add('flex');
+    } else {
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+    }
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => {
+        b.className = 'filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-highest transition';
+      });
+      btn.className = 'filter-btn shrink-0 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-primary-container to-primary text-on-primary font-label-md text-label-md shadow-sm';
+      activeFilter = btn.getAttribute('data-filter');
+      applyFilters();
+    });
+  });
+
+  searchInput.addEventListener('input', applyFilters);
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      activeFilter = 'all';
+      filterButtons[0].click();
+    });
+  }
+
+  // Copy Claim Code Toast
+  if (copyClaimBtn) {
+    copyClaimBtn.addEventListener('click', () => {
+      navigator.clipboard?.writeText('KL-9120-KD4');
+      toast.classList.remove('opacity-0', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-2');
+      }, 2200);
+    });
+  }
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_12px_32px_rgba(30,41,59,0.08)]" data-active-classes="text-primary font-label-md"><div class="flex justify-between items-center h-20 px-space-xs relative max-w-lg mx-auto"><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 text-on-surface-variant hover:text-on-surface transition-colors" data-path="sesi" href="#"><span class="material-symbols-outlined text-[24px]">event_available</span><span class="font-label-sm text-label-sm mt-0.5">Sesi</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 text-on-surface-variant hover:text-on-surface transition-colors" data-path="sasaran" href="#"><span class="material-symbols-outlined text-[24px]">groups</span><span class="font-label-sm text-label-sm mt-0.5">Sasaran</span></a><div class="flex items-center justify-center -mt-6"><a class="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-[0_8px_20px_rgba(46,125,50,0.35)] active:scale-95 transition-transform hover:brightness-105" data-path="scan-ukur" href="#"><span class="material-symbols-outlined text-[28px]">qr_code_scanner</span></a></div><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 text-on-surface-variant hover:text-on-surface transition-colors" data-path="rekap" href="#"><span class="material-symbols-outlined text-[24px]">assignment</span><span class="font-label-sm text-label-sm mt-0.5">Rekap</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 text-on-surface-variant hover:text-on-surface transition-colors" data-path="profil" href="#"><span class="material-symbols-outlined text-[24px]">badge</span><span class="font-label-sm text-label-sm mt-0.5">Profil</span></a></div></nav></body></html>
