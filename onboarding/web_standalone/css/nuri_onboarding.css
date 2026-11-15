@@ -1,0 +1,181 @@
+/* NURI — Standalone Onboarding Stylesheet */
+:root {
+  --forest-green: #1F602E;
+  --leaf-green: #44A74F;
+  --deep-green: #0B3210;
+  --charcoal: #1B1B1B;
+  --natural-white: #F2F7F1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #141F18;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.app-shell {
+  width: 100%;
+  max-width: 390px;
+  min-height: 740px;
+  background-color: var(--natural-white);
+  color: var(--charcoal);
+  border-radius: 36px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+}
+.ob-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 2px;
+  border: 1px solid rgba(31,96,46,0.2);
+}
+.brand-icon svg { width: 100%; height: 100%; }
+.brand-title {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: var(--deep-green);
+}
+.btn-skip {
+  background: transparent;
+  border: none;
+  color: var(--forest-green);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.slide-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: 12px 0;
+}
+.illustration-box {
+  width: 100%;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.illustration-box svg {
+  width: 100%;
+  height: 100%;
+}
+.text-box {
+  text-align: center;
+}
+.slide-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: rgba(68, 167, 79, 0.16);
+  color: var(--forest-green);
+  margin-bottom: 10px;
+}
+h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--deep-green);
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--charcoal);
+  opacity: 0.85;
+}
+.ob-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pagination-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.dot {
+  height: 8px;
+  width: 8px;
+  border-radius: 99px;
+  border: none;
+  background: rgba(11, 50, 16, 0.25);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.dot.active {
+  width: 28px;
+  background: var(--forest-green);
+}
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  border-radius: 16px;
+  border: none;
+  background: var(--forest-green);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.role-card {
+  background: #FFFFFF;
+  border: 2px solid rgba(31,96,46,0.2);
+  border-radius: 18px;
+  padding: 16px;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.role-card.selected {
+  border-color: var(--forest-green);
+  box-shadow: 0 8px 24px rgba(31,96,46,0.12);
+}
+.role-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--deep-green);
+  margin-bottom: 4px;
+}
+.role-desc {
+  font-size: 12.5px;
+  color: var(--charcoal);
+  opacity: 0.8;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-pop { animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.anim-up  { animation: fadeUp 0.45s ease-out 0.08s both; }

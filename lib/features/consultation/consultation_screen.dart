@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
 
 class ConsultationScreen extends StatelessWidget {
@@ -47,163 +46,245 @@ class ConsultationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 28),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ScreenHeader(
-              title: 'Konsultasi Nakes',
-              subtitle: 'Bidan dan perawat resmi wilayah Posyandu & Puskesmas',
-              onBack: () => Navigator.of(context).pop(),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF145C45), Color(0xFF0E4332)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+            CurvedHeader(
+              borderRadius: 32,
+              padding: EdgeInsets.fromLTRB(
+                16,
+                MediaQuery.paddingOf(context).top + 16,
+                16,
+                22,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (Navigator.of(context).canPop())
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF145C45).withValues(alpha: 0.18),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.verified_user_rounded,
-                                color: AppColors.softMint,
-                                size: 18,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Tenaga Kesehatan Resmi',
-                                style: TextStyle(
-                                  color: AppColors.softMint,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Dampingan Langsung Bidan & Perawat',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              height: 1.3,
+                      const NuriLogo(compact: true, onDark: true),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.support_agent_rounded,
+                              size: 13,
+                              color: AppColors.secondaryFixed,
                             ),
-                          ),
-                          SizedBox(height: 6),
-                          Text(
-                            'Bila hasil skrining di NURI menunjukkan status "Perlu perhatian" atau "Perlu rujukan", Ibu dapat berkonsultasi langsung dengan bidan pembina.',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12.5,
-                              height: 1.45,
+                            SizedBox(width: 4),
+                            Text(
+                              'Nakes Resmi',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Tanya Bidan & Nakes',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.3,
                     ),
-                    const SizedBox(height: 18),
-                    Text(
-                      'Bidan & Perawat Wilayah Anda',
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Bidan dan perawat resmi wilayah Posyandu & Puskesmas binaan',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11.5,
+                      color: Colors.white70,
                     ),
-                    const SizedBox(height: 10),
-                    ..._nakesList.map(
-                      (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _NakesCard(item: item),
+                  ),
+                ],
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, -12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: AppCard(
+                  padding: const EdgeInsets.all(16),
+                  color: AppColors.surfaceContainerLow,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.secondaryContainer,
+                        ),
+                        child: const Icon(
+                          Icons.verified_user_rounded,
+                          color: AppColors.onSecondaryContainer,
+                          size: 20,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primarySoft,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.local_hospital_rounded,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Dampingan Langsung Bidan & Nakes',
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
                               ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Alur Rujukan ke Puskesmas',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Standar rujukan KIA Kemenkes RI',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              'Bila hasil skrining pertumbuhan atau nutrisi menunjukkan status "Perlu perhatian", Ibu dapat berkonsultasi langsung dengan bidan pembina.',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 12,
+                                color: AppColors.onSurfaceVariant,
+                                height: 1.4,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          const Divider(),
-                          const SizedBox(height: 10),
-                          const _StepRow(
-                            number: '1',
-                            text: 'Bawa Buku KIA (Kesehatan Ibu dan Anak) dan KTP/BPJS.',
-                          ),
-                          const SizedBox(height: 8),
-                          const _StepRow(
-                            number: '2',
-                            text: 'Tunjukkan hasil catatan pengukuran atau skrining dari aplikasi NURI kepada petugas di Poli KIA / Poli Gizi.',
-                          ),
-                          const SizedBox(height: 8),
-                          const _StepRow(
-                            number: '3',
-                            text: 'Dokter/Bidan Puskesmas akan melakukan validasi konfirmasi, pengukuran ulang, dan pemeriksaan USG / lab bila diperlukan.',
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    const NuriDisclaimer(),
-                  ],
+                    ],
+                  ),
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Bidan & Perawat Wilayah Anda',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ..._nakesList.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _NakesCard(item: item),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceContainerLow,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.local_hospital_rounded,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Alur Rujukan ke Puskesmas',
+                                    style: TextStyle(
+                                      fontFamily: 'Nunito',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  SizedBox(height: 1),
+                                  Text(
+                                    'Standar rujukan KIA Kemenkes RI',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const Divider(),
+                        const SizedBox(height: 10),
+                        const _StepRow(
+                          number: '1',
+                          text: 'Bawa Buku KIA (Kesehatan Ibu dan Anak) dan KTP/BPJS.',
+                        ),
+                        const SizedBox(height: 8),
+                        const _StepRow(
+                          number: '2',
+                          text: 'Tunjukkan hasil catatan pengukuran atau skrining dari aplikasi NURI kepada petugas di Poli KIA / Poli Gizi.',
+                        ),
+                        const SizedBox(height: 8),
+                        const _StepRow(
+                          number: '3',
+                          text: 'Dokter/Bidan Puskesmas akan melakukan validasi konfirmasi, pengukuran ulang, dan pemeriksaan USG / lab bila diperlukan.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -264,9 +345,10 @@ class _NakesCard extends StatelessWidget {
                           child: Text(
                             item.name,
                             style: const TextStyle(
-                              fontSize: 14.5,
+                              fontFamily: 'Nunito',
+                              fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.text,
+                              color: AppColors.onSurface,
                             ),
                           ),
                         ),
@@ -277,14 +359,9 @@ class _NakesCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: item.isReady
-                                ? AppColors.mint
-                                : AppColors.surfaceSubtle,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: item.isReady
-                                  ? AppColors.primary
-                                  : AppColors.line,
-                            ),
+                                ? AppColors.secondaryContainer
+                                : AppColors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -299,14 +376,15 @@ class _NakesCard extends StatelessWidget {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 4),
                               Text(
                                 item.status,
                                 style: TextStyle(
-                                  fontSize: 10.5,
+                                  fontFamily: 'Inter',
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: item.isReady
-                                      ? AppColors.primary
+                                      ? AppColors.onSecondaryContainer
                                       : AppColors.muted,
                                 ),
                               ),
@@ -319,99 +397,121 @@ class _NakesCard extends StatelessWidget {
                     Text(
                       item.role,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primaryDark,
+                        fontFamily: 'Inter',
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       item.facility,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: AppColors.muted,
-                      ),
+                      style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.surfaceSubtle,
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(
-                  Icons.schedule_rounded,
+                  Icons.medical_information_outlined,
                   size: 15,
-                  color: AppColors.muted,
+                  color: AppColors.primary,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    item.schedule,
+                    item.specialty,
                     style: const TextStyle(
+                      fontFamily: 'Inter',
                       fontSize: 11.5,
-                      color: AppColors.text,
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.35,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Layanan: ${item.specialty}',
-            style: const TextStyle(
-              fontSize: 11.5,
-              color: AppColors.muted,
-              height: 1.4,
-            ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.access_time_rounded, size: 14, color: AppColors.muted),
+              const SizedBox(width: 5),
+              Text(
+                item.schedule,
+                style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    showNuriSnack(
-                      context,
-                      'Menghubungi ${item.name} via WhatsApp (${item.whatsapp})...',
-                    );
-                  },
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                  label: const Text(
-                    'Konsultasi WA',
-                    style: TextStyle(fontSize: 12.5),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF25D366),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(0, 40),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  height: 38,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      showNuriSnack(
+                        context,
+                        'Membuka konsultasi WhatsApp dengan ${item.name}…',
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF25D366),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                    ),
+                    icon: const Icon(Icons.chat_rounded, size: 16),
+                    label: const Text(
+                      'Chat WhatsApp',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  showNuriSnack(context, 'Menghubungi ${item.phone}...');
-                },
-                icon: const Icon(Icons.call_outlined, size: 16),
-                label: const Text('Telepon', style: TextStyle(fontSize: 12.5)),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(0, 40),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              SizedBox(
+                height: 38,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    showNuriSnack(
+                      context,
+                      'Menghubungi nomor telepon fasilitas: ${item.phone}',
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.onSurface,
+                    side: const BorderSide(color: AppColors.line),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                  ),
+                  icon: const Icon(Icons.phone_rounded, size: 15),
+                  label: const Text(
+                    'Telepon',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -437,28 +537,32 @@ class _StepRow extends StatelessWidget {
         Container(
           width: 20,
           height: 20,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            color: AppColors.primarySoft,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
             shape: BoxShape.circle,
+            border: Border.all(color: AppColors.line),
           ),
-          child: Text(
-            number,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+          child: Center(
+            child: Text(
+              number,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+              ),
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
             style: const TextStyle(
-              fontSize: 12.5,
-              color: AppColors.text,
-              height: 1.45,
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: AppColors.onSurfaceVariant,
+              height: 1.4,
             ),
           ),
         ),

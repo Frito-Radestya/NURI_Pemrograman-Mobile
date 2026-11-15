@@ -48,14 +48,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _selectRole(UserRole role) {
-    if (_role == role) return;
-    setState(() {
-      _role = role;
-      _error = null;
-    });
-  }
-
   void _finish() {
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -136,133 +128,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Curved Organic Header Canvas (Inspired by UI_UX/nuri_masuk)
             CurvedHeader(
               borderRadius: 36,
               padding: EdgeInsets.fromLTRB(
                 20,
                 MediaQuery.paddingOf(context).top + 10,
                 20,
-                32,
+                28,
               ),
               child: Column(
                 children: [
-                  // Top Bar: Back / Brand & Kemenkes Badge
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          if (widget.showBack && Navigator.of(context).canPop())
-                            Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: GestureDetector(
-                                onTap: () => Navigator.of(context).pop(),
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_back_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          const NuriLogo(compact: false, onDark: true),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.verified_rounded,
-                              size: 14,
-                              color: AppColors.secondaryFixed,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'Resmi Kemenkes',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  // Visual Motif Badge
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 68,
-                        height: 68,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x20000000),
-                              blurRadius: 10,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          isMother
-                              ? Icons.family_restroom_rounded
-                              : Icons.medical_services_rounded,
-                          color: AppColors.primary,
-                          size: 28,
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
+                  // Top Bar: Back button only
+                  if (widget.showBack && Navigator.of(context).canPop())
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
                         child: Container(
-                          width: 22,
-                          height: 22,
-                          decoration: const BoxDecoration(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
-                            color: AppColors.secondaryContainer,
                           ),
                           child: const Icon(
-                            Icons.eco_rounded,
-                            size: 13,
-                            color: AppColors.onSecondaryContainer,
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                            size: 20,
                           ),
                         ),
                       ),
-                    ],
+                    )
+                  else
+                    const SizedBox(height: 8),
+
+                  const SizedBox(height: 6),
+                  // Round NURI Logo Emblem above "Selamat Datang Kembali"
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 18,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      'assets/images/nuri_logo_mark.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.spa_rounded,
+                        color: AppColors.primary,
+                        size: 38,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   const Text(
                     'Selamat Datang Kembali',
                     textAlign: TextAlign.center,
@@ -275,10 +202,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Sahabat Ibu & Balita untuk generasi sehat cerdas bebas stunting.',
+                  Text(
+                    isMother
+                        ? 'Portal Masuk Ibu & Keluarga'
+                        : 'Portal Masuk Kader Posyandu',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12.5,
                       color: AppColors.onPrimaryContainer,
@@ -288,93 +217,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
             ),
-            // Role Segmented Pill Filter
-            Transform.translate(
-              offset: const Offset(0, -18),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: NuriSegmentedControl<UserRole>(
-                  values: const [UserRole.mother, UserRole.cadre],
-                  selected: _role,
-                  icons: const {
-                    UserRole.mother: Icons.pregnant_woman_rounded,
-                    UserRole.cadre: Icons.medical_services_rounded,
-                  },
-                  labelFor: (value) => value == UserRole.mother
-                      ? 'Ibu & Keluarga'
-                      : 'Kader Posyandu',
-                  onChanged: _selectRole,
-                ),
-              ),
-            ),
             // Form Card
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
               child: AppCard(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Role Helper Banner
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.secondaryContainer,
-                            ),
-                            child: Icon(
-                              isMother
-                                  ? Icons.child_care_rounded
-                                  : Icons.badge_rounded,
-                              size: 19,
-                              color: AppColors.onSecondaryContainer,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isMother
-                                      ? 'Portal Orang Tua & Anak'
-                                      : 'Portal Kader Posyandu',
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 1),
-                                Text(
-                                  isMother
-                                      ? 'Akses grafik KMS, jadwal imunisasi, & menu MPASI'
-                                      : 'Pencatatan sesi, validasi antropometri, & rujukan',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 11.5,
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                     NuriTextField(
                       label: 'Alamat Email atau NIK',
                       controller: _email,
@@ -539,11 +389,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: NuriDisclaimer(),
             ),
             const SizedBox(height: 28),
           ],
@@ -846,41 +691,59 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 20,
                 MediaQuery.paddingOf(context).top + 10,
                 20,
-                26,
+                24,
               ),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          if (Navigator.of(context).canPop())
-                            Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: GestureDetector(
-                                onTap: () => Navigator.of(context).pop(),
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_back_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          const NuriLogo(compact: false, onDark: true),
-                        ],
+                  if (Navigator.of(context).canPop())
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
                       ),
-                    ],
+                    )
+                  else
+                    const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 18,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      'assets/images/nuri_logo_mark.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.spa_rounded,
+                        color: AppColors.primary,
+                        size: 36,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   const Text(
                     'Buat Akun Baru',
                     textAlign: TextAlign.center,
@@ -893,10 +756,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                   ),
                   const SizedBox(height: 3),
-                  const Text(
-                    'Gratis, tenang, dan siap dipakai offline.',
+                  Text(
+                    _role == UserRole.mother
+                        ? 'Daftar sebagai Ibu & Keluarga'
+                        : 'Daftar sebagai Kader Posyandu',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12,
                       color: AppColors.onPrimaryContainer,
@@ -1054,11 +919,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 14),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: NuriDisclaimer(),
             ),
             const SizedBox(height: 24),
           ],

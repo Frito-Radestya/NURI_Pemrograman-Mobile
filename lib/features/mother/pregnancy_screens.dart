@@ -487,116 +487,201 @@ class AncScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 28),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ScreenHeader(
-              title: 'Kunjungan ANC',
-              subtitle: 'Minimal ${AkgReference.ancTarget} kali selama hamil',
-              onBack: () => Navigator.of(context).pop(),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF145C45), Color(0xFF0E4332)],
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF145C45).withValues(alpha: 0.2),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Pill(
-                                label: 'Antenatal Care',
-                                icon: Icons.event_available_rounded,
-                                background: AppColors.softMint,
-                                foreground: AppColors.deepForest,
-                                fontSize: 11.5,
-                                bold: true,
+            CurvedHeader(
+              borderRadius: 32,
+              padding: EdgeInsets.fromLTRB(
+                16,
+                MediaQuery.paddingOf(context).top + 16,
+                16,
+                22,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      if (Navigator.of(context).canPop())
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
                               ),
-                              const Spacer(),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const NuriLogo(compact: true, onDark: true),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.event_available_rounded,
+                              size: 13,
+                              color: AppColors.secondaryFixed,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Standar 6x ANC',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Kunjungan ANC Ibu',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Pemeriksaan kehamilan rutin (Antenatal Care) standar Kemenkes',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11.5,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, -12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: AppCard(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                '${visits.length} / ${AkgReference.ancTarget}',
-                                style: const TextStyle(
+                                'Progres Kunjungan ANC',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Target Minimal 6x',
+                                style: TextStyle(
                                   fontFamily: 'Nunito',
-                                  fontSize: 22,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w800,
-                                  color: Colors.white,
+                                  color: AppColors.onSurface,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0, end: progress),
-                              duration: const Duration(milliseconds: 800),
-                              builder: (context, value, child) => Stack(
-                                children: [
-                                  Container(
-                                    height: 8,
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                  ),
-                                  FractionallySizedBox(
-                                    widthFactor: value,
-                                    child: Container(
-                                      height: 8,
-                                      color: AppColors.leafGreen,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
                           Text(
-                            visits.length >= AkgReference.ancTarget
-                                ? 'Semua kunjungan minimal tercatat.'
-                                : '${AkgReference.ancTarget - visits.length} kunjungan lagi. Jadwalkan lebih awal.',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: Colors.white.withValues(alpha: 0.9),
+                            '${visits.length} / ${AkgReference.ancTarget}',
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    const _UsgScheduleCard(),
-                    const SizedBox(height: 16),
-                    SectionHeader(
-                      title: 'Jadwal kunjungan',
-                      subtitle:
-                          '${visits.length} dari ${AkgReference.ancTarget} tercatat',
-                      actionLabel: 'Catat',
-                      onAction: () => _openForm(context),
-                    ),
-                    const SizedBox(height: 10),
-                    ...List.generate(_schedule.length, (index) {
-                      final item = _schedule[index];
-                      final visit = index < visits.length
-                          ? visits[index]
-                          : null;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          height: 8,
+                          color: AppColors.surfaceContainerLow,
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: progress,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: AppGradients.button,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        visits.length >= AkgReference.ancTarget
+                            ? 'Semua kunjungan minimal tercatat lengkap.'
+                            : '${AkgReference.ancTarget - visits.length} kunjungan lagi untuk memenuhi standar.',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _UsgScheduleCard(),
+                  const SizedBox(height: 16),
+                  SectionHeader(
+                    title: 'Jadwal kunjungan',
+                    subtitle:
+                        '${visits.length} dari ${AkgReference.ancTarget} tercatat',
+                    actionLabel: 'Catat',
+                    onAction: () => _openForm(context),
+                  ),
+                  const SizedBox(height: 10),
+                  ...List.generate(_schedule.length, (index) {
+                    final item = _schedule[index];
+                    final visit = index < visits.length
+                        ? visits[index]
+                        : null;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
                         child: _AncTile(
                           index: index + 1,
                           title: item.$1,
@@ -626,15 +711,13 @@ class AncScreen extends ConsumerWidget {
                       background: AppColors.redSoft,
                       foreground: AppColors.red,
                     ),
-                    const NuriDisclaimer(),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
   }
 
   void _openForm(BuildContext context) {

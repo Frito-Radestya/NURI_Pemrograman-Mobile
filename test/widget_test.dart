@@ -6,7 +6,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:nuri/app.dart';
-import 'package:nuri/core/theme/app_theme.dart';
 import 'package:nuri/data/app_controller.dart';
 import 'package:nuri/data/app_repository.dart';
 import 'package:nuri/data/demo_seed.dart';
@@ -56,14 +55,15 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 1400));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Pilih Peran Anda'), findsOneWidget);
-    expect(find.textContaining('bukan diagnosis'), findsWidgets);
-    expect(
-      DefaultTextStyle.of(tester.element(find.text('Pilih Peran Anda')))
-          .style
-          .color,
-      AppColors.text,
-    );
+    expect(find.text('Setiap Anak Berhak Tumbuh Sehat'), findsOneWidget);
+    expect(find.text('Lanjut'), findsOneWidget);
+
+    // Tap Lewati to go to role selection
+    await tester.tap(find.text('Lewati'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mulai Perjalanan Bersama NURI'), findsOneWidget);
+    expect(find.text('Saya Ibu / Keluarga'), findsOneWidget);
+    expect(find.text('Saya Kader Posyandu'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 50));

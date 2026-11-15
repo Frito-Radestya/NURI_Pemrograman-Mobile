@@ -35,184 +35,187 @@ class GrowthDetailScreen extends ConsumerWidget {
             CurvedHeader(
               borderRadius: 32,
               padding: EdgeInsets.fromLTRB(
-                20,
-                embedded ? MediaQuery.paddingOf(context).top + 8 : 12,
-                20,
+                16,
+                MediaQuery.paddingOf(context).top + 16,
+                16,
                 20,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          if (!embedded && Navigator.of(context).canPop())
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: GestureDetector(
-                                onTap: () => Navigator.of(context).pop(),
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_back_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
+                      if (!embedded && Navigator.of(context).canPop())
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_rounded,
+                                color: Colors.white,
+                                size: 20,
                               ),
                             ),
-                          if (child != null) ...[
-                            AppAvatar(
-                              name: child.nickname,
-                              index: child.avatarIndex,
-                              size: 44,
-                            ),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  child.nickname,
-                                  style: const TextStyle(
-                                    fontFamily: 'Nunito',
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    letterSpacing: -0.2,
-                                  ),
+                          ),
+                        ),
+                      if (child != null) ...[
+                        AppAvatar(
+                          name: child.nickname,
+                          index: child.avatarIndex,
+                          size: 40,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                child.nickname,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Nunito',
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  letterSpacing: -0.2,
                                 ),
+                              ),
+                              Text(
+                                '${child.sex.label} • ${child.ageLabel()}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else
+                        const Expanded(
+                          child: NuriLogo(
+                            compact: false,
+                            onDark: true,
+                            subtitle: 'Tumbuh Kembang',
+                          ),
+                        ),
+                      if (child != null) ...[
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  GrowthHistoryScreen(childId: child.id),
+                            ),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.pill),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.history_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 3),
                                 Text(
-                                  '${child.sex.label} • ${child.ageLabel()}',
-                                  style: const TextStyle(
+                                  'Riwayat',
+                                  style: TextStyle(
                                     fontFamily: 'Inter',
-                                    fontSize: 11.5,
-                                    color: Colors.white70,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
                             ),
-                          ] else
-                            const NuriLogo(
-                              compact: false,
-                              onDark: true,
-                              subtitle: 'Tumbuh Kembang',
-                            ),
-                        ],
-                      ),
-                      if (child != null)
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      GrowthHistoryScreen(childId: child.id),
-                                ),
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius:
-                                      BorderRadius.circular(AppRadius.pill),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.history_rounded,
-                                      size: 15,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Riwayat',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => MeasurementInputScreen(
-                                    childId: child.id,
-                                  ),
-                                ),
-                              ),
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.1),
-                                      blurRadius: 8,
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.add_rounded,
-                                  size: 20,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => MeasurementInputScreen(
+                                childId: child.id,
+                              ),
+                            ),
+                          ),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.add_rounded,
+                              size: 19,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 12),
                   // Inspection badge
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.verified_rounded,
-                              size: 16,
-                              color: AppColors.secondaryFixed,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              latest == null
-                                  ? 'Belum ada pemeriksaan'
-                                  : 'Pemeriksaan Terakhir: ${formatDateId(latest.date, withYear: false)}',
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 11.5,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 15,
+                          color: AppColors.secondaryFixed,
                         ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            latest == null
+                                ? 'Belum ada pemeriksaan'
+                                : 'Pemeriksaan Terakhir: ${formatDateId(latest.date, withYear: false)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 7,
@@ -224,8 +227,10 @@ class GrowthDetailScreen extends ConsumerWidget {
                           ),
                           child: Text(
                             state.posyanduName.isEmpty
-                                ? 'Posyandu Mawar'
+                                ? 'Posyandu'
                                 : state.posyanduName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,

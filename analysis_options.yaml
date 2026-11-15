@@ -15,6 +15,7 @@ analyzer:
     - android/**
     - web/**
     - nuri_splash_screen_package/**
+    - onboarding/**
 
 linter:
   # The lint rules applied to this project can be customized in the
