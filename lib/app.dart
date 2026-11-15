@@ -33,7 +33,7 @@ class _NuriAppState extends ConsumerState<NuriApp> {
         },
       );
     } else if (!loggedIn) {
-      home = state.landingSeen ? const AuthScreen() : const LandingScreen();
+      home = const LandingScreen();
     } else if (!state.onboardingSeen) {
       home = OnboardingGate(role: state.currentUser!.role);
     } else {

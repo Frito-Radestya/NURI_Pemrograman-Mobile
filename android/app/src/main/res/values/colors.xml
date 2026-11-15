@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="nuri_cream">#F4FAF4</color>
+    <color name="nuri_splash_bg">#F4F8F2</color>
     <color name="nuri_black">#145C45</color>
     <color name="nuri_deep_forest">#145C45</color>
     <color name="nuri_fresh_green">#239B70</color>

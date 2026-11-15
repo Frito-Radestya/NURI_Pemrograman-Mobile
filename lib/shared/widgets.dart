@@ -38,15 +38,22 @@ class NuriLogo extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
+        border: Border.all(
+          color: onDark
+              ? Colors.white.withValues(alpha: 0.25)
+              : AppColors.line,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: (onDark ? Colors.black : AppColors.primary).withValues(alpha: 0.12),
+            color: (onDark ? Colors.black : AppColors.primary)
+                .withValues(alpha: 0.12),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      padding: EdgeInsets.all(emblemSize * 0.08),
+      padding: EdgeInsets.all(emblemSize * 0.1),
       child: Image.asset(
         'assets/images/nuri_logo_mark.png',
         fit: BoxFit.contain,
@@ -276,7 +283,10 @@ class CurvedHeader extends StatelessWidget {
             ],
             Padding(
               padding: padding,
-              child: child,
+              child: SizedBox(
+                width: double.infinity,
+                child: child,
+              ),
             ),
           ],
         ),
