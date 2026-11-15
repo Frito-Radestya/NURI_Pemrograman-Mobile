@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -10,6 +8,7 @@ import 'data/app_controller.dart';
 import 'features/auth/onboarding_screens.dart';
 import 'features/landing/landing_screen.dart';
 import 'features/shell/app_shell.dart';
+import 'features/splash/splash_screen.dart';
 
 class NuriApp extends ConsumerStatefulWidget {
   const NuriApp({super.key});
@@ -20,21 +19,6 @@ class NuriApp extends ConsumerStatefulWidget {
 
 class _NuriAppState extends ConsumerState<NuriApp> {
   bool _showSplash = true;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer(const Duration(milliseconds: 500), () {
-      if (mounted) setState(() => _showSplash = false);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,13 +27,10 @@ class _NuriAppState extends ConsumerState<NuriApp> {
 
     Widget home;
     if (_showSplash) {
-      home = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          _timer?.cancel();
+      home = NuriSplashScreen(
+        onFinished: () {
           if (mounted) setState(() => _showSplash = false);
         },
-        child: const SplashScreen(),
       );
     } else if (!loggedIn) {
       home = state.landingSeen ? const AuthScreen() : const LandingScreen();
@@ -109,91 +90,6 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.deepForest,
-          ),
-          child: SafeArea(
-            child: Stack(
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: AppColors.softMint,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.16),
-                              blurRadius: 20,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.spa_rounded,
-                          color: AppColors.deepForest,
-                          size: 42,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'NURI',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 2.0,
-                          height: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Sahabat Ibu & Balita',
-                        style: TextStyle(
-                          color: AppColors.softMint,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 36),
-                      const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: AppColors.leafGreen,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Positioned(
-                  left: 24,
-                  right: 24,
-                  bottom: 24,
-                  child: Text(
-                    'Skrining awal, bukan diagnosis.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return NuriSplashScreen(onFinished: () {});
   }
 }

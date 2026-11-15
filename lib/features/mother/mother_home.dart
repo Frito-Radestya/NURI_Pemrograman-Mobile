@@ -93,46 +93,10 @@ class MotherHomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                '${formatWeekday(today)}, ${formatDateId(today, withYear: false)}',
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.secondaryFixed,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                width: 5,
-                                height: 5,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.secondaryFixed,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'Posyandu Aktif',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 10.5,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
+                        const NuriLogo(
+                          compact: false,
+                          onDark: true,
+                          subtitle: 'NURI BUNDA',
                         ),
                         Row(
                           children: [
@@ -166,6 +130,49 @@ class MotherHomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${formatWeekday(today)}, ${formatDateId(today, withYear: false)}',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.secondaryFixed,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 5,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.secondaryFixed,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Posyandu Aktif',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10.5,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -1297,16 +1304,28 @@ class _EmptyDataCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 56,
+            height: 56,
             decoration: const BoxDecoration(
-              color: AppColors.surfaceSubtle,
+              color: Colors.white,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x100D631B),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
-            child: const Icon(
-              Icons.spa_rounded,
-              color: AppColors.primary,
-              size: 26,
+            padding: const EdgeInsets.all(6),
+            child: Image.asset(
+              'assets/images/nuri_logo_mark.png',
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const Icon(
+                Icons.spa_rounded,
+                color: AppColors.primary,
+                size: 26,
+              ),
             ),
           ),
           const SizedBox(height: 12),

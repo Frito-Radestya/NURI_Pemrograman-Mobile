@@ -173,55 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                             ),
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.spa_rounded,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              RichText(
-                                text: const TextSpan(
-                                  text: 'NURI',
-                                  style: TextStyle(
-                                    fontFamily: 'Nunito',
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 18,
-                                    letterSpacing: -0.2,
-                                    color: Colors.white,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: '.',
-                                      style: TextStyle(
-                                        color: AppColors.secondaryFixed,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Text(
-                                'KESEHATAN IBU & BALITA',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                  color: AppColors.onPrimaryContainer,
-                                ),
-                              ),
-                            ],
-                          ),
+                          const NuriLogo(compact: false, onDark: true),
                         ],
                       ),
                       Container(
@@ -750,7 +702,18 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Reset password'),
+      title: const Row(
+        children: [
+          NuriLogo(compact: true),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Reset Password',
+              style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800, fontSize: 18),
+            ),
+          ),
+        ],
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -872,19 +835,79 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const ScreenHeader(
-                title: 'Buat akun NURI',
-                subtitle: 'Gratis, tenang, dan bisa dipakai offline.',
-                padding: EdgeInsets.fromLTRB(0, 6, 0, 14),
+      backgroundColor: AppColors.background,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CurvedHeader(
+              borderRadius: 36,
+              padding: EdgeInsets.fromLTRB(
+                20,
+                MediaQuery.paddingOf(context).top + 10,
+                20,
+                26,
               ),
-              AppCard(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          if (Navigator.of(context).canPop())
+                            Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).pop(),
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const NuriLogo(compact: false, onDark: true),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Buat Akun Baru',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  const Text(
+                    'Gratis, tenang, dan siap dipakai offline.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: AppColors.onPrimaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              child: AppCard(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1005,36 +1028,40 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Center(
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    const Text(
-                      'Sudah punya akun? ',
-                      style: TextStyle(fontSize: 13, color: AppColors.muted),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const Text(
-                        'Masuk',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.freshGreen,
-                          decoration: TextDecoration.underline,
-                          decorationColor: AppColors.freshGreen,
-                        ),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text(
+                    'Sudah punya akun? ',
+                    style: TextStyle(fontSize: 13, color: AppColors.muted),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Text(
+                      'Masuk',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.primary,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 14),
-              const NuriDisclaimer(),
-            ],
-          ),
+            ),
+            const SizedBox(height: 14),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: NuriDisclaimer(),
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );

@@ -117,9 +117,11 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
                             ),
                           ),
                         ),
+                      const NuriLogo(compact: true, onDark: true),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
+                          horizontal: 8,
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
@@ -133,12 +135,12 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
                               size: 13,
                               color: AppColors.secondaryFixed,
                             ),
-                            SizedBox(width: 5),
+                            SizedBox(width: 4),
                             Text(
-                              'Mode Kader Aktif',
+                              'Kader',
                               style: TextStyle(
                                 fontFamily: 'Inter',
-                                fontSize: 11,
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
                               ),

@@ -84,34 +84,10 @@ class KaderHomeScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            size: 7,
-                            color: AppColors.secondaryFixed,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            'Posyandu Aktif',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                    const NuriLogo(
+                      compact: false,
+                      onDark: true,
+                      subtitle: 'NURI KADER',
                     ),
                     _SyncButton(
                       pending: pendingWrites,
@@ -130,6 +106,37 @@ class KaderHomeScreen extends ConsumerWidget {
                       },
                     ),
                   ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.circle,
+                        size: 7,
+                        color: AppColors.secondaryFixed,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Posyandu Aktif',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Text(

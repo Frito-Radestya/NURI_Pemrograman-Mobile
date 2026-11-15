@@ -99,14 +99,10 @@ class GrowthDetailScreen extends ConsumerWidget {
                               ],
                             ),
                           ] else
-                            const Text(
-                              'Tumbuh Kembang',
-                              style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
+                            const NuriLogo(
+                              compact: false,
+                              onDark: true,
+                              subtitle: 'Tumbuh Kembang',
                             ),
                         ],
                       ),

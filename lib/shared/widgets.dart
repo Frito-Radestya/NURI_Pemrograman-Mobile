@@ -7,64 +7,151 @@ import '../domain/models.dart';
 import 'ui.dart';
 
 class NuriLogo extends StatelessWidget {
-  const NuriLogo({super.key, this.compact = false, this.onDark = false});
+  const NuriLogo({
+    super.key,
+    this.compact = false,
+    this.onDark = false,
+    this.vertical = false,
+    this.size,
+    this.subtitle,
+  });
 
   final bool compact;
   final bool onDark;
+  final bool vertical;
+  final double? size;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = onDark ? Colors.white : AppColors.darkGreen;
+    final textColor = onDark ? Colors.white : AppColors.onSurface;
+    final subColor = onDark
+        ? Colors.white.withValues(alpha: 0.78)
+        : AppColors.secondaryText;
+    final dotColor = onDark ? AppColors.secondaryFixed : AppColors.primary;
+
+    final emblemSize = size ?? (vertical ? 68.0 : (compact ? 32.0 : 38.0));
+
+    final emblem = Container(
+      width: emblemSize,
+      height: emblemSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: (onDark ? Colors.black : AppColors.primary).withValues(alpha: 0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(emblemSize * 0.08),
+      child: Image.asset(
+        'assets/images/nuri_logo_mark.png',
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => Icon(
+          Icons.spa_rounded,
+          color: AppColors.primary,
+          size: emblemSize * 0.55,
+        ),
+      ),
+    );
+
+    if (vertical) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          emblem,
+          const SizedBox(height: 8),
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              text: 'NURI',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w900,
+                fontSize: compact ? 20 : 24,
+                letterSpacing: -0.4,
+                color: textColor,
+              ),
+              children: [
+                TextSpan(
+                  text: '.',
+                  style: TextStyle(color: dotColor),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle ?? 'Nutrisi & Risiko Stunting di Indonesia',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: compact ? 10 : 11.5,
+              fontWeight: FontWeight.w700,
+              color: subColor,
+              letterSpacing: 0.3,
+            ),
+          ),
+          if (!compact) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Tumbuh Sehat, Keluarga Kuat.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10.5,
+                fontWeight: FontWeight.w500,
+                color: subColor.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: compact ? 34 : 38,
-          height: compact ? 34 : 38,
-          decoration: BoxDecoration(
-            color: AppColors.deepForest,
-            borderRadius: BorderRadius.circular(compact ? 11 : 12),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.deepForest.withValues(alpha: 0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.spa_rounded,
-            color: Colors.white,
-            size: compact ? 19 : 21,
-          ),
-        ),
-        const SizedBox(width: 10),
+        emblem,
+        const SizedBox(width: 9),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'NURI',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontWeight: FontWeight.w800,
-                fontSize: compact ? 19 : 21,
-                letterSpacing: 0.4,
-                color: textColor,
-                height: 1,
+            RichText(
+              text: TextSpan(
+                text: 'NURI',
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.w900,
+                  fontSize: compact ? 18 : 20,
+                  letterSpacing: -0.3,
+                  color: textColor,
+                  height: 1,
+                ),
+                children: [
+                  TextSpan(
+                    text: '.',
+                    style: TextStyle(color: dotColor),
+                  ),
+                ],
               ),
             ),
             if (!compact) ...[
               const SizedBox(height: 2),
               Text(
-                'Sahabat Ibu & Balita',
+                subtitle ?? 'Kesehatan Ibu & Balita',
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 11,
-                  color: onDark
-                      ? Colors.white.withValues(alpha: 0.72)
-                      : AppColors.secondaryText,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                  color: subColor,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
               ),
             ],
