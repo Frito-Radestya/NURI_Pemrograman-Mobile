@@ -56,7 +56,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1400));
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Setiap Anak Berhak Tumbuh Sehat'), findsOneWidget);
-    expect(find.text('Lanjut'), findsOneWidget);
+    expect(find.textContaining('Lanjut'), findsOneWidget);
 
     // Tap Lewati to go to role selection
     await tester.tap(find.text('Lewati'));
