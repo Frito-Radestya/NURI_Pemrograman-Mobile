@@ -8,7 +8,8 @@ import '../../data/app_controller.dart';
 import '../../domain/models.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
-import '../mother/growth_screens.dart';
+import 'scan_sheets.dart';
+import 'scan_widgets.dart';
 
 class ScanScreen extends ConsumerStatefulWidget {
   const ScanScreen({super.key});
@@ -134,50 +135,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
   }
 
   Future<void> _manualCode() async {
-    final controller = TextEditingController();
     final code = await showNuriSheet<String>(
       context: context,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Masukkan Kode Keluarga',
-              style: Theme.of(sheetContext).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 3),
-            const Text(
-              'Masukkan token sekali pakai (contoh: NR-XXXX-XXXX) yang ditampilkan pada layar Profil Ibu.',
-              style: TextStyle(
-                fontSize: 12.5,
-                color: AppColors.muted,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(
-                hintText: 'NR-XXXX-XXXX',
-                prefixIcon: Icon(Icons.key_rounded, size: 20),
-              ),
-            ),
-            const SizedBox(height: 14),
-            NuriButton(
-              label: 'Verifikasi Kode',
-              icon: Icons.verified_outlined,
-              onPressed: () =>
-                  Navigator.of(sheetContext).pop(controller.text.trim()),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => const ScanManualCodeSheet(),
     );
-    controller.dispose();
     if (!mounted || code == null || code.isEmpty) return;
 
     final (grant, linkedChild, error) = await ref
@@ -240,129 +201,12 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     }
     await showNuriSheet<void>(
       context: context,
-      builder: (sheetContext) => SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: const BoxDecoration(
-                    color: AppColors.mint,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    color: AppColors.primary,
-                    size: 25,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Kode keluarga ditemukan',
-                        style: Theme.of(sheetContext).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Akses ukur aktif untuk sesi ini.',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: AppColors.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            AppCard(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  AppAvatar(
-                    name: name,
-                    index: entry?.avatarIndex ?? 1,
-                    size: 48,
-                  ),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          meta,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.muted,
-                          ),
-                        ),
-                        if (entry != null) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              if (entry.category != null)
-                                GrowthStatusBadge(
-                                  category: entry.category!,
-                                  compact: true,
-                                ),
-                              const SizedBox(width: 5),
-                              SyncBadge(pending: entry.pendingSync),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            InfoBanner(
-              title: 'Cakupan akses: ${scopes.join(", ")}',
-              body: scopes.contains('makan')
-                  ? 'Ibu memberikan izin pencatatan pengukuran dan pembacaan diary makan anak.'
-                  : 'Kader dapat menambah pengukuran. Catatan makan belum diizinkan oleh Ibu.',
-              icon: Icons.verified_user_outlined,
-            ),
-            const SizedBox(height: 14),
-            NuriButton(
-              label: 'Ukur sekarang',
-              icon: Icons.straighten_rounded,
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        MeasurementInputScreen(childId: childId, isCadre: true),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 6),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.of(sheetContext).pop(),
-                child: const Text('Batal'),
-              ),
-            ),
-          ],
-        ),
+      builder: (_) => ScanFoundSheet(
+        childId: childId,
+        name: name,
+        meta: meta,
+        entry: entry,
+        scopes: scopes,
       ),
     );
   }
@@ -421,8 +265,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.18),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                             ),
                             child: const Row(
                               children: [
@@ -462,8 +307,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                                 color: _torchOn
                                     ? AppColors.secondaryFixed
                                     : Colors.black.withValues(alpha: 0.2),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -500,8 +346,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             ),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.2),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.pill),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
                             ),
                             child: Row(
                               children: [
@@ -596,7 +443,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                             },
                           ),
                         ),
-                        const _ScannerCorners(),
+                        const ScannerCorners(),
                         Positioned.fill(
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(22),
@@ -644,8 +491,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.7),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.pill),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -660,7 +508,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    _scanning ? 'Membaca kode…' : 'Mendeteksi QR…',
+                                    _scanning
+                                        ? 'Membaca kode…'
+                                        : 'Mendeteksi QR…',
                                     style: const TextStyle(
                                       fontFamily: 'Inter',
                                       fontSize: 11,
@@ -677,7 +527,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                           Positioned.fill(
                             child: Container(
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.65),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.65,
+                                ),
                                 borderRadius: BorderRadius.circular(22),
                               ),
                               child: const Center(
@@ -748,69 +600,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ScannerCorners extends StatelessWidget {
-  const _ScannerCorners();
-
-  @override
-  Widget build(BuildContext context) {
-    const color = AppColors.secondaryFixed;
-    return Stack(
-      children: const [
-        Positioned(
-          top: 22,
-          left: 22,
-          child: _Corner(color: color, top: true, left: true),
-        ),
-        Positioned(
-          top: 22,
-          right: 22,
-          child: _Corner(color: color, top: true, left: false),
-        ),
-        Positioned(
-          bottom: 22,
-          left: 22,
-          child: _Corner(color: color, top: false, left: true),
-        ),
-        Positioned(
-          bottom: 22,
-          right: 22,
-          child: _Corner(color: color, top: false, left: false),
-        ),
-      ],
-    );
-  }
-}
-
-class _Corner extends StatelessWidget {
-  const _Corner({required this.color, required this.top, required this.left});
-
-  final Color color;
-  final bool top;
-  final bool left;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        border: Border(
-          top: top ? BorderSide(color: color, width: 3) : BorderSide.none,
-          bottom: !top ? BorderSide(color: color, width: 3) : BorderSide.none,
-          left: left ? BorderSide(color: color, width: 3) : BorderSide.none,
-          right: !left ? BorderSide(color: color, width: 3) : BorderSide.none,
-        ),
-        borderRadius: BorderRadius.only(
-          topLeft: top && left ? const Radius.circular(12) : Radius.zero,
-          topRight: top && !left ? const Radius.circular(12) : Radius.zero,
-          bottomLeft: !top && left ? const Radius.circular(12) : Radius.zero,
-          bottomRight: !top && !left ? const Radius.circular(12) : Radius.zero,
         ),
       ),
     );

@@ -1667,7 +1667,3 @@ const Object _unset = Object();
 /// Pembulatan tampilan. Perhitungan tetap memakai nilai penuh.
 String fmt1(double? value) => value == null ? '—' : value.toStringAsFixed(1);
 String fmt2(double? value) => value == null ? '—' : value.toStringAsFixed(2);
-String fmt0(double? value) => value == null ? '—' : value.round().toString();
-
-double clampDouble(double value, double min, double max) =>
-    math.min(math.max(value, min), max);

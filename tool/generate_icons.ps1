@@ -1,5 +1,5 @@
 Add-Type -AssemblyName System.Drawing
-$emblem = [System.Drawing.Image]::FromFile('assets/images/nuri_emblem_cropped.png')
+$emblem = [System.Drawing.Image]::FromFile('assets/images/nuri_logo_mark.png')
 $sizes = @{
     'mipmap-mdpi' = 48
     'mipmap-hdpi' = 72

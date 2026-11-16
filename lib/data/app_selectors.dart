@@ -10,22 +10,6 @@ final currentUserProvider = Provider<AppUser?>(
       ref.watch(appControllerProvider.select((state) => state.currentUser)),
 );
 
-final activePregnancyProvider = Provider<Pregnancy?>(
-  (ref) =>
-      ref.watch(appControllerProvider.select((state) => state.activePregnancy)),
-);
-
-final activeChildProvider = Provider<Child?>(
-  (ref) =>
-      ref.watch(appControllerProvider.select((state) => state.activeChild)),
-);
-
-final pregnancyContextProvider = Provider<bool>(
-  (ref) => ref.watch(
-    appControllerProvider.select((state) => state.pregnancyContext),
-  ),
-);
-
 final rosterProvider = Provider<List<RosterEntry>>(
   (ref) => ref.watch(appControllerProvider.select((state) => state.myRoster)),
 );
@@ -45,12 +29,3 @@ final posyanduNameProvider = Provider<String>(
       ref.watch(appControllerProvider.select((state) => state.posyanduName)),
 );
 
-final nextPosyanduDateProvider = Provider<DateTime?>(
-  (ref) => ref.watch(
-    appControllerProvider.select((state) => state.nextPosyanduDate),
-  ),
-);
-
-final contentsProvider = Provider<List<ContentArticle>>(
-  (ref) => ref.watch(appControllerProvider.select((state) => state.contents)),
-);

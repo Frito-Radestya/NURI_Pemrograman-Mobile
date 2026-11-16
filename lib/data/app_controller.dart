@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/growth/who_lms.dart';
 import '../domain/models.dart';
-import '../domain/nutrition/food_catalog.dart';
 import 'app_repository.dart';
 import 'auth_service.dart';
 import 'demo_seed.dart';
@@ -19,14 +18,6 @@ export 'controllers/pregnancy_actions.dart';
 
 final localRepositoryProvider = Provider<AppRepository>(
   (ref) => throw UnimplementedError('Repository harus di-override di main().'),
-);
-
-final whoReferenceProvider = Provider<WhoReference>(
-  (ref) => WhoReference.instance,
-);
-
-final foodCatalogProvider = Provider<FoodCatalog>(
-  (ref) => FoodCatalog.instance,
 );
 
 final appControllerProvider = NotifierProvider<AppController, AppState>(

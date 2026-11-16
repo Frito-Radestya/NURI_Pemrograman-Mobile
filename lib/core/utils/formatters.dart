@@ -11,9 +11,6 @@ String formatDateId(
   return DateFormat(pattern, 'id_ID').format(date);
 }
 
-String formatMonthYear(DateTime date) =>
-    DateFormat('MMMM yyyy', 'id_ID').format(date);
-
 String formatDayShort(DateTime date) => DateFormat('EEE', 'id_ID').format(date);
 
 String formatWeekday(DateTime date) => DateFormat('EEEE', 'id_ID').format(date);
@@ -49,19 +46,7 @@ String initialsOf(String name) {
   return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
 }
 
-String compactNumber(double? value) {
-  if (value == null) return '—';
-  if (value >= 1000) {
-    final thousands = value / 1000;
-    return '${thousands.toStringAsFixed(thousands >= 10 ? 0 : 1)}k';
-  }
-  return value.round().toString();
-}
-
 String gramsLabel(double grams) {
   if (grams == grams.roundToDouble()) return '${grams.round()} g';
   return '${grams.toStringAsFixed(1)} g';
 }
-
-String percentLabel(double? percent) =>
-    percent == null ? '—' : '${percent.round()}%';
