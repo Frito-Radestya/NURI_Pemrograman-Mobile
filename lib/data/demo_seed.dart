@@ -1000,6 +1000,7 @@ class DemoSeed {
       readArticles: const {'art_trimester2'},
       mealPlan: const ['menu_nasi_tim', 'menu_sup_bola', 'menu_opor_telur'],
       remindersEnabled: true,
+      assignedNakesIds: const {'nakes_siti', 'nakes_ratna', 'nakes_hendra'},
     );
   }
 }

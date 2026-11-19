@@ -5,6 +5,7 @@ import '../../shared/widgets.dart';
 
 class NakesItem {
   const NakesItem({
+    required this.id,
     required this.name,
     required this.role,
     required this.facility,
@@ -12,10 +13,9 @@ class NakesItem {
     required this.status,
     required this.isReady,
     required this.schedule,
-    required this.whatsapp,
-    required this.phone,
   });
 
+  final String id;
   final String name;
   final String role;
   final String facility;
@@ -23,14 +23,21 @@ class NakesItem {
   final String status;
   final bool isReady;
   final String schedule;
-  final String whatsapp;
-  final String phone;
 }
 
 class NakesCard extends StatelessWidget {
-  const NakesCard({super.key, required this.item});
+  const NakesCard({
+    super.key,
+    required this.item,
+    required this.onChat,
+    this.isAssigned = true,
+    this.onToggleAssign,
+  });
 
   final NakesItem item;
+  final VoidCallback onChat;
+  final bool isAssigned;
+  final VoidCallback? onToggleAssign;
 
   @override
   Widget build(BuildContext context) {
@@ -177,14 +184,9 @@ class NakesCard extends StatelessWidget {
                 child: SizedBox(
                   height: 38,
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      showNuriSnack(
-                        context,
-                        'Membuka konsultasi WhatsApp dengan ${item.name}…',
-                      );
-                    },
+                    onPressed: onChat,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF25D366),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -193,7 +195,7 @@ class NakesCard extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.chat_rounded, size: 16),
                     label: const Text(
-                      'Chat WhatsApp',
+                      'Kirim Pesan',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 12,
@@ -203,34 +205,41 @@ class NakesCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 38,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    showNuriSnack(
-                      context,
-                      'Menghubungi nomor telepon fasilitas: ${item.phone}',
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.onSurface,
-                    side: const BorderSide(color: AppColors.line),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
+              if (onToggleAssign != null) ...[
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 38,
+                  child: OutlinedButton.icon(
+                    onPressed: onToggleAssign,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: isAssigned
+                          ? AppColors.primary
+                          : AppColors.onSurface,
+                      backgroundColor: isAssigned ? AppColors.softMint : null,
+                      side: BorderSide(
+                        color: isAssigned ? AppColors.primary : AppColors.line,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
                     ),
-                  ),
-                  icon: const Icon(Icons.phone_rounded, size: 15),
-                  label: const Text(
-                    'Telepon',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    icon: Icon(
+                      isAssigned
+                          ? Icons.check_circle_rounded
+                          : Icons.person_add_alt_1_rounded,
+                      size: 15,
+                    ),
+                    label: Text(
+                      isAssigned ? 'Ditugaskan' : 'Tugaskan',
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ],

@@ -1362,6 +1362,8 @@ class AppState {
     this.readArticles = const {},
     this.mealPlan = const [],
     this.remindersEnabled = true,
+    this.assignedNakesIds = const {},
+    this.chatMessages = const {},
   });
 
   final List<AppUser> users;
@@ -1388,6 +1390,16 @@ class AppState {
   final Set<String> readArticles;
   final List<String> mealPlan;
   final bool remindersEnabled;
+  final Set<String> assignedNakesIds;
+  final Map<String, List<Map<String, String>>> chatMessages;
+
+  bool get isPosyanduConnected {
+    final user = currentUser;
+    if (user == null) return false;
+    if (user.role == UserRole.cadre) return posyanduName.isNotEmpty;
+    if (user.demo || user.posyanduId != null) return true;
+    return accessGrants.any((g) => g.ownerUid == user.id && g.isActive);
+  }
 
   AppUser? get currentUser {
     for (final user in users) {
@@ -1543,6 +1555,8 @@ class AppState {
     Set<String>? readArticles,
     List<String>? mealPlan,
     bool? remindersEnabled,
+    Set<String>? assignedNakesIds,
+    Map<String, List<Map<String, String>>>? chatMessages,
   }) => AppState(
     users: users ?? this.users,
     currentUserId: identical(currentUserId, _unset)
@@ -1576,6 +1590,8 @@ class AppState {
     readArticles: readArticles ?? this.readArticles,
     mealPlan: mealPlan ?? this.mealPlan,
     remindersEnabled: remindersEnabled ?? this.remindersEnabled,
+    assignedNakesIds: assignedNakesIds ?? this.assignedNakesIds,
+    chatMessages: chatMessages ?? this.chatMessages,
   );
 
   Map<String, dynamic> toJson() => {
@@ -1605,6 +1621,8 @@ class AppState {
     'readArticles': readArticles.toList(),
     'mealPlan': mealPlan,
     'remindersEnabled': remindersEnabled,
+    'assignedNakesIds': assignedNakesIds.toList(),
+    'chatMessages': chatMessages,
   };
 
   factory AppState.fromJson(Map<String, dynamic> json) => AppState(
@@ -1659,6 +1677,16 @@ class AppState {
     readArticles: _stringList(json['readArticles']).toSet(),
     mealPlan: _stringList(json['mealPlan']),
     remindersEnabled: json['remindersEnabled'] as bool? ?? true,
+    assignedNakesIds: _stringList(json['assignedNakesIds']).toSet(),
+    chatMessages: (json['chatMessages'] as Map? ?? const {}).map(
+      (k, v) => MapEntry(
+        k.toString(),
+        (v as List? ?? const [])
+            .whereType<Map>()
+            .map((m) => m.map((mk, mv) => MapEntry(mk.toString(), mv.toString())))
+            .toList(),
+      ),
+    ),
   );
 }
 

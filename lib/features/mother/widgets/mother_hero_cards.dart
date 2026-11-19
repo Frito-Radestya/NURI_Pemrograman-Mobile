@@ -21,16 +21,12 @@ class MotherPregnancyHero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF145C45), Color(0xFF0E4332)],
-        ),
+        gradient: AppGradients.headerWide,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF145C45).withValues(alpha: 0.22),
+            color: AppColors.primary.withValues(alpha: 0.22),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

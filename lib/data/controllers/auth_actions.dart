@@ -109,7 +109,13 @@ extension AuthActions on AppController {
       return 'Email belum terdaftar. Periksa kembali atau daftar akun baru.';
     }
     commitState(
-      currentState.copyWith(currentUserId: user.id, landingSeen: true),
+      currentState.copyWith(
+        currentUserId: user.id,
+        landingSeen: true,
+        assignedNakesIds: user.demo && currentState.assignedNakesIds.isEmpty
+            ? const {'nakes_siti', 'nakes_ratna', 'nakes_hendra'}
+            : currentState.assignedNakesIds,
+      ),
     );
     return null;
   }
@@ -171,6 +177,9 @@ extension AuthActions on AppController {
         posyanduArea: isNewUser && role == UserRole.cadre
             ? ''
             : currentState.posyanduArea,
+        assignedNakesIds: isNewUser
+            ? const {}
+            : currentState.assignedNakesIds,
       ),
     );
     if (databaseService.isAvailable) {
@@ -231,6 +240,9 @@ extension AuthActions on AppController {
         currentUserId: user.id,
         onboardingSeen: true,
         landingSeen: true,
+        assignedNakesIds: currentState.assignedNakesIds.isEmpty
+            ? const {'nakes_siti', 'nakes_ratna', 'nakes_hendra'}
+            : currentState.assignedNakesIds,
       ),
     );
     if (databaseService.isAvailable) {
@@ -321,6 +333,7 @@ extension AuthActions on AppController {
           sessions: role == UserRole.cadre ? const [] : currentState.sessions,
           posyanduName: role == UserRole.cadre ? '' : currentState.posyanduName,
           posyanduArea: role == UserRole.cadre ? '' : currentState.posyanduArea,
+          assignedNakesIds: const {},
         ),
       );
       if (databaseService.isAvailable) {
@@ -363,6 +376,7 @@ extension AuthActions on AppController {
         sessions: role == UserRole.cadre ? const [] : currentState.sessions,
         posyanduName: role == UserRole.cadre ? '' : currentState.posyanduName,
         posyanduArea: role == UserRole.cadre ? '' : currentState.posyanduArea,
+        assignedNakesIds: const {},
       ),
     );
     return null;
@@ -716,8 +730,27 @@ extension AuthActions on AppController {
       usedCode,
     ];
 
+    final updatedUsers = currentState.users.map((u) {
+      if (u.id == codeRecord.issuerUid && u.posyanduId == null) {
+        return AppUser(
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          posyanduId: cadre.posyanduId ?? 'p_melati',
+          avatarAsset: u.avatarAsset,
+          demo: u.demo,
+          authUid: u.authUid,
+          consentVersion: u.consentVersion,
+          consentAcceptedAt: u.consentAcceptedAt,
+        );
+      }
+      return u;
+    }).toList();
+
     commitState(
       currentState.copyWith(
+        users: updatedUsers,
         children: updatedChildren,
         roster: updatedRoster,
         accessGrants: [
@@ -815,8 +848,27 @@ extension AuthActions on AppController {
       usedCode,
     ];
 
+    final updatedUsers = currentState.users.map((u) {
+      if (u.id == mother.id && u.posyanduId == null) {
+        return AppUser(
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          posyanduId: codeRecord.posyanduId ?? claimedChild!.posyanduId ?? 'p_melati',
+          avatarAsset: u.avatarAsset,
+          demo: u.demo,
+          authUid: u.authUid,
+          consentVersion: u.consentVersion,
+          consentAcceptedAt: u.consentAcceptedAt,
+        );
+      }
+      return u;
+    }).toList();
+
     commitState(
       currentState.copyWith(
+        users: updatedUsers,
         children: updatedChildren,
         selectedChildId: claimedChild!.id,
         accessGrants: [...currentState.accessGrants, grant],
@@ -824,5 +876,84 @@ extension AuthActions on AppController {
       ),
     );
     return (claimedChild, null);
+  }
+
+  /// Menghubungkan akun Ibu dengan Posyandu menggunakan Kode Posyandu.
+  String? connectPosyanduCode(String rawCode) {
+    final user = currentState.currentUser;
+    if (user == null || user.role != UserRole.mother) {
+      return 'Hanya akun Ibu yang dapat menyambungkan kode Posyandu.';
+    }
+    final clean = rawCode.trim().toUpperCase();
+    if (clean.isEmpty) return 'Masukkan kode Posyandu terlebih dahulu.';
+    if (!clean.startsWith('POSYANDU') && !clean.startsWith('NR') && clean.length < 4) {
+      return 'Kode Posyandu tidak valid.';
+    }
+    final updatedUsers = currentState.users.map((u) {
+      if (u.id == user.id) {
+        return AppUser(
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          posyanduId: 'p_melati',
+          avatarAsset: u.avatarAsset,
+          demo: u.demo,
+          authUid: u.authUid,
+          consentVersion: u.consentVersion,
+          consentAcceptedAt: u.consentAcceptedAt,
+        );
+      }
+      return u;
+    }).toList();
+    commitState(
+      currentState.copyWith(
+        users: updatedUsers,
+        posyanduName: currentState.posyanduName.isEmpty
+            ? 'Posyandu Melati II'
+            : currentState.posyanduName,
+        posyanduArea: currentState.posyanduArea.isEmpty
+            ? 'Kelurahan Sukamaju'
+            : currentState.posyanduArea,
+      ),
+    );
+    return null;
+  }
+
+  void toggleNakesAssignment(String nakesId) {
+    final next = {...currentState.assignedNakesIds};
+    if (next.contains(nakesId)) {
+      next.remove(nakesId);
+    } else {
+      next.add(nakesId);
+    }
+    commitState(currentState.copyWith(assignedNakesIds: next));
+  }
+
+  void sendChatMessage({
+    required String nakesId,
+    required String text,
+    required String senderRole,
+    required String senderName,
+  }) {
+    final clean = text.trim();
+    if (clean.isEmpty) return;
+    final now = DateTime.now();
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} WIB';
+    final existing = List<Map<String, String>>.from(
+      currentState.chatMessages[nakesId] ?? const [],
+    );
+    existing.add({
+      'senderRole': senderRole,
+      'senderName': senderName,
+      'text': clean,
+      'time': timeStr,
+    });
+    commitState(
+      currentState.copyWith(
+        chatMessages: {...currentState.chatMessages, nakesId: existing},
+      ),
+    );
   }
 }

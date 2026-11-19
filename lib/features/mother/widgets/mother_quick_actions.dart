@@ -8,14 +8,12 @@ class MotherQuickActions extends StatelessWidget {
     super.key,
     required this.onDiary,
     required this.onCamera,
-    required this.onGrowth,
     required this.onAnc,
     required this.onConsultation,
   });
 
   final VoidCallback onDiary;
   final VoidCallback onCamera;
-  final VoidCallback onGrowth;
   final VoidCallback onAnc;
   final VoidCallback onConsultation;
 
@@ -24,30 +22,14 @@ class MotherQuickActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Aksi Cepat Bunda',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppColors.onSurface,
-              ),
-            ),
-            GestureDetector(
-              onTap: onGrowth,
-              child: const Text(
-                'Semua Fitur',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ],
+        const Text(
+          'Aksi Cepat Bunda',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
+          ),
         ),
         const SizedBox(height: 10),
         Row(
@@ -56,6 +38,7 @@ class MotherQuickActions extends StatelessWidget {
             _QuickActionItem(
               icon: Icons.restaurant_menu_rounded,
               label: 'Buku Makan',
+              isPrimary: true,
               onTap: onDiary,
             ),
             _QuickActionItem(
@@ -65,18 +48,15 @@ class MotherQuickActions extends StatelessWidget {
               onTap: onCamera,
             ),
             _QuickActionItem(
-              icon: Icons.show_chart_rounded,
-              label: 'Grafik WHO',
-              onTap: onGrowth,
-            ),
-            _QuickActionItem(
               icon: Icons.event_available_rounded,
               label: 'Jadwal ANC',
+              isPrimary: true,
               onTap: onAnc,
             ),
             _QuickActionItem(
               icon: Icons.support_agent_rounded,
               label: 'Tanya Bidan',
+              isPrimary: true,
               onTap: onConsultation,
             ),
           ],

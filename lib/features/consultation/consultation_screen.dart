@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../data/app_controller.dart';
+import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
+import '../profile/profile_sheets.dart';
 import 'consultation_widgets.dart';
+import 'nakes_chat_screen.dart';
 
-class ConsultationScreen extends StatelessWidget {
+class ConsultationScreen extends ConsumerWidget {
   const ConsultationScreen({super.key});
 
   static const _nakesList = [
     NakesItem(
+      id: 'nakes_siti',
       name: 'Bidan Siti Aminah, S.Tr.Keb',
       role: 'Bidan Desa & Pembina Posyandu',
       facility: 'Pustu Sukamaju • Wilayah Posyandu Melati II',
@@ -16,10 +22,9 @@ class ConsultationScreen extends StatelessWidget {
       status: 'Siap Konsultasi',
       isReady: true,
       schedule: 'Senin–Jumat • 08:00–16:00',
-      whatsapp: '6281234567890',
-      phone: '(061) 821-1234',
     ),
     NakesItem(
+      id: 'nakes_ratna',
       name: 'Bidan Ratna Dewi, A.Md.Keb',
       role: 'Bidan Praktik Mandiri (BPM)',
       facility: 'Klinik Bersalin Pratama Sukamaju',
@@ -27,24 +32,28 @@ class ConsultationScreen extends StatelessWidget {
       status: 'Siap Konsultasi',
       isReady: true,
       schedule: 'Praktik Sore • 16:00–20:30',
-      whatsapp: '6281298765432',
-      phone: '(061) 821-5678',
     ),
     NakesItem(
-      name: 'Ns. Hendra Pratama, S.Kep',
-      role: 'Perawat Komunitas & Gizi',
+      id: 'nakes_hendra',
+      name: 'dr. Hendra Pratama, Sp.A',
+      role: 'Dokter Puskesmas & Konsultan Gizi',
       facility: 'Puskesmas Sukamaju Induk',
-      specialty: 'Intervensi Gizi Kurang, PMT Balita, Skrining KEK Ibu Hamil',
+      specialty: 'Intervensi Gizi Kurang, PKMK Balita, Skrining KEK Ibu Hamil',
       status: 'Jadwal Piket',
-      isReady: false,
+      isReady: true,
       schedule: 'Senin–Sabtu • 08:00–14:00',
-      whatsapp: '6281355556666',
-      phone: '(061) 821-9999',
     ),
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appControllerProvider);
+    final isCadre = state.isCadre;
+    final connected = state.isPosyanduConnected;
+    final assignedIds = state.assignedNakesIds;
+    final visibleNakes = isCadre
+        ? _nakesList
+        : _nakesList.where((n) => assignedIds.contains(n.id)).toList();
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
@@ -202,22 +211,153 @@ class ConsultationScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Bidan & Perawat Wilayah Anda',
-                    style: TextStyle(
+                  Text(
+                    isCadre
+                        ? 'Atur Bidan & Dokter Pendamping'
+                        : 'Bidan & Dokter Wilayah Anda',
+                    style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: AppColors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  ..._nakesList.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: NakesCard(item: item),
+                  if (isCadre) ...[
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Pilih bidan atau dokter yang bersedia, sesuai, dan mampu mendampingi Ibu di wilayah Posyandu Anda. Ketuk Kirim Pesan untuk membalas pesan Ibu.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted,
+                        height: 1.4,
+                      ),
                     ),
-                  ),
+                  ],
+                  const SizedBox(height: 10),
+                  if (!isCadre && !connected)
+                    AppCard(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.link_off_rounded,
+                            size: 36,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Belum Tersambung ke Posyandu',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Sambungkan akun Ibu dengan Posyandu terlebih dahulu agar Kader dapat mengatur dan menghubungkan bidan atau dokter pendamping yang sesuai.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.muted,
+                              height: 1.45,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          NuriButton(
+                            label: 'Sambungkan Kode Posyandu',
+                            icon: Icons.qr_code_rounded,
+                            onPressed: () async {
+                              final code = await showNuriSheet<String>(
+                                context: context,
+                                builder: (_) =>
+                                    const ConnectPosyanduCodeSheet(),
+                              );
+                              if (!context.mounted ||
+                                  code == null ||
+                                  code.isEmpty) {
+                                return;
+                              }
+                              final err = ref
+                                  .read(appControllerProvider.notifier)
+                                  .connectPosyanduCode(code);
+                              if (!context.mounted) return;
+                              if (err != null) {
+                                showNuriSnack(context, err, error: true);
+                              } else {
+                                showNuriSnack(
+                                  context,
+                                  'Berhasil tersambung ke Posyandu!',
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (!isCadre && visibleNakes.isEmpty)
+                    const AppCard(
+                      padding: EdgeInsets.all(18),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.hourglass_top_rounded,
+                            size: 34,
+                            color: AppColors.amber,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Menunggu Penugasan Kader',
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Pihak Kader Posyandu sedang mengatur bidan atau dokter yang bersedia, sesuai, dan mampu mendampingi konsultasi Ibu.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.muted,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...visibleNakes.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: NakesCard(
+                          item: item,
+                          isAssigned: assignedIds.contains(item.id),
+                          onToggleAssign: isCadre
+                              ? () {
+                                  ref
+                                      .read(appControllerProvider.notifier)
+                                      .toggleNakesAssignment(item.id);
+                                  final nowAssigned = !assignedIds.contains(
+                                    item.id,
+                                  );
+                                  showNuriSnack(
+                                    context,
+                                    nowAssigned
+                                        ? '${item.name} ditugaskan untuk konsultasi Ibu.'
+                                        : 'Penugasan ${item.name} dinonaktifkan.',
+                                  );
+                                }
+                              : null,
+                          onChat: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => NakesChatScreen(item: item),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 14),
                   AppCard(
                     padding: const EdgeInsets.all(16),

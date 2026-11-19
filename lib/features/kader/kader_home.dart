@@ -7,6 +7,7 @@ import '../../data/app_selectors.dart';
 import '../../domain/models.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
+import '../consultation/consultation_screen.dart';
 import 'add_target_screen.dart';
 import 'kader_home_snapshot.dart';
 import 'kader_home_widgets.dart';
@@ -141,7 +142,7 @@ class KaderHomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Semangat Pagi, Bu ${user?.name.split(' ').first ?? 'Kader'}! 🌿',
+                    'Semangat Pagi, Bu ${user?.name.split(' ').first ?? 'Kader'}!',
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 22,
@@ -221,6 +222,7 @@ class KaderHomeScreen extends ConsumerWidget {
                     onScan: () => _push(context, const ScanScreen()),
                     onFollowUp: () =>
                         _push(context, const FollowUpScreen(embedded: false)),
+                    onNakes: () => _push(context, const ConsultationScreen()),
                   ),
                   const SizedBox(height: 16),
                   KaderNutritionSnapshot(

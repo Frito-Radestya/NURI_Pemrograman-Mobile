@@ -49,6 +49,8 @@ class SqliteRepository implements AppRepository {
     'readArticles',
     'mealPlan',
     'remindersEnabled',
+    'assignedNakesIds',
+    'chatMessages',
   ];
 
   final Database _db;
@@ -233,6 +235,8 @@ class SqliteRepository implements AppRepository {
     'readArticles': state.readArticles.toList(),
     'mealPlan': state.mealPlan,
     'remindersEnabled': state.remindersEnabled,
+    'assignedNakesIds': state.assignedNakesIds.toList(),
+    'chatMessages': state.chatMessages,
   };
 
   Future<void> _syncTable<T>(

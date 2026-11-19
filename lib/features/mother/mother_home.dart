@@ -12,6 +12,7 @@ import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
 import '../consultation/consultation_screen.dart';
 import '../education/education_screen.dart';
+import '../profile/profile_sheets.dart';
 import 'diary_screen.dart';
 import 'food_flow.dart';
 import 'growth_screens.dart';
@@ -162,15 +163,19 @@ class MotherHomeScreen extends ConsumerWidget {
                           Container(
                             width: 5,
                             height: 5,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.secondaryFixed,
+                              color: state.isPosyanduConnected
+                                  ? AppColors.secondaryFixed
+                                  : Colors.white60,
                             ),
                           ),
                           const SizedBox(width: 6),
-                          const Text(
-                            'Posyandu Aktif',
-                            style: TextStyle(
+                          Text(
+                            state.isPosyanduConnected
+                                ? 'Posyandu Aktif'
+                                : 'Belum Tersambung Posyandu',
+                            style: const TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 10.5,
                               color: Colors.white,
@@ -181,7 +186,7 @@ class MotherHomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '${_greeting()}, ${user.name.split(' ').first}! 👋',
+                      '${_greeting()}, ${user.name.split(' ').first}!',
                       style: const TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 22,
@@ -190,7 +195,8 @@ class MotherHomeScreen extends ConsumerWidget {
                         letterSpacing: -0.3,
                       ),
                     ),
-                    if (state.nextPosyanduDate != null) ...[
+                    if (state.isPosyanduConnected &&
+                        state.nextPosyanduDate != null) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -319,6 +325,93 @@ class MotherHomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
+                    if (!state.isPosyanduConnected) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x25000000),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.qr_code_2_rounded,
+                                size: 22,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Sambungkan Posyandu',
+                                    style: TextStyle(
+                                      fontFamily: 'Nunito',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Hubungkan akun dengan Kader Posyandu untuk jadwal & layanan bidan',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => _showConnectPosyanduSheet(
+                                context,
+                                ref,
+                                child,
+                                pregnancy,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 7,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'Sambung',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -327,8 +420,8 @@ class MotherHomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 14),
                     if (hasBoth) ...[
-                      const SizedBox(height: 12),
                       NuriSegmentedControl<bool>(
                         values: const [true, false],
                         selected: showPregnancy,
@@ -339,22 +432,21 @@ class MotherHomeScreen extends ConsumerWidget {
                             .read(appControllerProvider.notifier)
                             .selectContext(pregnancy: value),
                       ),
+                      const SizedBox(height: 14),
                     ],
-                    Transform.translate(
-                      offset: const Offset(0, -10),
-                      child: showPregnancy
-                          ? MotherPregnancyHero(
-                              pregnancy: pregnancy,
-                              progress: pregnancyProgress!,
-                            )
-                          : child != null
-                          ? MotherChildHero(
-                              child: child,
-                              onTap: () =>
-                                  _push(context, const GrowthDetailScreen()),
-                            )
-                          : const MotherEmptyDataCard(),
-                    ),
+                    showPregnancy
+                        ? MotherPregnancyHero(
+                            pregnancy: pregnancy,
+                            progress: pregnancyProgress!,
+                          )
+                        : child != null
+                        ? MotherChildHero(
+                            child: child,
+                            onTap: () =>
+                                _push(context, const GrowthDetailScreen()),
+                          )
+                        : const MotherEmptyDataCard(),
+                    const SizedBox(height: 16),
                     // Quick Action Categories (Foodie style icons)
                     MotherQuickActions(
                       onDiary: () {
@@ -383,8 +475,6 @@ class MotherHomeScreen extends ConsumerWidget {
                           _openCamera(context, child.id, child.nickname);
                         }
                       },
-                      onGrowth: () =>
-                          _push(context, const GrowthDetailScreen()),
                       onAnc: () => _push(
                         context,
                         showPregnancy
@@ -651,5 +741,40 @@ class MotherHomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _showConnectPosyanduSheet(
+    BuildContext context,
+    WidgetRef ref,
+    Child? child,
+    Pregnancy? pregnancy,
+  ) async {
+    final subjectId = child?.id ?? pregnancy?.id;
+    final subjectName =
+        child?.nickname ?? (pregnancy != null ? 'Kehamilan' : null);
+    if (subjectId != null && subjectName != null) {
+      await showNuriSheet<void>(
+        context: context,
+        builder: (_) => FamilyCodeGeneratorSheet(
+          subjectId: subjectId,
+          subjectName: subjectName,
+        ),
+      );
+      return;
+    }
+    final code = await showNuriSheet<String>(
+      context: context,
+      builder: (_) => const ClaimChildSheet(),
+    );
+    if (!context.mounted || code == null || code.isEmpty) return;
+    final err = ref
+        .read(appControllerProvider.notifier)
+        .connectPosyanduCode(code);
+    if (!context.mounted) return;
+    if (err != null) {
+      showNuriSnack(context, err, error: true);
+    } else {
+      showNuriSnack(context, 'Akun berhasil tersambung dengan Posyandu!');
+    }
   }
 }

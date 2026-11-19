@@ -191,6 +191,28 @@ class _FamilyCodeGeneratorSheetState
           ],
           const SizedBox(height: 14),
           NuriButton(
+            label: 'Masukkan Kode Posyandu',
+            variant: NuriButtonVariant.outlined,
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final code = await showNuriSheet<String>(
+                context: context,
+                builder: (_) => const ConnectPosyanduCodeSheet(),
+              );
+              if (!context.mounted || code == null || code.isEmpty) return;
+              final err = ref
+                  .read(appControllerProvider.notifier)
+                  .connectPosyanduCode(code);
+              if (!context.mounted) return;
+              if (err != null) {
+                showNuriSnack(context, err, error: true);
+              } else {
+                showNuriSnack(context, 'Berhasil tersambung dengan Posyandu!');
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          NuriButton(
             label: 'Tutup',
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -520,6 +542,64 @@ class _ClaimChildSheetState extends State<ClaimChildSheet> {
           NuriButton(
             label: 'Verifikasi & Klaim',
             icon: Icons.verified_outlined,
+            onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ConnectPosyanduCodeSheet extends StatefulWidget {
+  const ConnectPosyanduCodeSheet({super.key});
+
+  @override
+  State<ConnectPosyanduCodeSheet> createState() =>
+      _ConnectPosyanduCodeSheetState();
+}
+
+class _ConnectPosyanduCodeSheetState extends State<ConnectPosyanduCodeSheet> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Sambungkan ke Posyandu',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Masukkan Kode Posyandu dari kader (contoh: POSYANDU-MELATI-II-2026) untuk menyambungkan akun Ibu.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: AppColors.muted,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          NuriTextField(
+            label: 'Kode Posyandu',
+            controller: _controller,
+            hint: 'POSYANDU-MELATI-II-2026',
+            prefixIcon: Icons.qr_code_rounded,
+            textCapitalization: TextCapitalization.characters,
+          ),
+          const SizedBox(height: 16),
+          NuriButton(
+            label: 'Sambungkan Posyandu',
+            icon: Icons.check_circle_outline_rounded,
             onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
           ),
         ],

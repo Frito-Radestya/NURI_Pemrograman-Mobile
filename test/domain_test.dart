@@ -1186,6 +1186,62 @@ void main() {
       expect(claimedChild?.guardianUid, 'u_maya');
       expect(claimedChild?.linked, isTrue);
     });
+
+    test('FLOW-POSYANDU-NAKES-CHAT: akun baru belum tersambung posyandu, kader mengatur bidan, dan chat 2 arah', () async {
+      final seed = DemoSeed.build(who: who, today: DateTime(2026, 3, 15));
+      final auth = _FakeAuthService()
+        ..registerSession = const AuthSession(
+          uid: 'u_new_mother',
+          email: 'bunda.baru@nuri.id',
+          displayName: 'Bunda Baru',
+        );
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, auth: auth, db: db);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+
+      // 1. Akun baru belum tersambung posyandu & belum ada bidan
+      final err = await controller.register(
+        name: 'Bunda Baru',
+        email: 'bunda.baru@nuri.id',
+        password: 'password123',
+        role: UserRole.mother,
+      );
+      expect(err, isNull);
+      expect(container.read(appControllerProvider).isPosyanduConnected, isFalse);
+      expect(container.read(appControllerProvider).assignedNakesIds, isEmpty);
+
+      // 2. Sambungkan kode posyandu
+      final connectErr = controller.connectPosyanduCode('POSYANDU-MELATI-II-2026');
+      expect(connectErr, isNull);
+      expect(container.read(appControllerProvider).isPosyanduConnected, isTrue);
+
+      // 3. Kader menugaskan bidan yang bersedia & mengirim/menerima pesan
+      controller.toggleNakesAssignment('nakes_siti');
+      expect(
+        container.read(appControllerProvider).assignedNakesIds,
+        contains('nakes_siti'),
+      );
+
+      controller.sendChatMessage(
+        nakesId: 'nakes_siti',
+        text: 'Halo Bu Bidan, saya ingin tanya jadwal ANC.',
+        senderRole: 'mother',
+        senderName: 'Bunda Baru',
+      );
+      controller.sendChatMessage(
+        nakesId: 'nakes_siti',
+        text: 'Halo Bunda, silakan datang hari Kamis pukul 09.00 ya.',
+        senderRole: 'nakes',
+        senderName: 'Bidan Siti Aminah, S.Tr.Keb',
+      );
+
+      final chat =
+          container.read(appControllerProvider).chatMessages['nakes_siti']!;
+      expect(chat.length, 2);
+      expect(chat.first['senderRole'], 'mother');
+      expect(chat.last['senderRole'], 'nakes');
+    });
   });
 }
 

@@ -13,12 +13,14 @@ class KaderQuickMenu extends StatelessWidget {
     required this.onAddTarget,
     required this.onScan,
     required this.onFollowUp,
+    required this.onNakes,
   });
 
   final VoidCallback onRoster;
   final VoidCallback onAddTarget;
   final VoidCallback onScan;
   final VoidCallback onFollowUp;
+  final VoidCallback onNakes;
 
   @override
   Widget build(BuildContext context) {
@@ -68,9 +70,9 @@ class KaderQuickMenu extends StatelessWidget {
               onTap: onAddTarget,
             ),
             _KaderMenuItem(
-              icon: Icons.warning_amber_rounded,
-              label: 'Tindak Lanjut',
-              onTap: onFollowUp,
+              icon: Icons.support_agent_rounded,
+              label: 'Atur Bidan',
+              onTap: onNakes,
             ),
           ],
         ),
