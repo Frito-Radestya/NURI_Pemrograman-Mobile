@@ -55,6 +55,13 @@ abstract class DatabaseService {
   Future<void> saveAccessGrant(AccessGrant grant);
   Future<void> saveLinkCode(LinkCode code);
   Future<LinkCode?> getLinkCode(String code);
+
+  /// Melakukan transaksi persalinan secara atomik: membuat profil anak baru
+  /// dan menutup kehamilan aktif dalam satu WriteBatch di Firestore.
+  Future<bool> executeAtomicBirth({
+    required Child child,
+    required String pregnancyId,
+  });
 }
 
 /// Implementasi Cloud Firestore dengan offline persistence bawaan SDK.
@@ -764,6 +771,32 @@ class FirestoreService implements DatabaseService {
     } catch (e) {
       debugPrint('getLinkCode gagal: $e');
       return null;
+    }
+  }
+
+  @override
+  Future<bool> executeAtomicBirth({
+    required Child child,
+    required String pregnancyId,
+  }) async {
+    if (!isAvailable) return false;
+    try {
+      final batch = _db.batch();
+      final childRef = _db.collection('children').doc(child.id);
+      batch.set(childRef, child.toJson(), SetOptions(merge: true));
+
+      final pregRef = _db.collection('pregnancies').doc(pregnancyId);
+      batch.update(pregRef, {
+        'status': PregnancyStatus.born.storage,
+        'childId': child.id,
+      });
+
+      await batch.commit();
+      debugPrint('Transaksi kelahiran atomik berhasil di Firestore untuk ${child.nickname}');
+      return true;
+    } catch (e) {
+      debugPrint('Gagal eksekusi transaksi kelahiran atomik: $e');
+      return false;
     }
   }
 }

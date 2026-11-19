@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../app_controller.dart';
 import '../../domain/models.dart';
 import '../../domain/pregnancy/pregnancy_calculator.dart';
@@ -141,6 +143,14 @@ extension PregnancyActions on AppController {
         pregnancyContext: false,
       ),
     );
+    if (databaseService.isAvailable) {
+      unawaited(
+        databaseService.executeAtomicBirth(
+          child: child,
+          pregnancyId: pregnancy.id,
+        ),
+      );
+    }
     return child;
   }
 

@@ -105,6 +105,18 @@ class SqliteRepository implements AppRepository {
     await db.execute(
       'CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
     );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sync_queue (
+        id TEXT PRIMARY KEY,
+        entity_type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        operation TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        retry_count INTEGER DEFAULT 0,
+        last_error TEXT
+      )
+    ''');
   }
 
   static Future<void> _upgradeSchema(
@@ -213,6 +225,7 @@ class SqliteRepository implements AppRepository {
         await txn.delete(table);
       }
       await txn.delete('meta');
+      await txn.delete('sync_queue');
     });
     _cachedState = null;
   });

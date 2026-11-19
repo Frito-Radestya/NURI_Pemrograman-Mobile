@@ -1296,6 +1296,35 @@ void main() {
       expect(log.items.first.proteinG, closeTo(29, 0.5));
       expect(log.items.first.ironMg, closeTo(5.9, 0.5));
     });
+
+    test('FLOW-03: giveBirth membuat anak dan menutup kehamilan secara atomik', () {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final db = _FakeDatabaseService();
+      final container = makeContainer(seed, db: db);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+
+      final activePreg = container.read(appControllerProvider).activePregnancy!;
+      final newBorn = controller.giveBirth(
+        dob: DateTime(2026, 3, 15),
+        sex: Sex.male,
+        nickname: 'Bayi Lahir Sehat',
+        birthWeightKg: 3.2,
+        birthLengthCm: 50.0,
+      );
+
+      expect(newBorn, isNotNull);
+      expect(newBorn!.nickname, 'Bayi Lahir Sehat');
+      final state = container.read(appControllerProvider);
+      expect(state.activePregnancy, isNull);
+      final pregUpdated = state.pregnancies.firstWhere((p) => p.id == activePreg.id);
+      expect(pregUpdated.status, PregnancyStatus.born);
+      expect(pregUpdated.childId, newBorn.id);
+      expect(db.children.containsKey(newBorn.id), isTrue);
+    });
   });
 }
 
@@ -1487,6 +1516,22 @@ class _FakeDatabaseService implements DatabaseService {
   @override
   Future<LinkCode?> getLinkCode(String code) async =>
       linkCodes[code.trim().toUpperCase()];
+
+  @override
+  Future<bool> executeAtomicBirth({
+    required Child child,
+    required String pregnancyId,
+  }) async {
+    children[child.id] = child;
+    final preg = pregnancies[pregnancyId];
+    if (preg != null) {
+      pregnancies[pregnancyId] = preg.copyWith(
+        status: PregnancyStatus.born,
+        childId: child.id,
+      );
+    }
+    return true;
+  }
 }
 
 class _FakeAuthService implements AuthService {

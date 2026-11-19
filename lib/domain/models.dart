@@ -32,14 +32,15 @@ List<String> _stringList(Object? value) {
 
 enum UserRole {
   mother('ibu', 'Ibu'),
-  cadre('kader', 'Kader');
+  cadre('kader', 'Kader'),
+  admin('admin', 'Admin');
 
   const UserRole(this.storage, this.label);
   final String storage;
   final String label;
 
   static UserRole fromStorage(String? value) => UserRole.values.firstWhere(
-    (e) => e.storage == value,
+    (e) => e.storage == value || e.name == value,
     orElse: () => UserRole.mother,
   );
 }
@@ -1410,6 +1411,7 @@ class AppState {
 
   bool get isLoggedIn => currentUser != null;
   bool get isCadre => currentUser?.role == UserRole.cadre;
+  bool get isAdmin => currentUser?.role == UserRole.admin;
 
   /// Memeriksa apakah kader saat ini memiliki izin aktif terhadap subjek
   /// (anak/kehamilan). Jika ada grant yang tercatat dan statusnya sudah dicabut,

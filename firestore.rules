@@ -1,6 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -10,16 +11,34 @@ service cloud.firestore {
     }
 
     function isUidOrOwner(uid) {
+      return isAuthenticated() && (request.auth.uid == uid || resource.data.authUid == request.auth.uid);
+    }
+
+    function isOwner(uid) {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
+    function isCadreOf(posyanduId) {
+      return isAuthenticated() && 
+        (currentUserDoc().role == 'kader' || currentUserDoc().role == 'cadre') && 
+        currentUserDoc().posyanduId == posyanduId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        currentUserDoc().role == 'admin'
+      );
+    }
+
     // 1. Profil pengguna:
-    // - Hanya pemilik yang dapat membuat/mengubah dokumennya sendiri.
+    // - Hanya pemilik atau admin yang dapat membaca.
     // - Role tidak boleh diubah sepihak setelah dokumen dibuat (SEC-06).
     match /users/{userId} {
       allow read: if isAuthenticated() && (
         request.auth.uid == userId ||
-        resource.data.authUid == request.auth.uid
+        resource.data.authUid == request.auth.uid ||
+        isAdmin()
       );
       allow create: if isAuthenticated() && (
         request.auth.uid == userId ||
@@ -27,117 +46,149 @@ service cloud.firestore {
       );
       allow update: if isAuthenticated() && (
         request.auth.uid == userId ||
-        resource.data.authUid == request.auth.uid
-      ) && request.resource.data.role == resource.data.role;
-      allow delete: if false;
+        resource.data.authUid == request.auth.uid ||
+        isAdmin()
+      ) && (isAdmin() || request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
     }
 
-    // 2. Anak:
+    // 2. Data anak:
     // - Pemilik (guardianUid) memiliki akses baca & tulis penuh.
-    // - Kader hanya dapat membaca/memperbarui pengukuran jika anak terdaftar
-    //   di Posyandu kader tersebut.
-    // - Kader tidak diizinkan menghapus profil anak milik ibu.
+    // - Kader hanya dapat membaca/memperbarui jika anak terdaftar di posyandu binaan kader.
+    // - Mencegah pembacaan massal balita posyandu oleh pengguna acak non-kader.
     match /children/{childId} {
       allow read: if isAuthenticated() && (
+        isOwner(resource.data.guardianUid) ||
         isUidOrOwner(resource.data.guardianUid) ||
-        resource.data.posyanduId != null
+        (resource.data.posyanduId != null && isCadreOf(resource.data.posyanduId)) ||
+        isAdmin()
       );
       allow create: if isAuthenticated() && (
-        isUidOrOwner(request.resource.data.guardianUid) ||
-        request.resource.data.guardianUid == null
+        isOwner(request.resource.data.guardianUid) ||
+        request.resource.data.guardianUid == null ||
+        (request.resource.data.posyanduId != null && isCadreOf(request.resource.data.posyanduId)) ||
+        isAdmin()
       );
       allow update: if isAuthenticated() && (
+        isOwner(resource.data.guardianUid) ||
+        isOwner(request.resource.data.guardianUid) ||
         isUidOrOwner(resource.data.guardianUid) ||
-        isUidOrOwner(request.resource.data.guardianUid) ||
-        resource.data.posyanduId == request.resource.data.posyanduId
+        (resource.data.posyanduId != null && isCadreOf(resource.data.posyanduId)) ||
+        isAdmin()
       );
-      allow delete: if isAuthenticated() &&
-        isUidOrOwner(resource.data.guardianUid);
+      allow delete: if isAuthenticated() && (
+        isOwner(resource.data.guardianUid) ||
+        isAdmin()
+      );
     }
 
-    // 3. Kehamilan: hanya ibu pemilik (ownerUid)
+    // 3. Kehamilan: hanya ibu pemilik (ownerUid) atau admin
     match /pregnancies/{pregnancyId} {
-      allow read, update, delete: if isAuthenticated() &&
-        isUidOrOwner(resource.data.ownerUid);
-      allow create: if isAuthenticated() &&
-        isUidOrOwner(request.resource.data.ownerUid);
+      allow read, update, delete: if isAuthenticated() && (
+        isOwner(resource.data.ownerUid) ||
+        isUidOrOwner(resource.data.ownerUid) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        isOwner(request.resource.data.ownerUid) ||
+        isAdmin()
+      );
     }
 
     // 4. Catatan makan harian:
-    // - Hanya dapat dibuat/diubah/dihapus oleh pemilik catatan terautentikasi
+    // - Terisolasi pada pemilik akun ibu / subjek yang bersangkutan
     match /food_logs/{logId} {
       allow read: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.ownerUid == request.auth.uid ||
-        isUidOrOwner(resource.data.subjectId)
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.ownerUid) ||
+        resource.data.subjectId == request.auth.uid ||
+        isAdmin()
       );
-      allow create, update: if isAuthenticated() && (
-        request.resource.data.userId == request.auth.uid ||
-        request.resource.data.ownerUid == request.auth.uid ||
-        isUidOrOwner(request.resource.data.subjectId)
-      );
-      allow delete: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.ownerUid == request.auth.uid ||
-        isUidOrOwner(resource.data.subjectId)
+      allow create, update, delete: if isAuthenticated() && (
+        isOwner(request.resource.data.userId) ||
+        isOwner(request.resource.data.ownerUid) ||
+        request.resource.data.subjectId == request.auth.uid ||
+        isAdmin()
       );
     }
 
-    // 5. Roster Posyandu & Sesi Penimbangan (ruang lingkup Posyandu - kader)
+    // 5. Roster Posyandu & Sesi Penimbangan:
+    // - Terisolasi per Posyandu bagi kader yang bertugas
     match /roster/{entryId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && currentUserDoc().role == 'cadre';
+      allow read: if isAuthenticated() && (
+        isCadreOf(resource.data.posyanduId) ||
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        isCadreOf(request.resource.data.posyanduId) ||
+        isAdmin()
+      );
     }
 
     match /sessions/{sessionId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && currentUserDoc().role == 'cadre';
+      allow read: if isAuthenticated() && (
+        isCadreOf(resource.data.posyanduId) ||
+        resource.data.createdByUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        isCadreOf(request.resource.data.posyanduId) ||
+        request.resource.data.createdByUid == request.auth.uid ||
+        isAdmin()
+      );
     }
 
     // 6. Artikel edukasi: publik dapat membaca, penulisan terbatas pada admin/nakes
     match /contents/{articleId} {
       allow read: if true;
-      allow write: if isAuthenticated() && (
-        currentUserDoc().role == 'admin' ||
-        currentUserDoc().role == 'doctor'
-      );
+      allow write: if isAdmin();
     }
 
     // 7. Izin akses keluarga-kader (AccessGrant):
-    // - Hanya pemilik (ownerUid) atau kader penerima saat menukar kode yang sah
-    //   yang dapat membuat grant.
-    // - Pencabutan (status == 'dicabut') hanya boleh dilakukan oleh ownerUid (ibu).
+    // - Pemilik (ownerUid), kader penerima, kader Posyandu terkait, atau admin
     match /access_grants/{grantId} {
       allow read: if isAuthenticated() && (
-        isUidOrOwner(resource.data.ownerUid) ||
-        isUidOrOwner(resource.data.granteeUid) ||
-        resource.data.posyanduId != null
+        isOwner(resource.data.ownerUid) ||
+        isOwner(resource.data.granteeUid) ||
+        (resource.data.posyanduId != null && isCadreOf(resource.data.posyanduId)) ||
+        isAdmin()
       );
       allow create: if isAuthenticated() && (
-        isUidOrOwner(request.resource.data.ownerUid) ||
-        isUidOrOwner(request.resource.data.granteeUid)
+        isOwner(request.resource.data.ownerUid) ||
+        isOwner(request.resource.data.granteeUid) ||
+        isAdmin()
       );
-      allow update: if isAuthenticated() &&
-        isUidOrOwner(resource.data.ownerUid);
-      allow delete: if isAuthenticated() &&
-        isUidOrOwner(resource.data.ownerUid);
+      allow update, delete: if isAuthenticated() && (
+        isOwner(resource.data.ownerUid) ||
+        isAdmin()
+      );
     }
 
     // 8. Kode penghubung sekali pakai (LinkCode):
-    // - Dibuat oleh issuerUid (ibu untuk kode keluarga, kader untuk kode klaim).
-    // - Hanya bisa ditukar satu kali (usedAt berubah dari null ke timestamp).
+    // - Dibuat oleh issuerUid yang sah
+    // - Penukaran dibatasi (hanya satu kali dari usedAt null ke timestamp)
     match /link_codes/{codeId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() &&
-        isUidOrDemoOwner(request.resource.data.issuerUid) &&
-        request.resource.data.usedAt == null;
+      allow read: if isAuthenticated() && (
+        isOwner(resource.data.issuerUid) ||
+        currentUserDoc().role == 'kader' ||
+        currentUserDoc().role == 'cadre' ||
+        currentUserDoc().role == 'ibu' ||
+        currentUserDoc().role == 'mother' ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        isOwner(request.resource.data.issuerUid) ||
+        isAdmin()
+      ) && request.resource.data.usedAt == null;
       allow update: if isAuthenticated() &&
         resource.data.usedAt == null &&
         request.resource.data.usedAt != null &&
         request.resource.data.code == resource.data.code &&
         request.resource.data.subjectId == resource.data.subjectId;
-      allow delete: if isAuthenticated() &&
-        isUidOrDemoOwner(resource.data.issuerUid);
+      allow delete: if isAuthenticated() && (
+        isOwner(resource.data.issuerUid) ||
+        isAdmin()
+      );
     }
   }
 }
