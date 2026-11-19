@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../data/food_ai_service.dart';
 import '../../domain/models.dart';
-import '../../domain/nutrition/food_catalog.dart';
 import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
 import 'food_detection_screen.dart';
@@ -37,6 +39,10 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
   final ImagePicker _picker = ImagePicker();
   bool _flashOn = false;
   bool _capturing = false;
+  bool _analyzing = false;
+  String _status = 'Arahkan ke piring';
+  String? _previewPath;
+  bool _autoOpened = false;
 
   @override
   void initState() {
@@ -46,6 +52,15 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
+    // Langsung buka kamera saat layar ini tampil.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _autoOpened) return;
+      _autoOpened = true;
+      // Beri jeda agar transisi halaman selesai sebelum picker dibuka.
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+      _pickImage(ImageSource.camera);
+    });
   }
 
   @override
@@ -56,45 +71,89 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
 
   Future<void> _pickImage(ImageSource source) async {
     if (_capturing) return;
-    setState(() => _capturing = true);
+    setState(() {
+      _capturing = true;
+      _analyzing = false;
+      _status = source == ImageSource.camera
+          ? 'Membuka kamera…'
+          : 'Membuka galeri…';
+    });
+
+    XFile? photo;
     try {
-      final photo = await _picker.pickImage(
+      photo = await _picker.pickImage(
         source: source,
         maxWidth: 1600,
         maxHeight: 1600,
         imageQuality: 85,
       );
-      if (!mounted) return;
-      if (photo != null) {
-        final items = _demoDetectedFoods();
-        setState(() => _capturing = false);
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => DetectionResultScreen(
-              subjectId: widget.subjectId,
-              subjectLabel: widget.subjectLabel,
-              meal: _meal,
-              initialItems: items,
-              capturedImagePath: photo.path,
-            ),
-          ),
-        );
-        return;
-      }
     } catch (e) {
       debugPrint('ImagePicker error: $e');
+      if (!mounted) return;
+      setState(() {
+        _capturing = false;
+        _status = 'Arahkan ke piring';
+      });
+      showNuriSnack(
+        context,
+        'Kamera/galeri tidak dapat dibuka. Periksa izin aplikasi.',
+        error: true,
+      );
+      return;
     }
-    if (!mounted) return;
-    setState(() => _capturing = false);
-  }
 
-  Future<void> _captureSimulation() async {
-    if (_capturing) return;
-    setState(() => _capturing = true);
-    await Future<void>.delayed(const Duration(milliseconds: 320));
     if (!mounted) return;
-    final items = _demoDetectedFoods();
-    setState(() => _capturing = false);
+    if (photo == null) {
+      setState(() {
+        _capturing = false;
+        _status = 'Arahkan ke piring';
+      });
+      return;
+    }
+
+    final capturedPath = photo.path;
+    setState(() {
+      _analyzing = true;
+      _previewPath = capturedPath;
+      _status = 'AI sedang menganalisis gizi…';
+    });
+
+    List<DetectedFood> items;
+    try {
+      items = await FoodAiService.analyzeImage(File(capturedPath));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _capturing = false;
+        _analyzing = false;
+        _status = 'Analisis gagal, coba lagi';
+      });
+      showNuriSnack(
+        context,
+        e is FoodAiException
+            ? e.message
+            : 'Gagal menganalisis foto. Coba ambil foto lagi.',
+        error: true,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _capturing = false;
+      _analyzing = false;
+      _status = 'Arahkan ke piring';
+    });
+
+    if (items.isEmpty) {
+      showNuriSnack(
+        context,
+        'Tidak ada makanan terdeteksi. Coba foto lebih dekat dan jelas.',
+        error: true,
+      );
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => DetectionResultScreen(
@@ -102,48 +161,10 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
           subjectLabel: widget.subjectLabel,
           meal: _meal,
           initialItems: items,
+          capturedImagePath: capturedPath,
         ),
       ),
     );
-  }
-
-  List<DetectedFood> _demoDetectedFoods() {
-    final catalog = FoodCatalog.instance;
-    DetectedFood detected(
-      String id,
-      String displayName,
-      double grams,
-      double confidence,
-    ) {
-      final item = catalog.byId(id);
-      return DetectedFood(
-        food:
-            item ??
-            FoodCatalogItem(
-              id: id,
-              name: displayName,
-              originalName: displayName,
-              category: 'Lainnya',
-              source: 'TKPI 2017',
-              energyKcal: 100,
-              proteinG: 5,
-              fatG: 3,
-              carbG: 12,
-              ironMg: 1,
-              zincMg: 0.5,
-            ),
-        displayName: displayName,
-        grams: grams,
-        confidence: confidence,
-      );
-    }
-
-    return [
-      detected('tkpi_0909', 'Ikan Kembung Suwir', 35, 0.94),
-      detected('tkpi_1039', 'Telur Ayam Rebus', 55, 0.98),
-      detected('tkpi_0023', 'Nasi Putih Tim Lembek', 75, 0.86),
-      detected('composite_buncis_wortel', 'Sayur Buncis & Wortel', 30, 0.91),
-    ];
   }
 
   void _openManual() {
@@ -175,12 +196,20 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
         body: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              'assets/images/food_plate.jpg',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) =>
-                  Container(color: AppColors.primaryDeep),
-            ),
+            if (_previewPath != null)
+              Image.file(
+                File(_previewPath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) =>
+                    Container(color: AppColors.primaryDeep),
+              )
+            else
+              Image.asset(
+                'assets/images/food_plate.jpg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) =>
+                    Container(color: AppColors.primaryDeep),
+              ),
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -241,10 +270,10 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
                         ),
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: _captureSimulation,
-                          child: Pill(
-                            label: 'Kamera Aktif • Tap Demo',
-                            icon: Icons.camera_alt_rounded,
+                          onTap: () => _pickImage(ImageSource.camera),
+                          child: const Pill(
+                            label: 'Kamera AI • 9router',
+                            icon: Icons.auto_awesome_rounded,
                             background: AppColors.secondaryContainer,
                             foreground: AppColors.onSecondaryContainer,
                             fontSize: 11.5,
@@ -337,9 +366,8 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
                                       ),
                                       const SizedBox(height: 10),
                                       Text(
-                                        _capturing
-                                            ? 'Memotret…'
-                                            : 'Arahkan ke piring',
+                                        _status,
+                                        textAlign: TextAlign.center,
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 12,
@@ -353,10 +381,43 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
                                   Positioned.fill(
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.32,
+                                        color: Colors.black.withValues(
+                                          alpha: 0.45,
                                         ),
                                         borderRadius: BorderRadius.circular(28),
+                                      ),
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const SizedBox(
+                                              width: 28,
+                                              height: 28,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.4,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                  ),
+                                              child: Text(
+                                                _analyzing
+                                                    ? 'AI 9router menganalisis gizi makanan…'
+                                                    : 'Menunggu foto…',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -434,7 +495,7 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
                               icon: Icons.flip_camera_ios_outlined,
                               onTap: () => showNuriSnack(
                                 context,
-                                'Kamera belakang digunakan untuk demo.',
+                                'Kamera depan belum tersedia. Gunakan kamera belakang.',
                               ),
                             ),
                           ],
@@ -456,7 +517,8 @@ class _FoodCameraScreenState extends State<FoodCameraScreen>
                           ),
                         ),
                         const Text(
-                          'Deteksi foto disimulasikan untuk demo. Porsi tetap dapat diubah.',
+                          'Foto dianalisis otomatis oleh AI gizi (9router). '
+                          'Porsi & menu tetap dapat diubah.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white60,
