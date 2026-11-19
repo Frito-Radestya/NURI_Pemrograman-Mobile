@@ -824,6 +824,7 @@ class FoodLog {
   const FoodLog({
     required this.id,
     required this.subjectId,
+    this.ownerUid = '',
     required this.date,
     required this.meal,
     required this.items,
@@ -834,6 +835,7 @@ class FoodLog {
 
   final String id;
   final String subjectId;
+  final String ownerUid;
   final DateTime date;
   final MealType meal;
   final List<FoodLogItem> items;
@@ -843,10 +845,16 @@ class FoodLog {
 
   NutritionTotals get totals => NutritionTotals.fromItems(items);
 
-  FoodLog copyWith({List<FoodLogItem>? items, String? note, MealType? meal}) =>
+  FoodLog copyWith({
+    List<FoodLogItem>? items,
+    String? note,
+    MealType? meal,
+    String? ownerUid,
+  }) =>
       FoodLog(
         id: id,
         subjectId: subjectId,
+        ownerUid: ownerUid ?? this.ownerUid,
         date: date,
         meal: meal ?? this.meal,
         items: items ?? this.items,
@@ -858,6 +866,7 @@ class FoodLog {
   Map<String, dynamic> toJson() => {
     'id': id,
     'subjectId': subjectId,
+    'ownerUid': ownerUid,
     'date': dateToIso(date),
     'meal': meal.storage,
     'items': items.map((e) => e.toJson()).toList(),
@@ -869,6 +878,7 @@ class FoodLog {
   factory FoodLog.fromJson(Map<String, dynamic> json) => FoodLog(
     id: json['id'] as String,
     subjectId: json['subjectId'] as String? ?? '',
+    ownerUid: json['ownerUid'] as String? ?? '',
     date: parseDate(json['date']) ?? DateTime.now(),
     meal: MealType.fromStorage(json['meal'] as String?),
     items: (json['items'] as List? ?? const [])
@@ -1100,6 +1110,7 @@ class PosyanduSession {
   const PosyanduSession({
     required this.id,
     required this.posyanduName,
+    this.posyanduId,
     required this.date,
     required this.targetCount,
     required this.presentCount,
@@ -1110,6 +1121,7 @@ class PosyanduSession {
 
   final String id;
   final String posyanduName;
+  final String? posyanduId;
   final DateTime date;
   final int targetCount;
   final int presentCount;
@@ -1120,9 +1132,32 @@ class PosyanduSession {
   double get progress => targetCount == 0 ? 0 : presentCount / targetCount;
   bool get isDone => status == 'selesai';
 
+  PosyanduSession copyWith({
+    String? posyanduName,
+    String? posyanduId,
+    DateTime? date,
+    int? targetCount,
+    int? presentCount,
+    String? status,
+    String? createdByUid,
+    String? note,
+  }) =>
+      PosyanduSession(
+        id: id,
+        posyanduName: posyanduName ?? this.posyanduName,
+        posyanduId: posyanduId ?? this.posyanduId,
+        date: date ?? this.date,
+        targetCount: targetCount ?? this.targetCount,
+        presentCount: presentCount ?? this.presentCount,
+        status: status ?? this.status,
+        createdByUid: createdByUid ?? this.createdByUid,
+        note: note ?? this.note,
+      );
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'posyanduName': posyanduName,
+    'posyanduId': posyanduId,
     'date': dateToIso(date),
     'targetCount': targetCount,
     'presentCount': presentCount,
@@ -1135,6 +1170,7 @@ class PosyanduSession {
       PosyanduSession(
         id: json['id'] as String,
         posyanduName: json['posyanduName'] as String? ?? 'Posyandu',
+        posyanduId: json['posyanduId'] as String?,
         date: parseDate(json['date']) ?? DateTime.now(),
         targetCount: parseInt(json['targetCount']) ?? 0,
         presentCount: parseInt(json['presentCount']) ?? 0,

@@ -30,7 +30,7 @@ class ProfileScreen extends ConsumerWidget {
         ),
       );
     }
-    final isCadre = state.isCadre;
+    final isCadre = state.isCadre || state.isAdmin;
     final pregnancy = state.activePregnancy;
     final child = state.activeChild;
     final grants = state.accessGrants

@@ -9,10 +9,14 @@ extension FoodActions on AppController {
     required List<FoodLogItem> items,
     DateTime? date,
     String? note,
+    String? ownerUid,
   }) {
+    final user = currentState.currentUser;
+    final owner = ownerUid ?? user?.id ?? '';
     final log = FoodLog(
       id: 'fl_${DateTime.now().microsecondsSinceEpoch}',
       subjectId: subjectId,
+      ownerUid: owner,
       date: dateOnly(date ?? DateTime.now()),
       meal: meal,
       items: items,

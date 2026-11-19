@@ -510,6 +510,7 @@ class DemoSeed {
       FoodLog(
         id: 'fl_rafi_breakfast',
         subjectId: 'c_rafi',
+        ownerUid: 'u_ibu',
         date: now,
         meal: MealType.breakfast,
         items: [
@@ -532,6 +533,7 @@ class DemoSeed {
       FoodLog(
         id: 'fl_rafi_lunch',
         subjectId: 'c_rafi',
+        ownerUid: 'u_ibu',
         date: now,
         meal: MealType.lunch,
         items: [
@@ -555,6 +557,7 @@ class DemoSeed {
       FoodLog(
         id: 'fl_siti_breakfast',
         subjectId: 'preg_siti',
+        ownerUid: 'u_ibu',
         date: now,
         meal: MealType.breakfast,
         items: [
@@ -576,6 +579,7 @@ class DemoSeed {
       FoodLog(
         id: 'fl_siti_lunch',
         subjectId: 'preg_siti',
+        ownerUid: 'u_ibu',
         date: now,
         meal: MealType.lunch,
         items: [
@@ -597,6 +601,7 @@ class DemoSeed {
       FoodLog(
         id: 'fl_rafi_yesterday_breakfast',
         subjectId: 'c_rafi',
+        ownerUid: 'u_ibu',
         date: now.subtract(const Duration(days: 1)),
         meal: MealType.breakfast,
         items: [
@@ -951,6 +956,7 @@ class DemoSeed {
         PosyanduSession(
           id: 's_maret',
           posyanduName: 'Posyandu Melati II',
+          posyanduId: 'p_melati',
           date: now,
           targetCount: 52,
           presentCount: 38,

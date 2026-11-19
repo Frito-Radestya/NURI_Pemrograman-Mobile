@@ -252,14 +252,17 @@ class FirestoreService implements DatabaseService {
       };
       final remoteLogs = <FoodLog>[];
       if (allowedSubjectIds.isNotEmpty) {
-        final batchIds = allowedSubjectIds.take(10).toList();
-        final logsSnap = await _db
-            .collection('food_logs')
-            .where('subjectId', whereIn: batchIds)
-            .get();
-        remoteLogs.addAll(
-          logsSnap.docs.map((doc) => FoodLog.fromJson(doc.data())),
-        );
+        final allIds = allowedSubjectIds.toList();
+        for (var i = 0; i < allIds.length; i += 30) {
+          final chunk = allIds.sublist(i, (i + 30).clamp(0, allIds.length));
+          final logsSnap = await _db
+              .collection('food_logs')
+              .where('subjectId', whereIn: chunk)
+              .get();
+          remoteLogs.addAll(
+            logsSnap.docs.map((doc) => FoodLog.fromJson(doc.data())),
+          );
+        }
       }
 
       // 5. Baca roster dan sesi khusus ruang lingkup Posyandu kader
@@ -276,7 +279,7 @@ class FirestoreService implements DatabaseService {
 
         final sessionSnap = await _db
             .collection('sessions')
-            .where('createdByUid', isEqualTo: user.id)
+            .where('posyanduId', isEqualTo: user.posyanduId)
             .get();
         remoteSessions.addAll(
           sessionSnap.docs.map((doc) => PosyanduSession.fromJson(doc.data())),

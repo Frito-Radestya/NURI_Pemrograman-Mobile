@@ -23,7 +23,9 @@ class ProfileCard extends StatelessWidget {
         children: [
           AppAvatar(
             name: user.name,
-            index: user.role == UserRole.cadre ? 7 : 0,
+            index: user.role == UserRole.cadre || user.role == UserRole.admin
+                ? 7
+                : 0,
             imageAsset: user.avatarAsset,
             size: 54,
             showBadge: true,

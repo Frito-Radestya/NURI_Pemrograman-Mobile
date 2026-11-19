@@ -70,7 +70,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appControllerProvider);
-    final isCadre = state.isCadre;
+    final isCadre = state.isCadre || state.isAdmin;
 
     final pages = isCadre
         ? const <Widget>[

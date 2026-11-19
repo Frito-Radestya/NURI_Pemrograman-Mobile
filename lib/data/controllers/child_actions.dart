@@ -139,17 +139,10 @@ extension ChildActions on AppController {
       final alreadyPresent = currentState.roster
           .where((r) => r.subjectId == childId)
           .any((r) => r.attendance == AttendanceStatus.present);
-      return PosyanduSession(
-        id: session.id,
-        posyanduName: session.posyanduName,
-        date: session.date,
-        targetCount: session.targetCount,
+      return session.copyWith(
         presentCount: alreadyPresent
             ? session.presentCount
             : session.presentCount + 1,
-        status: session.status,
-        createdByUid: session.createdByUid,
-        note: session.note,
       );
     }).toList();
     commitState(

@@ -93,15 +93,8 @@ extension CadreActions on AppController {
     );
     final sessions = currentState.sessions.map((session) {
       if (session.id != currentState.activeSession?.id) return session;
-      return PosyanduSession(
-        id: session.id,
-        posyanduName: session.posyanduName,
-        date: session.date,
+      return session.copyWith(
         targetCount: session.targetCount + 1,
-        presentCount: session.presentCount,
-        status: session.status,
-        createdByUid: session.createdByUid,
-        note: session.note,
       );
     }).toList();
     commitState(
@@ -126,15 +119,8 @@ extension CadreActions on AppController {
       var present = session.presentCount;
       if (!wasPresent && isPresent) present += 1;
       if (wasPresent && !isPresent) present -= 1;
-      return PosyanduSession(
-        id: session.id,
-        posyanduName: session.posyanduName,
-        date: session.date,
-        targetCount: session.targetCount,
+      return session.copyWith(
         presentCount: present < 0 ? 0 : present,
-        status: session.status,
-        createdByUid: session.createdByUid,
-        note: session.note,
       );
     }).toList();
     commitState(
@@ -172,17 +158,10 @@ extension CadreActions on AppController {
     final sessionId = currentState.activeSession?.id;
     final sessions = currentState.sessions.map((session) {
       if (session.id != sessionId) return session;
-      return PosyanduSession(
-        id: session.id,
-        posyanduName: session.posyanduName,
-        date: session.date,
-        targetCount: session.targetCount,
+      return session.copyWith(
         presentCount: wasPresent
             ? session.presentCount
             : session.presentCount + 1,
-        status: session.status,
-        createdByUid: session.createdByUid,
-        note: session.note,
       );
     }).toList();
     commitState(
@@ -224,16 +203,7 @@ extension CadreActions on AppController {
   void completeSession() {
     final session = currentState.activeSession;
     if (session == null) return;
-    final updated = PosyanduSession(
-      id: session.id,
-      posyanduName: session.posyanduName,
-      date: session.date,
-      targetCount: session.targetCount,
-      presentCount: session.presentCount,
-      status: 'selesai',
-      createdByUid: session.createdByUid,
-      note: session.note,
-    );
+    final updated = session.copyWith(status: 'selesai');
     commitState(
       currentState.copyWith(
         sessions: currentState.sessions

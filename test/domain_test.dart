@@ -1325,6 +1325,52 @@ void main() {
       expect(pregUpdated.childId, newBorn.id);
       expect(db.children.containsKey(newBorn.id), isTrue);
     });
+
+    test('REMEDIATION-P0: FoodLog ownerUid, PosyanduSession posyanduId, and Admin authorization', () {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final container = makeContainer(seed);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+
+      // 1. FoodLog memiliki ownerUid
+      final log = controller.addFoodLog(
+        subjectId: 'c_rafi',
+        meal: MealType.lunch,
+        items: const [
+          FoodLogItem(
+            foodId: 'item_1',
+            name: 'Sup Ayam',
+            grams: 100,
+            kcalPer100: 100,
+          ),
+        ],
+      );
+      expect(log.ownerUid, 'u_ibu');
+
+      // 2. PosyanduSession memiliki posyanduId
+      final session = container.read(appControllerProvider).activeSession!;
+      expect(session.posyanduId, 'p_melati');
+      final updatedSession = session.copyWith(targetCount: 60);
+      expect(updatedSession.posyanduId, 'p_melati');
+      expect(updatedSession.targetCount, 60);
+
+      // 3. UserRole admin dan AppState.isAdmin
+      final adminUser = const AppUser(
+        id: 'u_admin',
+        name: 'Admin Utama',
+        email: 'admin@nuri.id',
+        role: UserRole.admin,
+      );
+      final adminState = seed.copyWith(
+        users: [...seed.users, adminUser],
+        currentUserId: 'u_admin',
+      );
+      expect(adminState.isAdmin, isTrue);
+      expect(adminState.isCadre, isFalse);
+    });
   });
 }
 
