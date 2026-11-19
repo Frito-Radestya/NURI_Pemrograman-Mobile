@@ -4,39 +4,98 @@ import '../../core/theme/app_theme.dart';
 import '../../shared/widgets.dart';
 
 class RecommendationPortionGuide extends StatelessWidget {
-  const RecommendationPortionGuide({super.key, required this.pregnancyMode});
+  const RecommendationPortionGuide({
+    super.key,
+    required this.pregnancyMode,
+    this.trimester = 2,
+  });
 
   final bool pregnancyMode;
+  final int trimester;
 
   @override
   Widget build(BuildContext context) {
     final items = pregnancyMode
-        ? const [
-            (
-              'Energi',
-              'Tambahan ±300 kkal pada trimester 2–3',
-              Icons.local_fire_department_rounded,
-              AppColors.amber,
-            ),
-            (
-              'Protein',
-              '70–85 g per hari',
-              Icons.fitness_center_rounded,
-              AppColors.coral,
-            ),
-            (
-              'Zat besi',
-              '18 mg per hari + TTD 90 tablet',
-              Icons.medication_rounded,
-              AppColors.primary,
-            ),
-            (
-              'Cairan',
-              '±2,3 liter per hari',
-              Icons.water_drop_rounded,
-              AppColors.blue,
-            ),
-          ]
+        ? switch (trimester) {
+            1 => const [
+              (
+                'Energi Trimester 1',
+                '2.250 kkal/hari (+180 kkal) • porsi kecil 5–6x sehari',
+                Icons.local_fire_department_rounded,
+                AppColors.amber,
+              ),
+              (
+                'Protein & Asam Folat',
+                '60 g protein + 600 mcg folat untuk tabung saraf janin',
+                Icons.fitness_center_rounded,
+                AppColors.coral,
+              ),
+              (
+                'Vitamin B6 & Zat Besi',
+                '18 mg zat besi + Vit B6 & jahe hangat pereda mual',
+                Icons.medication_rounded,
+                AppColors.primary,
+              ),
+              (
+                'Cairan & Elektrolit',
+                '±2,3 liter air hangat/kaldu bening per hari',
+                Icons.water_drop_rounded,
+                AppColors.blue,
+              ),
+            ],
+            2 => const [
+              (
+                'Energi Trimester 2',
+                '2.550 kkal/hari (+300 kkal) untuk pacu tumbuh janin',
+                Icons.local_fire_department_rounded,
+                AppColors.amber,
+              ),
+              (
+                'Protein Hewani & Nabati',
+                '70 g protein/hari (ikan, telur, hati, daging, tempe)',
+                Icons.fitness_center_rounded,
+                AppColors.coral,
+              ),
+              (
+                'Zat Besi & Kalsium',
+                '18 mg besi (+ TTD rutin) & 1.200 mg kalsium tulang janin',
+                Icons.medication_rounded,
+                AppColors.primary,
+              ),
+              (
+                'Cairan Harian',
+                '±2,3–2,5 liter air putih per hari (8–10 gelas)',
+                Icons.water_drop_rounded,
+                AppColors.blue,
+              ),
+            ],
+            _ => const [
+              (
+                'Energi Trimester 3',
+                '2.550 kkal/hari (+300 kkal) & karbohidrat kompleks',
+                Icons.local_fire_department_rounded,
+                AppColors.amber,
+              ),
+              (
+                'Protein Tinggi & DHA',
+                '85 g protein/hari (+30 g) & Omega-3 untuk otak janin',
+                Icons.fitness_center_rounded,
+                AppColors.coral,
+              ),
+              (
+                'Zat Besi Persalinan',
+                '18 mg besi + TTD 90 tablet cegah perdarahan & anemia',
+                Icons.medication_rounded,
+                AppColors.primary,
+              ),
+              (
+                'Serat & Cairan Laktasi',
+                '±2,5 liter air + sayur/buah tinggi serat cegah sembelit',
+                Icons.water_drop_rounded,
+                AppColors.blue,
+              ),
+            ],
+          }
         : const [
             (
               'Makanan pokok',

@@ -12,6 +12,7 @@ import 'package:nuri/domain/growth/who_lms.dart';
 import 'package:nuri/domain/models.dart';
 import 'package:nuri/domain/nutrition/nutrition_calculator.dart';
 import 'package:nuri/domain/pregnancy/pregnancy_calculator.dart';
+import 'package:nuri/features/mother/recommendation_menu_widgets.dart';
 
 void main() {
   late WhoReference who;
@@ -1241,6 +1242,59 @@ void main() {
       expect(chat.length, 2);
       expect(chat.first['senderRole'], 'mother');
       expect(chat.last['senderRole'], 'nakes');
+    });
+
+    test('FLOW-TRIMESTER-RECOMMENDATION: menu gizi tiap trimester terdefinisi dan dapat dicatat langsung ke diary', () {
+      final seed = DemoSeed.build(
+        who: who,
+        today: DateTime(2026, 3, 15),
+      ).copyWith(currentUserId: 'u_ibu');
+      final container = makeContainer(seed);
+      addTearDown(container.dispose);
+      final controller = container.read(appControllerProvider.notifier);
+
+      final preg = container.read(appControllerProvider).activePregnancy!;
+      const akg = AkgReference();
+      final targetT1 = akg.forPregnancy(1);
+      final targetT2 = akg.forPregnancy(2);
+      final targetT3 = akg.forPregnancy(3);
+
+      expect(targetT1.energyKcal, 2250);
+      expect(targetT2.energyKcal, 2550);
+      expect(targetT3.proteinG, 85);
+
+      const menuT2 = MenuIdea(
+        id: 'menu_t2_nasi_tim_ikan',
+        title: 'Nasi Tim Ikan Kembung, Bayam Merah & Tahu',
+        subtitle: 'Tinggi zat besi & kalsium alami',
+        image: 'assets/images/food_rice.jpg',
+        kcal: 470,
+        protein: 29,
+        minutes: 25,
+        tags: ['Makan Siang', 'Zat Besi'],
+        ingredients: ['100g nasi', '70g kembung'],
+        steps: ['Kukus', 'Sajikan'],
+        mealType: MealType.lunch,
+        grams: 270,
+        fatG: 15,
+        carbG: 55,
+        ironMg: 5.9,
+        zincMg: 2.9,
+      );
+
+      final log = controller.addFoodLog(
+        subjectId: preg.id,
+        meal: menuT2.mealType,
+        items: [menuT2.toFoodLogItem()],
+        date: DateTime(2026, 3, 15),
+        note: menuT2.title,
+      );
+
+      expect(log.subjectId, preg.id);
+      expect(log.meal, MealType.lunch);
+      expect(log.items.first.kcal, closeTo(470, 0.5));
+      expect(log.items.first.proteinG, closeTo(29, 0.5));
+      expect(log.items.first.ironMg, closeTo(5.9, 0.5));
     });
   });
 }

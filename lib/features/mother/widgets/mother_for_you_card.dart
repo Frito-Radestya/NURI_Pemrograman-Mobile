@@ -11,11 +11,13 @@ class MotherForYouCard extends StatelessWidget {
     required this.article,
     required this.onArticle,
     required this.onMenu,
+    this.isPregnancy = false,
   });
 
   final ContentArticle? article;
   final VoidCallback onArticle;
   final VoidCallback onMenu;
+  final bool isPregnancy;
 
   @override
   Widget build(BuildContext context) {
@@ -88,11 +90,11 @@ class MotherForYouCard extends StatelessWidget {
           InkWell(
             onTap: onMenu,
             borderRadius: BorderRadius.circular(AppRadius.card),
-            child: const Padding(
-              padding: EdgeInsets.all(14),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 38,
                     height: 38,
                     child: DecoratedBox(
@@ -107,22 +109,26 @@ class MotherForYouCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: 11),
+                  const SizedBox(width: 11),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Inspirasi menu hari ini',
-                          style: TextStyle(
+                          isPregnancy
+                              ? 'Rekomendasi menu trimester'
+                              : 'Inspirasi menu hari ini',
+                          style: const TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Menu tinggi protein hewani yang mudah dibuat.',
-                          style: TextStyle(
+                          isPregnancy
+                              ? 'Menu kaya folat, kalsium, zat besi & DHA.'
+                              : 'Menu tinggi protein hewani yang mudah dibuat.',
+                          style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.muted,
                           ),
@@ -130,7 +136,7 @@ class MotherForYouCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(
+                  const Icon(
                     Icons.chevron_right_rounded,
                     size: 20,
                     color: AppColors.muted,

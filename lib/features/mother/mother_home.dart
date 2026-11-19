@@ -561,6 +561,7 @@ class MotherHomeScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     MotherForYouCard(
                       article: _articleFor(state.contents, showPregnancy),
+                      isPregnancy: showPregnancy,
                       onArticle: () {
                         final article = _articleFor(
                           state.contents,
