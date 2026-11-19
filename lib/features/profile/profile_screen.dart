@@ -332,31 +332,10 @@ class ProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     AppUser user,
   ) async {
-    final controller = TextEditingController(text: user.name);
-    final result = await showDialog<String>(
+    final result = await showNuriSheet<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Ubah nama'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(hintText: 'Nama lengkap'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
+      builder: (_) => EditNameSheet(initialName: user.name),
     );
-    controller.dispose();
     if (result == null || result.length < 2) return;
     ref.read(appControllerProvider.notifier).updateProfile(name: result);
     if (context.mounted) showNuriSnack(context, 'Nama diperbarui.');

@@ -434,6 +434,73 @@ class _AddPregnancySheetState extends ConsumerState<AddPregnancySheet> {
   }
 }
 
+class EditNameSheet extends StatefulWidget {
+  const EditNameSheet({super.key, required this.initialName});
+
+  final String initialName;
+
+  @override
+  State<EditNameSheet> createState() => _EditNameSheetState();
+}
+
+class _EditNameSheetState extends State<EditNameSheet> {
+  late final TextEditingController _name;
+
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Ubah Nama', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 14),
+          NuriTextField(
+            label: 'Nama lengkap',
+            controller: _name,
+            hint: 'Contoh: Siti Rahma',
+            textCapitalization: TextCapitalization.words,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: NuriButton(
+                  label: 'Batal',
+                  variant: NuriButtonVariant.outlined,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: NuriButton(
+                  label: 'Simpan',
+                  icon: Icons.check_rounded,
+                  onPressed: () =>
+                      Navigator.of(context).pop(_name.text.trim()),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class EditPosyanduSheet extends StatefulWidget {
   const EditPosyanduSheet({
     super.key,
