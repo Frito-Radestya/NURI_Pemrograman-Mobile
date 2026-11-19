@@ -910,10 +910,10 @@ extension AuthActions on AppController {
       currentState.copyWith(
         users: updatedUsers,
         posyanduName: currentState.posyanduName.isEmpty
-            ? 'Posyandu Melati II'
+            ? 'Posyandu'
             : currentState.posyanduName,
         posyanduArea: currentState.posyanduArea.isEmpty
-            ? 'Kelurahan Sukamaju'
+            ? ''
             : currentState.posyanduArea,
       ),
     );

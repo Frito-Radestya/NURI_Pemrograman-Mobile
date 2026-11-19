@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../domain/models.dart';
-import '../../shared/ui.dart';
 import '../../shared/widgets.dart';
 
 class KaderQuickMenu extends StatelessWidget {
@@ -27,27 +26,14 @@ class KaderQuickMenu extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Menu Cepat Kader',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppColors.onSurface,
-              ),
-            ),
-            Text(
-              'Alat Sesi',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
+        const Text(
+          'Menu Cepat Kader',
+          style: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
+          ),
         ),
         const SizedBox(height: 10),
         Row(
@@ -61,7 +47,6 @@ class KaderQuickMenu extends StatelessWidget {
             _KaderMenuItem(
               icon: Icons.qr_code_scanner_rounded,
               label: 'Scan QR KMS',
-              isHighlight: true,
               onTap: onScan,
             ),
             _KaderMenuItem(
@@ -86,13 +71,11 @@ class _KaderMenuItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.isHighlight = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool isHighlight;
 
   @override
   Widget build(BuildContext context) {
@@ -110,15 +93,14 @@ class _KaderMenuItem extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                gradient: isHighlight ? AppGradients.button : null,
-                color: isHighlight ? null : AppColors.surfaceContainerLow,
+                gradient: AppGradients.button,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: isHighlight ? AppShadows.glow : null,
+                boxShadow: AppShadows.glow,
               ),
               child: Icon(
                 icon,
                 size: 24,
-                color: isHighlight ? Colors.white : AppColors.primary,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 5),
@@ -127,10 +109,10 @@ class _KaderMenuItem extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10.5,
-                fontWeight: isHighlight ? FontWeight.w700 : FontWeight.w600,
-                color: isHighlight ? AppColors.primary : AppColors.onSurface,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
               ),
             ),
           ],
@@ -196,7 +178,7 @@ class KaderSessionCard extends StatelessWidget {
     required this.present,
     required this.target,
     required this.followUpCount,
-    required this.onMeasure,
+    this.onMeasure,
     required this.onComplete,
   });
 
@@ -205,7 +187,7 @@ class KaderSessionCard extends StatelessWidget {
   final int present;
   final int target;
   final int followUpCount;
-  final VoidCallback onMeasure;
+  final VoidCallback? onMeasure;
   final VoidCallback? onComplete;
 
   @override
@@ -452,17 +434,8 @@ class KaderSessionCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
-          NuriButton(
-            label: present == 0
-                ? '+ Mulai Scan / Ukur Baru'
-                : '+ Lanjut Scan / Ukur',
-            icon: Icons.add_a_photo_rounded,
-            height: 48,
-            onPressed: done ? null : onMeasure,
-          ),
           if (onComplete != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               height: 42,

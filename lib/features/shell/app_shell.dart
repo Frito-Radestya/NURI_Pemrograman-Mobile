@@ -9,7 +9,6 @@ import '../education/education_screen.dart';
 import '../kader/followup_screen.dart';
 import '../kader/kader_home.dart';
 import '../kader/recap_screen.dart';
-import '../kader/roster_screen.dart';
 import '../mother/food_flow.dart';
 import '../mother/growth_screens.dart';
 import '../mother/mother_home.dart';
@@ -76,7 +75,6 @@ class _AppShellState extends ConsumerState<AppShell> {
     final pages = isCadre
         ? const <Widget>[
             KaderHomeScreen(),
-            RosterScreen(embedded: true),
             RecapScreen(embedded: true),
             FollowUpScreen(embedded: true),
             ProfileScreen(),
@@ -95,11 +93,6 @@ class _AppShellState extends ConsumerState<AppShell> {
               icon: Icons.event_note_outlined,
               activeIcon: Icons.event_note_rounded,
               label: 'Sesi',
-            ),
-            BottomNavItem(
-              icon: Icons.groups_outlined,
-              activeIcon: Icons.groups_rounded,
-              label: 'Sasaran',
             ),
             BottomNavItem(
               icon: Icons.insert_chart_outlined_rounded,
@@ -146,12 +139,14 @@ class _AppShellState extends ConsumerState<AppShell> {
             ),
           ];
 
+    final safeIndex = _index >= pages.length ? 0 : _index;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(index: _index, children: pages),
+      body: IndexedStack(index: safeIndex, children: pages),
       bottomNavigationBar: NuriBottomNav(
         items: items,
-        selectedIndex: _index,
+        selectedIndex: safeIndex,
         onTap: (index) {
           if (!isCadre && index == 2) {
             _openQuickLog();

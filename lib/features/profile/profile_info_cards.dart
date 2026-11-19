@@ -163,14 +163,16 @@ class ProfilePosyanduCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      name.isEmpty ? 'Posyandu Belum Diatur' : name,
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      area,
+                      area.isEmpty
+                          ? 'Ketuk Ubah untuk mengatur wilayah'
+                          : area,
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.muted,

@@ -51,7 +51,10 @@ extension PregnancyActions on AppController {
     final visit = AncVisit(
       id: 'anc_${DateTime.now().microsecondsSinceEpoch}',
       date: dateOnly(date ?? DateTime.now()),
-      facility: facility ?? 'Posyandu Melati II',
+      facility: facility ??
+          (currentState.posyanduName.isNotEmpty
+              ? currentState.posyanduName
+              : 'Posyandu'),
       note: note,
     );
     final updated = pregnancy.copyWith(

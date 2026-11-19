@@ -19,6 +19,14 @@ import 'scan_screen.dart';
 class KaderHomeScreen extends ConsumerWidget {
   const KaderHomeScreen({super.key});
 
+  static String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 11) return 'Selamat pagi';
+    if (hour < 15) return 'Selamat siang';
+    if (hour < 18) return 'Selamat sore';
+    return 'Selamat malam';
+  }
+
   void _push(BuildContext context, Widget page) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
   }
@@ -51,6 +59,14 @@ class KaderHomeScreen extends ConsumerWidget {
         .length;
     final target = session?.targetCount ?? roster.length;
     final notPresent = target - present;
+    final greetingName = () {
+      final raw = user?.name.trim() ?? '';
+      if (raw.isEmpty) return 'Admin';
+      final clean = raw
+          .replaceAll(RegExp(r'^(Bu|Ibu|Bunda)\s+', caseSensitive: false), '')
+          .trim();
+      return clean.isEmpty ? 'Admin' : clean.split(' ').first;
+    }();
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -142,7 +158,7 @@ class KaderHomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Semangat Pagi, Bu ${user?.name.split(' ').first ?? 'Kader'}!',
+                    '${_greeting()}, $greetingName!',
                     style: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 22,
@@ -162,7 +178,9 @@ class KaderHomeScreen extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          posyanduName,
+                          posyanduName.isEmpty
+                              ? 'Posyandu Belum Diatur'
+                              : posyanduName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -191,7 +209,6 @@ class KaderHomeScreen extends ConsumerWidget {
                       present: present,
                       target: target,
                       followUpCount: followUps.length,
-                      onMeasure: () => _push(context, const ScanScreen()),
                       onComplete: session == null || session.isDone
                           ? null
                           : () async {

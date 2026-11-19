@@ -16,7 +16,7 @@ class AncFormSheet extends ConsumerStatefulWidget {
 
 class _AncFormSheetState extends ConsumerState<AncFormSheet> {
   DateTime _date = dateOnly(DateTime.now());
-  final _facility = TextEditingController(text: 'Posyandu Melati II');
+  final _facility = TextEditingController(text: 'Puskesmas / Posyandu');
   final _note = TextEditingController();
 
   @override

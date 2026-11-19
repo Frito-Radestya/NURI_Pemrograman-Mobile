@@ -682,6 +682,10 @@ class PosyanduQrSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cleanCode = posyanduName.trim().isEmpty
+        ? 'POSYANDU-KADER-2026'
+        : 'POSYANDU-${posyanduName.trim().replaceAll(RegExp(r'\s+'), '-').toUpperCase()}';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       child: Column(
@@ -689,7 +693,7 @@ class PosyanduQrSheet extends StatelessWidget {
           Text('Kode Posyandu', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 4),
           Text(
-            posyanduName,
+            posyanduName.isEmpty ? 'Posyandu Anda' : posyanduName,
             style: const TextStyle(fontSize: 12.5, color: AppColors.muted),
           ),
           const SizedBox(height: 16),
@@ -701,7 +705,7 @@ class PosyanduQrSheet extends StatelessWidget {
               border: Border.all(color: AppColors.line),
             ),
             child: QrImageView(
-              data: 'POSYANDU-MELATI-II-2026',
+              data: cleanCode,
               version: QrVersions.auto,
               size: 190,
               backgroundColor: Colors.white,
@@ -716,9 +720,9 @@ class PosyanduQrSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const SelectableText(
-            'POSYANDU-MELATI-II-2026',
-            style: TextStyle(
+          SelectableText(
+            cleanCode,
+            style: const TextStyle(
               fontFamily: 'monospace',
               fontSize: 13.5,
               fontWeight: FontWeight.w700,

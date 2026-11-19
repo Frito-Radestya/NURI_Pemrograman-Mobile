@@ -306,7 +306,7 @@ class _RoleSetupScreenState extends ConsumerState<RoleSetupScreen> {
               NuriTextField(
                 label: 'Nama posyandu',
                 controller: _posyanduName,
-                hint: 'Posyandu Melati II',
+                hint: 'Contoh: Posyandu Mawar',
                 prefixIcon: Icons.home_work_outlined,
                 textCapitalization: TextCapitalization.words,
               ),
@@ -314,7 +314,7 @@ class _RoleSetupScreenState extends ConsumerState<RoleSetupScreen> {
               NuriTextField(
                 label: 'Wilayah / kelurahan',
                 controller: _posyanduArea,
-                hint: 'Kelurahan Sukamaju',
+                hint: 'Contoh: Desa / Kelurahan',
                 prefixIcon: Icons.location_on_outlined,
                 textCapitalization: TextCapitalization.words,
               ),

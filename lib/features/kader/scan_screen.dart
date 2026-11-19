@@ -119,21 +119,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
     );
   }
 
-  Future<void> _simulate() async {
-    if (_scanning) return;
-    HapticFeedback.lightImpact();
-    setState(() => _scanning = true);
-    await Future<void>.delayed(const Duration(milliseconds: 1300));
-    if (!mounted) return;
-    setState(() => _scanning = false);
-    await _showFound(
-      childId: 'c_kenzo',
-      rosterId: 'r_kenzo',
-      name: 'Kenzo Al-Ghifari',
-      meta: '14 bulan • Laki-laki',
-    );
-  }
-
   Future<void> _manualCode() async {
     final code = await showNuriSheet<String>(
       context: context,
@@ -237,140 +222,114 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.pill,
-                              ),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(
-                                  Icons.circle,
-                                  size: 6,
-                                  color: AppColors.secondaryFixed,
-                                ),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Mode Posyandu Online',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                            size: 20,
                           ),
-                        ],
+                        ),
                       ),
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () async {
-                              await _scannerController?.toggleTorch();
-                              setState(() => _torchOn = !_torchOn);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _torchOn
-                                    ? AppColors.secondaryFixed
-                                    : Colors.black.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.pill,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    _torchOn
-                                        ? Icons.flashlight_on_rounded
-                                        : Icons.flashlight_off_rounded,
-                                    size: 14,
-                                    color: _torchOn
-                                        ? AppColors.primary
-                                        : Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _torchOn ? 'Lampu On' : 'Lampu Off',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: _torchOn
-                                          ? AppColors.primary
-                                          : Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(
+                            AppRadius.pill,
                           ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 4,
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 6,
+                              color: AppColors.secondaryFixed,
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.pill,
+                            SizedBox(width: 5),
+                            Text(
+                              'Pindai QR',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.fact_check_outlined,
-                                  size: 14,
-                                  color: AppColors.secondaryFixed,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Antrean: $waitingCount',
-                                  style: const TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () async {
+                          await _scannerController?.toggleTorch();
+                          setState(() => _torchOn = !_torchOn);
+                        },
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: _torchOn
+                                ? AppColors.secondaryFixed
+                                : Colors.black.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
                           ),
-                        ],
+                          child: Icon(
+                            _torchOn
+                                ? Icons.flashlight_on_rounded
+                                : Icons.flashlight_off_rounded,
+                            size: 16,
+                            color: _torchOn
+                                ? AppColors.primary
+                                : Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(
+                            AppRadius.pill,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.fact_check_outlined,
+                              size: 13,
+                              color: AppColors.secondaryFixed,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Antrean: $waitingCount',
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -583,16 +542,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen>
                     ),
                     const SizedBox(height: 14),
                     NuriButton(
-                      label: _scanning ? 'Memindai…' : 'Simulasikan Pindai QR',
-                      icon: Icons.qr_code_scanner_rounded,
-                      loading: _scanning,
-                      onPressed: _simulate,
-                    ),
-                    const SizedBox(height: 8),
-                    NuriButton(
                       label: 'Masukkan Kode Manual',
                       icon: Icons.keyboard_alt_outlined,
-                      variant: NuriButtonVariant.outlined,
                       onPressed: _scanning ? null : _manualCode,
                     ),
                   ],
